@@ -18,7 +18,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 # Bypass the debug chipscope generation via return cmd
 # ELSE ... comment out the return to include chipscope
 ######################################################
-return
+# return
 
 ############################
 ## Open the synthesis design
@@ -38,21 +38,23 @@ CreateDebugCore ${ilaName}
 #######################
 ## Set the record depth
 #######################
-set_property C_DATA_DEPTH 1024 [get_debug_cores ${ilaName}]
+set_property C_DATA_DEPTH 2048 [get_debug_cores ${ilaName}]
 
 #################################
 ## Set the clock for the ILA core
 #################################
-SetDebugCoreClk ${ilaName} {U_App/U_DspCoreWrapper/dspClk}
+SetDebugCoreClk ${ilaName} {U_App/dspClk}
 
 #######################
 ## Set the debug Probes
 #######################
 
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/startRxMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/startTxMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/debugRXMarker}
-ConfigProbe ${ilaName} {U_App/U_DspCoreWrapper/debugTXMarker}
+ConfigProbe ${ilaName} {U_App/dspRst}
+ConfigProbe ${ilaName} {U_App/sigGenTrig}
+ConfigProbe ${ilaName} {U_App/adc[0][*]}
+ConfigProbe ${ilaName} {U_App/adc[1][*]}
+ConfigProbe ${ilaName} {U_App/dac[0][*]}
+ConfigProbe ${ilaName} {U_App/dac[1][*]}
 
 ##########################
 ## Write the port map file

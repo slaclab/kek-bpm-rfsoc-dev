@@ -75,6 +75,11 @@ architecture mapping of Application is
 
    signal sigGenTrig : sl;
 
+   attribute dont_touch               : string;
+   attribute dont_touch of sigGenTrig : signal is "TRUE";
+   attribute dont_touch of adc        : signal is "TRUE";
+   attribute dont_touch of dac        : signal is "TRUE";
+
 begin
 
    process(dspClk)

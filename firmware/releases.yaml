@@ -28,6 +28,7 @@ Targets:
     ImageDir: targets/KekBpmRfsocDevZcu111/images
     Extensions:
       - petalinux.tar.gz
+      - ltx
 
 Releases:
   all:
