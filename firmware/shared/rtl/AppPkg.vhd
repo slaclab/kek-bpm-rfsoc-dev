@@ -22,7 +22,7 @@ use surf.AxiStreamPkg.all;
 
 package AppPkg is
 
-   constant SAMPLE_PER_CYCLE_C : positive := 16;
+   constant SAMPLE_PER_CYCLE_C : positive := 2;
 
    -------------------------------------------------
    -- DMA[lane=0].inbound  = ADC/DAC ring buffers

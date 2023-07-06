@@ -22,6 +22,20 @@ A 509 MHz reference clock connected to ZCU111's "J109" connect is required.
 Tested using a 509 MHz sine wave generator.  
 Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
 
+
+<!--- ######################################################## -->
+
+# RF Balun Daughter card
+
+Assumes you are using the Xilinx XM500 daughter card.
+Only RFMC_ADC_03_P/N and RFMC_DAC_05_P/N are implemented in firmware,
+which is a "1-4GHz Channels Anaren Balun [HF]" balun path.
+A loopback SMA cable between XM500.J1 and XM500.J8 is required.
+
+A 509 MHz reference clock connected to ZCU111's "J109" connect is required.
+Tested using a 509 MHz sine wave generator.  
+Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
+
 <!--- ######################################################## -->
 
 # How to generate the RFSoC .BIT and .XSA files

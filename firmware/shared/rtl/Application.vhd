@@ -40,8 +40,8 @@ entity Application is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspAdc          : in  Slv256Array(7 downto 0);
-      dspDac          : out Slv256Array(7 downto 0);
+      dspAdc          : in  Slv32Array(1 downto 0);
+      dspDac          : out Slv32Array(1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -53,13 +53,14 @@ end Application;
 
 architecture mapping of Application is
 
-   constant NUM_ADC_CH_C     : positive := 8;
-   constant NUM_DAC_CH_C     : positive := 8;
+   constant NUM_ADC_CH_C     : positive := 2;
+   constant NUM_DAC_CH_C     : positive := 2;
    constant RAM_ADDR_WIDTH_C : positive := 10;
 
    constant RING_INDEX_C       : natural := 0;
    constant DAC_SIG_INDEX_C    : natural := 1;
-   constant NUM_AXIL_MASTERS_C : natural := 2;
+   constant SW_TRIG_INDEX_C    : natural := 2;
+   constant NUM_AXIL_MASTERS_C : natural := 3;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 28, 24);
 
@@ -68,9 +69,11 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc      : Slv256Array(7 downto 0) := (others => (others => '0'));
-   signal dac      : Slv256Array(7 downto 0) := (others => (others => '0'));
-   signal loopback : Slv256Array(7 downto 0) := (others => (others => '0'));
+   signal adc      : Slv32Array(1 downto 0) := (others => (others => '0'));
+   signal dac      : Slv32Array(1 downto 0) := (others => (others => '0'));
+   signal loopback : Slv32Array(1 downto 0) := (others => (others => '0'));
+
+   signal sigGenTrig : sl;
 
 begin
 
@@ -83,7 +86,7 @@ begin
       end if;
    end process;
 
-   -- Loopback
+   -- ADC->DAC Loopback Path
    loopback <= adc;
 
    U_XBAR : entity surf.AxiLiteCrossbar
@@ -126,20 +129,9 @@ begin
          dspRst          => dspRst,
          dspAdc0         => adc(0),
          dspAdc1         => adc(1),
-         dspAdc2         => adc(2),
-         dspAdc3         => adc(3),
-         dspAdc4         => adc(4),
-         dspAdc5         => adc(5),
-         dspAdc6         => adc(6),
-         dspAdc7         => adc(7),
          dspDac0         => dac(0),
          dspDac1         => dac(1),
-         dspDac2         => dac(2),
-         dspDac3         => dac(3),
-         dspDac4         => dac(4),
-         dspDac5         => dac(5),
-         dspDac6         => dac(6),
-         dspDac7         => dac(7),
+         extTrigIn       => sigGenTrig,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -151,7 +143,7 @@ begin
    U_DacSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
-         NUM_CH_G           => 8,
+         NUM_CH_G           => NUM_DAC_CH_C,
          RAM_ADDR_WIDTH_G   => RAM_ADDR_WIDTH_C,
          SAMPLE_PER_CYCLE_G => SAMPLE_PER_CYCLE_C,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
@@ -161,20 +153,9 @@ begin
          dspRst          => dspRst,
          dspDacIn0       => loopback(0),
          dspDacIn1       => loopback(1),
-         dspDacIn2       => loopback(2),
-         dspDacIn3       => loopback(3),
-         dspDacIn4       => loopback(4),
-         dspDacIn5       => loopback(5),
-         dspDacIn6       => loopback(6),
-         dspDacIn7       => loopback(7),
          dspDacOut0      => dac(0),
          dspDacOut1      => dac(1),
-         dspDacOut2      => dac(2),
-         dspDacOut3      => dac(3),
-         dspDacOut4      => dac(4),
-         dspDacOut5      => dac(5),
-         dspDacOut6      => dac(6),
-         dspDacOut7      => dac(7),
+         extTrigIn       => sigGenTrig,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -182,5 +163,21 @@ begin
          axilReadSlave   => axilReadSlaves(DAC_SIG_INDEX_C),
          axilWriteMaster => axilWriteMasters(DAC_SIG_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DAC_SIG_INDEX_C));
+
+   U_SwDacTrig : entity work.SwDacTrig
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- DSP Interface (dspClk domain)
+         dspClk          => dspClk,
+         dspRst          => dspRst,
+         sigGenTrig      => sigGenTrig,
+         -- AXI-Lite Interface (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMasters(SW_TRIG_INDEX_C),
+         axilReadSlave   => axilReadSlaves(SW_TRIG_INDEX_C),
+         axilWriteMaster => axilWriteMasters(SW_TRIG_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(SW_TRIG_INDEX_C));
 
 end mapping;

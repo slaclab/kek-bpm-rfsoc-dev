@@ -82,8 +82,8 @@ architecture top_level of KekBpmRfsocDevZcu111 is
 
    signal dspClk : sl;
    signal dspRst : sl;
-   signal dspAdc : Slv256Array(7 downto 0);
-   signal dspDac : Slv256Array(7 downto 0);
+   signal dspAdc : Slv32Array(1 downto 0);
+   signal dspDac : Slv32Array(1 downto 0);
 
 begin
 
