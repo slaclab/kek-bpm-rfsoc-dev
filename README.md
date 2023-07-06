@@ -16,6 +16,14 @@ $ git clone --recursive git@github.com:slaclab/kek-bpm-rfsoc-dev
 
 <!--- ######################################################## -->
 
+# ZCU111 and External Clock reference
+
+A 509 MHz reference clock connected to ZCU111's "J109" connect is required.
+Tested using a 509 MHz sine wave generator.  
+Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
+
+<!--- ######################################################## -->
+
 # How to generate the RFSoC .BIT and .XSA files
 
 1) Setup Xilinx PATH and licensing (if on SLAC AFS network) else requires Vivado install and licensing on your local machine

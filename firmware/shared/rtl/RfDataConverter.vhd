@@ -372,10 +372,10 @@ begin
          RST_IN_POLARITY_G => '1',
          NUM_CLOCKS_G      => 2,
          -- MMCM attributes
-         CLKIN_PERIOD_G    => 4.0,      -- 250 MHz
-         CLKFBOUT_MULT_G   => 4,        -- 1 GHz = 4 x 250 MHz
-         CLKOUT0_DIVIDE_G  => 2,        -- 500 MHz = 1GHz/2
-         CLKOUT1_DIVIDE_G  => 4)        -- 250 MHz = 1GHz/4
+         CLKIN_PERIOD_G    => 3.929,    -- 254.5 MHz
+         CLKFBOUT_MULT_G   => 4,        -- 1018 MHz = 4 x 254.5MHz
+         CLKOUT0_DIVIDE_G  => 2,        -- 509 MHz = 1018MHz/2
+         CLKOUT1_DIVIDE_G  => 4)        -- 254.5 MHz = 1018MHz/4
       port map(
          -- Clock Input
          clkIn     => refClk,
