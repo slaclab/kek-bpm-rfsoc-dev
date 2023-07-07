@@ -107,6 +107,9 @@ class Root(pr.Root):
         # Useful pointers
         dacSigGen = self.RFSoC.Application.DacSigGen
 
+        # Issue a reset to the user logic
+        self.RFSoC.AxiSocCore.AxiVersion.UserRst()
+
         # Update all SW remote registers
         self.ReadAll()
 
