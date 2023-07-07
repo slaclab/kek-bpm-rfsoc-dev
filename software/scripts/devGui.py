@@ -65,7 +65,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     top_level = os.path.realpath(__file__).split('software')[0]
-    ui = top_level+'firmware/submodules/axi-soc-ultra-plus-core/python/axi_soc_ultra_plus_core/rfsoc_utility/gui/GuiTop.py'
+    ui = top_level+'firmware/python/kek_bpm_rfsoc_dev/gui/GuiTop.py'
 
     #################################################################
 
@@ -80,7 +80,6 @@ if __name__ == "__main__":
             ui         = ui,
             sizeX      = 800,
             sizeY      = 800,
-            numAdcCh   = 8,
-            numDacCh   = 8,
         )
+
     #################################################################

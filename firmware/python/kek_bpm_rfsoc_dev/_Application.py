@@ -12,33 +12,57 @@ import pyrogue as pr
 
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
+import surf.axi                              as axi
 
 class Application(pr.Device):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
-        self.add(rfsoc_utility.AppRingBuffer(
+        self.add(axi.AxiStreamRingBuffer(
             offset   = 0x00_000000,
-            numAdcCh = 8, # Must match NUM_ADC_CH_G config
-            numDacCh = 8, # Must match NUM_DAC_CH_G config
             # expand   = True,
         ))
 
         self.add(rfsoc_utility.SigGen(
             name         = 'DacSigGen',
             offset       = 0x01_000000,
-            numCh        = 8,  # Must match NUM_CH_G config
-            ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
-            smplPerCycle = 16, # Must match SAMPLE_PER_CYCLE_G config
+            numCh        = 2,  # Must match NUM_CH_G config
+            ramWidth     = 9, # Must match RAM_ADDR_WIDTH_G config
+            smplPerCycle = 2, # Must match SAMPLE_PER_CYCLE_G config
+            # expand       = True,
+        ))
+
+        self.add(rfsoc.SigGenLoader(
+            name         = 'DacSigGenLoader',
+            DacSigGen    = self.DacSigGen,
             expand       = True,
         ))
 
-        self.add(rfsoc_utility.SigGenLoader(
-            name         = 'DacSigGenLoader',
-            DacSigGen    = self.DacSigGen,
-            numCh        = 8,  # Must match NUM_CH_G config
-            ramWidth     = 10, # Must match RAM_ADDR_WIDTH_G config
-            smplPerCycle = 16, # Must match SAMPLE_PER_CYCLE_G config
-            sampleRate   = 4.0E+9, # Units of Hz
-            expand       = True,
+        self.add(pr.RemoteCommand(
+            name         = 'SoftDacTrig',
+            description  = 'Software generated trigger for the DacSigGen',
+            offset       = 0x02_000000,
+            bitSize      = 1,
+            function     = lambda cmd: cmd.post(1),
+            # hidden       = True,
+        ))
+
+        self.add(pr.LocalVariable(
+            name   = 'EnableSoftTrig',
+            mode   = 'RW',
+            value  = True,
+            hidden = True,
+        ))
+
+        @self.command(description  = 'Force a DAC signal generator trigger from software',hidden=True)
+        def getWaveformBurst():
+            if self.EnableSoftTrig.get():
+                self.SoftDacTrig()
+
+        self.add(pr.LocalVariable(
+            name         = 'GetWaveformBurst',
+            mode         = 'RO',
+            localGet     = self.getWaveformBurst,
+            pollInterval = 1,
+            hidden       = True,
         ))

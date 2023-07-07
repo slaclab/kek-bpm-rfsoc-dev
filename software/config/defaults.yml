@@ -1,17 +1,13 @@
 Root:
   RFSoC:
     Application:
-      AppRingBuffer:
-        Adc:
-          Ch[:]:
-            TrigBurst: 0x0
-            ContinuousMode: 0x1
-        Dac:
-          Ch[:]:
-            TrigBurst: 0x0
-            ContinuousMode: 0x1
+      ########################################################
+      AxiStreamRingBuffer:
+        TrigBurst: 0x0
+        ContinuousMode: 0x0 # Trigger mode
+      ########################################################
       DacSigGen:
         enable: True
         Enabled: 0x1
-        Continuous: 0x1
-        # CsvFilePath: 'config/DacSigGen/zero_all_ch.csv'
+        Continuous: 0x0 # Trigger mode
+      ########################################################

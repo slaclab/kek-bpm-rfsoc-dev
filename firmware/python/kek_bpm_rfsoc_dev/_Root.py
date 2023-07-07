@@ -35,6 +35,7 @@ class Root(pr.Root):
             lmkConfig   = 'config/lmk/HexRegisterValues.txt',
             lmxConfig   = 'config/lmx/HexRegisterValues.txt',
             zmqSrvEn    = True,  # Flag to include the ZMQ server
+            rateDropEn  = True,  # Flag to include the rate dropper for live display
             **kwargs):
 
         # Pass custom value to parent via super function
@@ -65,13 +66,11 @@ class Root(pr.Root):
         ##                              Register Access
         ##################################################################################
 
-        if ip != None:
-            # Check if we can ping the device and TCP socket not open
-            soc_core.connectionTest(ip)
-            # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
-            self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
-        else:
-            self.memMap = rogue.hardware.axi.AxiMemMap('/dev/axi_memory_map')
+        # Check if we can ping the device and TCP socket not open
+        soc_core.connectionTest(ip)
+
+        # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
+        self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
 
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
@@ -84,30 +83,21 @@ class Root(pr.Root):
         ##                              Data Path
         ##################################################################################
 
-        # Create rogue stream arrays
+        # Create rogue stream objects
         if ip != None:
-            self.ringBufferAdc = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(8)]
-            self.ringBufferDac = [stream.TcpClient(ip,10000+2*(i+16)) for i in range(8)]
+            self.ringBuffer = stream.TcpClient(ip,10000)
         else:
-            self.ringBufferAdc = [rogue.hardware.axi.AxiStreamDma('/dev/axi_stream_dma_0', i,    True) for i in range(8)]
-            self.ringBufferDac = [rogue.hardware.axi.AxiStreamDma('/dev/axi_stream_dma_0', 16+i, True) for i in range(8)]
-        self.adcRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.dacRateDrop   = [stream.RateDrop(True,1.0) for i in range(8)]
-        self.adcProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'AdcProcessor[{i}]',sampleRate=4.0E+9) for i in range(8)]
-        self.dacProcessor  = [rfsoc_utility.RingBufferProcessor(name=f'DacProcessor[{i}]',sampleRate=4.0E+9) for i in range(8)]
+            self.ringBuffer = rogue.hardware.axi.AxiStreamDma('/dev/axi_stream_dma_0', 0, True)
+        self.waveform = rfsoc.StreamProcessor(name='Waveform')
+        self.add(self.waveform)
 
-        # Connect the rogue stream arrays
-        for i in range(8):
-
-            # ADC Ring Buffer Path
-            self.ringBufferAdc[i] >> self.dataWriter.getChannel(i+0)
-            self.ringBufferAdc[i] >> self.adcRateDrop[i] >> self.adcProcessor[i]
-            self.add(self.adcProcessor[i])
-
-            # DAC Ring Buffer Path
-            self.ringBufferDac[i] >> self.dataWriter.getChannel(i+16)
-            self.ringBufferDac[i] >> self.dacRateDrop[i] >> self.dacProcessor[i]
-            self.add(self.dacProcessor[i])
+        # Connect the rogue stream to guiDisplay
+        self.ringBuffer >> self.dataWriter.getChannel(0)
+        if rateDropEn:
+            self.rateDrop = stream.RateDrop(True,1.0)
+            self.ringBuffer >> self.rateDrop >> self.waveform
+        else:
+            self.ringBuffer >> self.waveform
 
     ##################################################################################
 
@@ -128,21 +118,22 @@ class Root(pr.Root):
         # Initialize the LMK/LMX Clock chips
         self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
 
-        # Wait for DSP Clock to be stable
+        # Wait for DSP Clock to be stable after initializing LMK/LMX Clock chips
+        while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
+            time.sleep(0.01)
+
+        # Initialize the RF Data Converter
+        self.RFSoC.RfDataConverter.Init(dynamicNco=True)
+
+        # Wait for DSP Clock to be stable after changing NCO value
         while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
             time.sleep(0.01)
 
         # Load the waveform data into DacSigGen
-        csvFile = dacSigGen.CsvFilePath.get()
-        if csvFile != '':
-            if self.top_level != '':
-                dacSigGen.CsvFilePath.set(f'{self.top_level}/{csvFile}')
-            dacSigGen.LoadCsvFile()
-            dacSigGen.LoadCsvFile()
-        else:
-            self.RFSoC.Application.DacSigGenLoader.LoadSingleTones()
+        self.RFSoC.Application.DacSigGenLoader.LoadRectFunction()
 
         # Update all SW remote registers
+        self.CountReset()
         self.ReadAll()
 
     ##################################################################################

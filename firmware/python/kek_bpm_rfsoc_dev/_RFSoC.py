@@ -31,9 +31,24 @@ class RFSoC(pr.Device):
         ))
 
         self.add(xil.RfDataConverter(
-            offset       = 0x9000_0000,
-            # expand       = True,
+            offset    = 0x9000_0000,
+            gen3      = False, # True if using RFSoC GEN3 Hardware
+            enAdcTile = [False,True,False,False], # adcTile[1] only
+            enDacTile = [False,True,False,False], # dacTile[1] only
+            expand       = True,
         ))
+
+        # Hide the unused RF blocks
+        self.RfDataConverter.adcTile[1].adcBlock[0].hidden = True
+        self.RfDataConverter.adcTile[1].adcBlock[1].hidden = True
+        self.RfDataConverter.dacTile[1].dacBlock[0].hidden = True
+        self.RfDataConverter.dacTile[1].dacBlock[2].hidden = True
+        self.RfDataConverter.dacTile[1].dacBlock[3].hidden = True
+
+        # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
+        self.RfDataConverter.adcTile[1].adcBlock[2].samplingRate._default = 4072.0 # In units of MHz,
+        self.RfDataConverter.adcTile[1].adcBlock[3].samplingRate._default = 4072.0 # In units of MHz,
+        self.RfDataConverter.dacTile[1].dacBlock[1].samplingRate._default = 4072.0 # In units of MHz,
 
         self.add(rfsoc.Application(
             offset       = 0xA000_0000,
