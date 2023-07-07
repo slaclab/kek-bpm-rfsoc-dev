@@ -31,7 +31,7 @@ class Root(pr.Root):
     def __init__(self,
             ip          = '10.0.0.10', # ETH Host Name (or IP address)
             top_level   = '',
-            defaultFile = '',
+            defaultFile = 'config/defaults.yml',
             lmkConfig   = 'config/lmk/HexRegisterValues.txt',
             lmxConfig   = 'config/lmx/HexRegisterValues.txt',
             zmqSrvEn    = True,  # Flag to include the ZMQ server

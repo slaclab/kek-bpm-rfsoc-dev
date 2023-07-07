@@ -29,7 +29,7 @@ class StreamProcessor(pr.DataReceiver):
         # Configurable variables
         self._prevFrameCnt = 0
         self._maxSize  = 2**10
-        smplRate = 254.5E+6
+        smplRate = 509.0E+6
 
         # Init variables
         timeBin  = (1.0E+9/smplRate) # Units of ns
