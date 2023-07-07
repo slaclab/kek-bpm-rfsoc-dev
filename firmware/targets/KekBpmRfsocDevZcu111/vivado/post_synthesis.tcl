@@ -38,7 +38,7 @@ CreateDebugCore ${ilaName}
 #######################
 ## Set the record depth
 #######################
-set_property C_DATA_DEPTH 2048 [get_debug_cores ${ilaName}]
+set_property C_DATA_DEPTH 1024 [get_debug_cores ${ilaName}]
 
 #################################
 ## Set the clock for the ILA core
@@ -51,10 +51,10 @@ SetDebugCoreClk ${ilaName} {U_App/dspClk}
 
 ConfigProbe ${ilaName} {U_App/dspRst}
 ConfigProbe ${ilaName} {U_App/sigGenTrig}
-ConfigProbe ${ilaName} {U_App/adc[0][*]}
-ConfigProbe ${ilaName} {U_App/adc[1][*]}
-ConfigProbe ${ilaName} {U_App/dac[0][*]}
-ConfigProbe ${ilaName} {U_App/dac[1][*]}
+ConfigProbe ${ilaName} {U_App/adcI[0][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[0][*]}
+ConfigProbe ${ilaName} {U_App/dacI[0][*]}
+ConfigProbe ${ilaName} {U_App/dacQ[0][*]}
 
 ##########################
 ## Write the port map file

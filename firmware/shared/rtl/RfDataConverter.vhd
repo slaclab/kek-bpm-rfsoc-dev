@@ -30,7 +30,7 @@ use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 entity RfDataConverter is
    generic (
       TPD_G            : time := 1 ns;
-      AXIL_BASE_ADDR_G : slv(31 downto 0));
+      AXIL_BASE_ADDR_G : slv(31 downto 0) := (others=>'0'));
    port (
       -- RF DATA CONVERTER Ports
       adcClkP         : in  slv(3 downto 0);
@@ -46,8 +46,10 @@ entity RfDataConverter is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
-      dspAdc          : out Slv32Array(1 downto 0);  -- dspAdc(0) = I, dspAdc(1) = Q
-      dspDac          : in  Slv32Array(1 downto 0);  -- dspDac(0) = I, dspDac(1) = Q
+      dspAdcI         : out Slv32Array(NUM_ADC_CH_C-1 downto 0);
+      dspAdcQ         : out Slv32Array(NUM_ADC_CH_C-1 downto 0);
+      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -109,9 +111,6 @@ architecture mapping of RfDataConverter is
          );
    end component;
 
-   signal rfdcAdc : Slv32Array(1 downto 0) := (others => (others => '0'));
-   signal rfdcDac : Slv32Array(1 downto 0) := (others => (others => '0'));
-
    signal refClk   : sl := '0';
    signal axilRstL : sl := '0';
 
@@ -163,19 +162,19 @@ begin
          -- ADC[3] AXI Stream Interface
          m1_axis_aresetn => dspResetL,
          m1_axis_aclk    => dspClock,
-         m12_axis_tdata  => rfdcAdc(0), -- dspAdc(0) = I (2 samples)
+         m12_axis_tdata  => dspAdcI(0), -- dspAdc(0) = I (2 samples)
          m12_axis_tvalid => open,
          m12_axis_tready => '1',
-         m13_axis_tdata  => rfdcAdc(1), -- dspAdc(1) = Q (2 samples)
+         m13_axis_tdata  => dspAdcQ(0), -- dspAdc(1) = Q (2 samples)
          m13_axis_tvalid => open,
          m13_axis_tready => '1',
          -- DAC[5] AXI Stream Interface
          s1_axis_aresetn => dspResetL,
          s1_axis_aclk    => dspClock,
-         s11_axis_tdata(15 downto 0)  => rfdcDac(0)(15 downto 0),  -- I[1st sample)
-         s11_axis_tdata(31 downto 16) => rfdcDac(1)(15 downto 0),  -- Q[1st sample)
-         s11_axis_tdata(47 downto 32) => rfdcDac(0)(31 downto 16),  -- I[2nd sample)
-         s11_axis_tdata(63 downto 48) => rfdcDac(1)(31 downto 16),  -- Q[2nd sample)
+         s11_axis_tdata(15 downto 0)  => dspDacI(0)(15 downto 0),  -- I[1st sample)
+         s11_axis_tdata(31 downto 16) => dspDacQ(0)(15 downto 0),  -- Q[1st sample)
+         s11_axis_tdata(47 downto 32) => dspDacI(0)(31 downto 16),  -- I[2nd sample)
+         s11_axis_tdata(63 downto 48) => dspDacQ(0)(31 downto 16),  -- Q[2nd sample)
          s11_axis_tvalid => '1',
          s11_axis_tready => open);
 
@@ -205,14 +204,5 @@ begin
 
    dspClk <= dspClock;
    dspRst <= dspReset;
-
-   process(dspClock)
-   begin
-      -- Help with making timing
-      if rising_edge(dspClock) then
-         rfdcDac <= dspDac  after TPD_G;
-         dspAdc  <= rfdcAdc after TPD_G;
-      end if;
-   end process;
 
 end mapping;

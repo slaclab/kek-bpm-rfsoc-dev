@@ -24,6 +24,9 @@ package AppPkg is
 
    constant SAMPLE_PER_CYCLE_C : positive := 2;
 
+   constant NUM_ADC_CH_C     : positive := 1;
+   constant NUM_DAC_CH_C     : positive := 1;
+
    -------------------------------------------------
    -- DMA[lane=0].inbound  = ADC/DAC ring buffers
    -- DMA[lane=1]          = loopback debugging

@@ -80,10 +80,12 @@ architecture top_level of KekBpmRfsocDevZcu111 is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal dspClk : sl;
-   signal dspRst : sl;
-   signal dspAdc : Slv32Array(1 downto 0);
-   signal dspDac : Slv32Array(1 downto 0);
+   signal dspClk  : sl;
+   signal dspRst  : sl;
+   signal dspAdcI : Slv32Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspAdcQ : Slv32Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspDacI : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspDacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0);
 
 begin
 
@@ -215,8 +217,10 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspAdc          => dspAdc,
-         dspDac          => dspDac,
+         dspAdcI         => dspAdcI,
+         dspAdcQ         => dspAdcQ,
+         dspDacI         => dspDacI,
+         dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -241,8 +245,10 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspAdc          => dspAdc,
-         dspDac          => dspDac,
+         dspAdcI         => dspAdcI,
+         dspAdcQ         => dspAdcQ,
+         dspDacI         => dspDacI,
+         dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
