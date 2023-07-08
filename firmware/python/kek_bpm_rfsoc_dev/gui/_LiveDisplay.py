@@ -78,25 +78,6 @@ class LiveDisplay(PyDMFrame):
             self.timePlot[i+1].setLabel("bottom", text='Time (ns)')
             fl.addWidget(self.timePlot[i+1])
 
-        # for i in range(2):
-
-            # gb = QGroupBox( f'{self.chType[i+4]} Time Domain' )
-            # vb.addWidget(gb)
-
-            # fl = QFormLayout()
-            # fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
-            # fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-            # fl.setLabelAlignment(Qt.AlignRight)
-            # gb.setLayout(fl)
-
-            # if(i==0):
-                # self.timePlot[i+4].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.I[4]', name='Counts', color=self.color[0])
-            # else:
-                # self.timePlot[i+4].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.Q[4]', name='Counts', color=self.color[0])
-            # self.timePlot[i+4].setLabel("bottom", text='Time (ns)')
-            # fl.addWidget(self.timePlot[i+4])
-
-
         #-----------------------------------------------------------------------------
 
         gb = QGroupBox('Display Controls')
