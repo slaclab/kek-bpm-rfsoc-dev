@@ -10,4 +10,5 @@ Root:
         enable: True
         Enabled: 0x1
         Continuous: 0x0 # Trigger mode
+        CsvFilePath: 'config/DacSigGen/triangle_wave.csv'  
       ########################################################
