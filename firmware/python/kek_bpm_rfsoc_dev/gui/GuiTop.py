@@ -67,6 +67,10 @@ class GuiTop(Display):
         liveDisplay = guiUser.LiveDisplay(parent=None, init_channel=Channel)
         self.tab.addTab(liveDisplay,'Waveforms')
 
+        # Freq Live Display (Tab Index=3)
+        liveDisplay = guiUser.LiveDisplayFft(parent=None, init_channel=Channel)
+        self.tab.addTab(liveDisplay,'Frequency')
+
         # Set the default Tab view
         self.tab.setCurrentIndex(2)
 

@@ -109,6 +109,22 @@ class StreamProcessor(pr.DataReceiver):
                 hidden      = True,
             ))
 
+            self.add(pr.LocalVariable(
+                name        = f'FftAdcMag[{i}]',
+                description = 'Magnitude Frame Container',
+                typeStr     = 'Float[np]',
+                value       = np.zeros(shape=(self._maxSize>>1), dtype=np.float32, order='C'),
+                hidden      = True,
+            ))
+
+            self.add(pr.LocalVariable(
+                name        = f'FftDacMag[{i}]',
+                description = 'Magnitude Frame Container',
+                typeStr     = 'Float[np]',
+                value       = np.zeros(shape=(self._maxSize>>1), dtype=np.float32, order='C'),
+                hidden      = True,
+            ))
+
     # Method which is called when a frame is received
     def process(self,frame):
         with self.root.updateGroup():
@@ -142,3 +158,20 @@ class StreamProcessor(pr.DataReceiver):
 
                 self.AdcMag[x].set(magAdc,write=True)
                 self.DacMag[x].set(magDac,write=True)
+
+                # Prevent warning message when for divide by zero encountered in log10
+                # Checking for inf later to fix this in the display
+                np.seterr(divide = 'ignore')
+
+                # Calculate the FFT
+                freq = np.fft.fft(self.AdcI[x].value())/float(len(magAdc))
+                # freq = np.fft.fft(magAdc)/float(len(magAdc))
+                freq = freq[range(len(magAdc)//2)]
+                mag = 20.0*np.log10(np.abs(freq)/32767.0) # Units of dBFS
+                self.FftAdcMag[x].set(mag,write=True)
+
+                # Calculate the FFT
+                freq = np.fft.fft(magDac)/float(len(magDac))
+                freq = freq[range(len(magDac)//2)]
+                mag = 20.0*np.log10(np.abs(freq)/32767.0) # Units of dBFS
+                self.FftDacMag[x].set(mag,write=True)
