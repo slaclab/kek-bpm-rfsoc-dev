@@ -20,6 +20,7 @@ import pyrogue as pr
 import pyrogue.protocols
 import pyrogue.utilities.fileio
 import pyrogue.utilities.prbs
+import pyrogue.protocols.epicsV4
 
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
@@ -98,6 +99,17 @@ class Root(pr.Root):
             self.ringBuffer >> self.rateDrop >> self.waveform
         else:
             self.ringBuffer >> self.waveform
+
+        ##################################################################################
+
+        self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
+            base      = 'rfsoc_ioc',
+            root      = self,
+            pvMap     = None,
+            incGroups = None,
+            excGroups = None,
+        )
+        self.addProtocol(self.epics)
 
     ##################################################################################
 

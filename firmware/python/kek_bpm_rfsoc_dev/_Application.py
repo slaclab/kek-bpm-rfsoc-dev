@@ -38,14 +38,18 @@ class Application(pr.Device):
             expand       = True,
         ))
 
-        self.add(pr.RemoteCommand(
-            name         = 'SoftDacTrig',
+        self.add(pr.RemoteVariable(
+            name         = 'SoftDacTrigRaw',
             description  = 'Software generated trigger for the DacSigGen',
             offset       = 0x02_000000,
             bitSize      = 1,
-            function     = lambda cmd: cmd.post(1),
-            # hidden       = True,
+            mode         = 'WO',
+            hidden       = True,
         ))
+
+        @self.command()
+        def SoftDacTrig():
+            self.SoftDacTrigRaw.set(1)
 
         self.add(pr.LocalVariable(
             name   = 'EnableSoftTrig',
