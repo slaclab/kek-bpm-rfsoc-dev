@@ -157,6 +157,11 @@ architecture mapping of RfDataConverter is
    signal dspReset  : sl := '1';
    signal dspResetL : sl := '0';
 
+   signal adcI : Slv32Array(3 downto 0);
+   signal adcQ : Slv32Array(3 downto 0);
+   signal dacI : Slv32Array(1 downto 0);
+   signal dacQ : Slv32Array(1 downto 0);
+
 begin
 
    U_IpCore : RfDataConverterIpCore
@@ -215,49 +220,49 @@ begin
          -- ADC[1:0] AXI Stream Interface
          m0_axis_aresetn              => dspResetL,
          m0_axis_aclk                 => dspClock,
-         m00_axis_tdata               => dspAdcI(0),  -- dspAdc(0) = I (2 samples)
+         m00_axis_tdata               => adcI(0),  -- dspAdc(0) = I (2 samples)
          m00_axis_tvalid              => open,
          m00_axis_tready              => '1',
-         m01_axis_tdata               => dspAdcQ(0),  -- dspAdc(0) = Q (2 samples)
+         m01_axis_tdata               => adcQ(0),  -- dspAdc(0) = Q (2 samples)
          m01_axis_tvalid              => open,
          m01_axis_tready              => '1',
-         m02_axis_tdata               => dspAdcI(1),  -- dspAdc(1) = I (2 samples)
+         m02_axis_tdata               => adcI(1),  -- dspAdc(1) = I (2 samples)
          m02_axis_tvalid              => open,
          m02_axis_tready              => '1',
-         m03_axis_tdata               => dspAdcQ(1),  -- dspAdc(1) = Q (2 samples)
+         m03_axis_tdata               => adcQ(1),  -- dspAdc(1) = Q (2 samples)
          m03_axis_tvalid              => open,
          m03_axis_tready              => '1',
          -- ADC[3:2] AXI Stream Interface
          m2_axis_aresetn              => dspResetL,
          m2_axis_aclk                 => dspClock,
-         m20_axis_tdata               => dspAdcI(2),  -- dspAdc(2) = I (2 samples)
+         m20_axis_tdata               => adcI(2),  -- dspAdc(2) = I (2 samples)
          m20_axis_tvalid              => open,
          m20_axis_tready              => '1',
-         m21_axis_tdata               => dspAdcQ(2),  -- dspAdc(2) = Q (2 samples)
+         m21_axis_tdata               => adcQ(2),  -- dspAdc(2) = Q (2 samples)
          m21_axis_tvalid              => open,
          m21_axis_tready              => '1',
-         m22_axis_tdata               => dspAdcI(3),  -- dspAdc(3) = I (2 samples)
+         m22_axis_tdata               => adcI(3),  -- dspAdc(3) = I (2 samples)
          m22_axis_tvalid              => open,
          m22_axis_tready              => '1',
-         m23_axis_tdata               => dspAdcQ(3),  -- dspAdc(3) = Q (2 samples)
+         m23_axis_tdata               => adcQ(3),  -- dspAdc(3) = Q (2 samples)
          m23_axis_tvalid              => open,
          m23_axis_tready              => '1',
          -- DAC[0] AXI Stream Interface
          s0_axis_aresetn              => dspResetL,
          s0_axis_aclk                 => dspClock,
-         s00_axis_tdata(15 downto 0)  => dspDacI(0)(15 downto 0),  -- I[1st sample)
-         s00_axis_tdata(31 downto 16) => dspDacQ(0)(15 downto 0),  -- Q[1st sample)
-         s00_axis_tdata(47 downto 32) => dspDacI(0)(31 downto 16),  -- I[2nd sample)
-         s00_axis_tdata(63 downto 48) => dspDacQ(0)(31 downto 16),  -- Q[2nd sample)
+         s00_axis_tdata(15 downto 0)  => dacI(0)(15 downto 0),  -- I[1st sample)
+         s00_axis_tdata(31 downto 16) => dacQ(0)(15 downto 0),  -- Q[1st sample)
+         s00_axis_tdata(47 downto 32) => dacI(0)(31 downto 16),  -- I[2nd sample)
+         s00_axis_tdata(63 downto 48) => dacQ(0)(31 downto 16),  -- Q[2nd sample)
          s00_axis_tvalid              => '1',
          s00_axis_tready              => open,
          -- DAC[1] AXI Stream Interface
          s2_axis_aresetn              => dspResetL,
          s2_axis_aclk                 => dspClock,
-         s20_axis_tdata(15 downto 0)  => dspDacI(1)(15 downto 0),  -- I[1st sample)
-         s20_axis_tdata(31 downto 16) => dspDacQ(1)(15 downto 0),  -- Q[1st sample)
-         s20_axis_tdata(47 downto 32) => dspDacI(1)(31 downto 16),  -- I[2nd sample)
-         s20_axis_tdata(63 downto 48) => dspDacQ(1)(31 downto 16),  -- Q[2nd sample)
+         s20_axis_tdata(15 downto 0)  => dacI(1)(15 downto 0),  -- I[1st sample)
+         s20_axis_tdata(31 downto 16) => dacQ(1)(15 downto 0),  -- Q[1st sample)
+         s20_axis_tdata(47 downto 32) => dacI(1)(31 downto 16),  -- I[2nd sample)
+         s20_axis_tdata(63 downto 48) => dacQ(1)(31 downto 16),  -- Q[2nd sample)
          s20_axis_tvalid              => '1',
          s20_axis_tready              => open);
 
@@ -287,5 +292,31 @@ begin
 
    dspClk <= dspClock;
    dspRst <= dspReset;
+
+   REMAP_ADC :
+   for i in 3 downto 0 generate
+      -----------------------------------------
+      -- Reserve Order to match PCB silkscreen:
+      -----------------------------------------
+      -- ADC_A = CH[0] = ADC_VIN_I23_226
+      -- ADC_B = CH[1] = ADC_VIN_I01_226
+      -- ADC_C = CH[2] = ADC_VIN_I23_224
+      -- ADC_D = CH[3] = ADC_VIN_I01_224
+      -----------------------------------------
+      dspAdcI(i) <= adcI(3-i);
+      dspAdcQ(i) <= adcQ(3-i);
+   end generate REMAP_ADC;
+
+   REMAP_DAC :
+   for i in 1 downto 0 generate
+      -----------------------------------------
+      -- Reserve Order to match PCB silkscreen:
+      -----------------------------------------
+      -- DAC_A = CH[0] = DAC_VOUT0_230
+      -- DAC_B = CH[1] = DAC_VOUT0_228
+      -----------------------------------------
+      dacI(i) <= dspDacI(1-i);
+      dacQ(i) <= dspDacQ(1-i);
+   end generate REMAP_DAC;
 
 end mapping;

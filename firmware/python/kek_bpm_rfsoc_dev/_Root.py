@@ -25,6 +25,7 @@ import pyrogue.protocols.epicsV4
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import axi_soc_ultra_plus_core as soc_core
+import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
 
 rogue.Version.minVersion('6.0.0')
 
@@ -72,6 +73,11 @@ class Root(pr.Root):
 
         # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
         self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
+
+        # Add RfSoC4x2 PS hardware control
+        self.add(rfsoc_hw.Hardware(
+            memBase    = self.memMap,
+        ))
 
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
@@ -131,7 +137,7 @@ class Root(pr.Root):
         self.ReadAll()
 
         # Initialize the LMK/LMX Clock chips
-        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
+        self.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
 
         # Wait for DSP Clock to be stable after initializing LMK/LMX Clock chips
         while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
