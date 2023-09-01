@@ -1,0 +1,76 @@
+##############################################################################
+## This file is part of 'kek_bpm_rfsoc_dev'.
+## It is subject to the license terms in the LICENSE.txt file found in the
+## top-level directory of this distribution and at:
+##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+## No part of 'kek_bpm_rfsoc_dev', including this file,
+## may be copied, modified, propagated, or distributed except according to
+## the terms contained in the LICENSE.txt file.
+##############################################################################
+
+##############################
+# Get variables and procedures
+##############################
+source -quiet $::env(RUCKUS_DIR)/vivado_env_var.tcl
+source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
+
+######################################################
+# Bypass the debug chipscope generation via return cmd
+# ELSE ... comment out the return to include chipscope
+######################################################
+# return
+
+############################
+## Open the synthesis design
+############################
+open_run synth_1
+
+###############################
+## Set the name of the ILA core
+###############################
+set ilaName u_ila_0
+
+##################
+## Create the core
+##################
+CreateDebugCore ${ilaName}
+
+#######################
+## Set the record depth
+#######################
+set_property C_DATA_DEPTH 1024 [get_debug_cores ${ilaName}]
+
+#################################
+## Set the clock for the ILA core
+#################################
+SetDebugCoreClk ${ilaName} {U_App/dspClk}
+
+#######################
+## Set the debug Probes
+#######################
+
+ConfigProbe ${ilaName} {U_App/dspRst}
+ConfigProbe ${ilaName} {U_App/sigGenTrig}
+
+ConfigProbe ${ilaName} {U_App/adcI[0][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[0][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[1][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[1][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[2][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[2][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[3][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[3][*]}
+
+ConfigProbe ${ilaName} {U_App/dacI[0][*]}
+ConfigProbe ${ilaName} {U_App/dacQ[0][*]}
+
+ConfigProbe ${ilaName} {U_App/dacI[1][*]}
+ConfigProbe ${ilaName} {U_App/dacQ[1][*]}
+
+##########################
+## Write the port map file
+##########################
+WriteDebugProbes ${ilaName}
