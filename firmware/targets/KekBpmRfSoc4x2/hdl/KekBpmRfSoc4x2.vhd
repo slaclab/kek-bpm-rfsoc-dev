@@ -36,12 +36,12 @@ entity KekBpmRfSoc4x2 is
       -- RF DATA CONVERTER Ports
       adcClkP : in  slv(1 downto 0);
       adcClkN : in  slv(1 downto 0);
-      adcP    : in  slv(3 downto 0);
-      adcN    : in  slv(3 downto 0);
+      adcP    : in  slv(7 downto 0);
+      adcN    : in  slv(7 downto 0);
       dacClkP : in  slv(1 downto 0);
       dacClkN : in  slv(1 downto 0);
-      dacP    : out slv(1 downto 0);
-      dacN    : out slv(1 downto 0);
+      dacP    : out slv(2 downto 0);
+      dacN    : out slv(2 downto 0);
       sysRefP : in  sl;
       sysRefN : in  sl;
       -- SYSMON Ports
