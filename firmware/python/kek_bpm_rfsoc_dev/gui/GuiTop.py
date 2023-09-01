@@ -64,8 +64,12 @@ class GuiTop(Display):
         self.tab.addTab(var,'Debug Tree')
 
         # Time Live Display (Tab Index=2)
-        liveDisplay = guiUser.LiveDisplay(parent=None, init_channel=Channel)
-        self.tab.addTab(liveDisplay,'Waveforms')
+        liveDisplay = guiUser.LiveDisplay(parent=None, init_channel=Channel, dataType='Adc', numCh=4)
+        self.tab.addTab(liveDisplay,'Adc')
+
+        # Time Live Display (Tab Index=2)
+        liveDisplay = guiUser.LiveDisplay(parent=None, init_channel=Channel, dataType='Dac', numCh=2)
+        self.tab.addTab(liveDisplay,'Dac')
 
         # Freq Live Display (Tab Index=3)
         liveDisplay = guiUser.LiveDisplayFft(parent=None, init_channel=Channel)

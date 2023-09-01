@@ -45,10 +45,10 @@ class LiveDisplayFft(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        self.timePlot = [PyDMWaveformPlot() for i in range(2)]
-        for i in range(1):
+        self.timePlot = [PyDMWaveformPlot() for i in range(4)]
+        for i in range(4):
 
-            gb = QGroupBox( f'ADC[{i}]: {self.color[2]}=Magnitude' )
+            gb = QGroupBox( f'ADC[{i}] Magnitude FFT: {self.color[i]}=Magnitude' )
             vb.addWidget(gb)
 
             fl = QFormLayout()
@@ -57,28 +57,12 @@ class LiveDisplayFft(PyDMFrame):
             fl.setLabelAlignment(Qt.AlignRight)
             gb.setLayout(fl)
 
-            self.timePlot[i].addChannel(x_channel=f'{self.path}.Freq', y_channel=f'{self.path}.FftAdcMag[{i}]', name='dBFS', color=self.color[2])
+            self.timePlot[i].addChannel(x_channel=f'{self.path}.Freq', y_channel=f'{self.path}.FftAdcMag[{i}]', name='dBFS', color=self.color[i])
             self.timePlot[i].setLabel("bottom", text='Frequency (MHz)')
             self.timePlot[i].setAutoRangeY(False)
             self.timePlot[i].setMinYRange(-140.0)
             self.timePlot[1].setMaxYRange(0.0)
             fl.addWidget(self.timePlot[i])
-
-            gb = QGroupBox( f'DAC[{i}]: {self.color[2]}=Magnitude' )
-            vb.addWidget(gb)
-
-            fl = QFormLayout()
-            fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
-            fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-            fl.setLabelAlignment(Qt.AlignRight)
-            gb.setLayout(fl)
-
-            self.timePlot[i+1].addChannel(x_channel=f'{self.path}.Freq', y_channel=f'{self.path}.FFtDacMag[{i}]', name='dBFS', color=self.color[2])
-            self.timePlot[i+1].setLabel("bottom", text='Frequency (MHz)')
-            self.timePlot[i+1].setAutoRangeY(False)
-            self.timePlot[i+1].setMinYRange(-140.0)
-            self.timePlot[i+1].setMaxYRange(0.0)
-            fl.addWidget(self.timePlot[i+1])
 
         #-----------------------------------------------------------------------------
 

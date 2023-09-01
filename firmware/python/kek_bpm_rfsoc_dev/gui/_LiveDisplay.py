@@ -20,9 +20,11 @@ from pyrogue.pydm.widgets import PyRogueLineEdit
 import pyrogue as pr
 
 class LiveDisplay(PyDMFrame):
-    def __init__(self, parent=None, init_channel=None):
+    def __init__(self, parent=None, init_channel=None, dataType='Adc', numCh=4):
         PyDMFrame.__init__(self, parent, init_channel)
         self._node    = None
+        self.dataType = dataType
+        self.numCh    = numCh
         self.path     = f'{init_channel}.Waveform'
         self.color    = ["white","red","lime","teal","white","red"]
 
@@ -45,10 +47,10 @@ class LiveDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        self.timePlot = [PyDMWaveformPlot() for i in range(2)]
-        for i in range(1):
+        self.timePlot = [PyDMWaveformPlot() for i in range(self.numCh)]
+        for i in range(self.numCh):
 
-            gb = QGroupBox( f'ADC[{i}] I/Q Waveform: {self.color[0]}=I, {self.color[1]}=Q, {self.color[2]}=Magnitude' )
+            gb = QGroupBox( f'{self.dataType}[{i}] I/Q Waveform: {self.color[i]}=Magnitude' )
             vb.addWidget(gb)
 
             fl = QFormLayout()
@@ -57,26 +59,11 @@ class LiveDisplay(PyDMFrame):
             fl.setLabelAlignment(Qt.AlignRight)
             gb.setLayout(fl)
 
-            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.AdcI[{i}]',   name='Counts', color=self.color[0])
-            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.AdcQ[{i}]',   name='Counts', color=self.color[1])
-            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.AdcMag[{i}]', name='Counts', color=self.color[2])
+            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.{self.dataType}I[{i}]',   name='Counts', color=self.color[0])
+            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.{self.dataType}Q[{i}]',   name='Counts', color=self.color[1])
+            self.timePlot[i].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.{self.dataType}Mag[{i}]', name='Counts', color=self.color[2])
             self.timePlot[i].setLabel("bottom", text='Time (ns)')
             fl.addWidget(self.timePlot[i])
-
-            gb = QGroupBox( f'DAC[{i}] I/Q Waveform: {self.color[0]}=I, {self.color[1]}=Q, {self.color[2]}=Magnitude' )
-            vb.addWidget(gb)
-
-            fl = QFormLayout()
-            fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
-            fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-            fl.setLabelAlignment(Qt.AlignRight)
-            gb.setLayout(fl)
-
-            self.timePlot[i+1].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.DacI[{i}]',   name='Counts', color=self.color[0])
-            self.timePlot[i+1].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.DacQ[{i}]',   name='Counts', color=self.color[1])
-            self.timePlot[i+1].addChannel(x_channel=f'{self.path}.Time', y_channel=f'{self.path}.DacMag[{i}]', name='Counts', color=self.color[2])
-            self.timePlot[i+1].setLabel("bottom", text='Time (ns)')
-            fl.addWidget(self.timePlot[i+1])
 
         #-----------------------------------------------------------------------------
 

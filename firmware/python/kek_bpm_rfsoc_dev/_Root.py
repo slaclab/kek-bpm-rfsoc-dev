@@ -26,6 +26,7 @@ import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import axi_soc_ultra_plus_core as soc_core
 import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
+import surf.xilinx as xil
 
 rogue.Version.minVersion('6.0.0')
 
@@ -124,6 +125,7 @@ class Root(pr.Root):
 
         # Useful pointers
         dacSigGen = self.RFSoC.Application.DacSigGen
+        rfBlock   = self.find(typ=xil.RfBlock)
 
         # Issue a reset to the user logic
         self.RFSoC.AxiSocCore.AxiVersion.UserRst()
