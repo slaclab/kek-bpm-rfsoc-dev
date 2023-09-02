@@ -27,6 +27,9 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
+library unisim;
+use unisim.vcomponents.all;
+
 entity RfDataConverter is
    generic (
       TPD_G            : time             := 1 ns;
@@ -43,6 +46,10 @@ entity RfDataConverter is
       dacN            : out slv(2 downto 0);
       sysRefP         : in  sl;
       sysRefN         : in  sl;
+      plClkP          : in  sl;
+      plClkN          : in  sl;
+      plSysRefP       : in  sl;
+      plSysRefN       : in  sl;
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
@@ -204,7 +211,6 @@ begin
    U_IpCore : RfDataConverterIpCore
       port map (
          -- Clock Ports
-         clk_adc0                     => refClk,
          dac0_clk_p                   => dacClkP(0),
          dac0_clk_n                   => dacClkN(0),
          -- AXI-Lite Ports
@@ -355,17 +361,23 @@ begin
          s20_axis_tvalid              => '1',
          s20_axis_tready              => open);
 
+   U_IBUFDS : IBUFDS
+      port map(
+         I  => plClkP,
+         IB => plClkN,
+         O  => refClk);
+
    U_Pll : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G             => TPD_G,
          TYPE_G            => "PLL",
-         INPUT_BUFG_G      => false,
+         INPUT_BUFG_G      => true,
          FB_BUFG_G         => true,
          RST_IN_POLARITY_G => '1',
          NUM_CLOCKS_G      => 1,
          -- MMCM attributes
-         CLKIN_PERIOD_G    => 3.929,    -- 254.5 MHz
-         CLKFBOUT_MULT_G   => 4,        -- 1018 MHz = 4 x 254.5MHz
+         CLKIN_PERIOD_G    => 1.964,    -- 509 MHz
+         CLKFBOUT_MULT_G   => 2,        -- 1018 MHz = 2 x 509 MHz
          CLKOUT0_DIVIDE_G  => 4)        -- 254.5 MHz = 1018MHz/4
       port map(
          -- Clock Input
