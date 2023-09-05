@@ -16,22 +16,21 @@ $ git clone --recursive git@github.com:slaclab/kek-bpm-rfsoc-dev
 
 <!--- ######################################################## -->
 
-# ZCU111 and External Clock reference
+# Real Digital RFSoC 4x2 and External Clock reference
 
-A 509 MHz reference clock connected to ZCU111's "J109" connect is required.
+https://www.realdigital.org/hardware/rfsoc-4x2
+
+A 509 MHz reference clock connected to RFSoC4x2's "CLK_IN" connect is required.
 Tested using a 509 MHz sine wave generator.  
-Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
+Sine wave amplitude needed to be between 100 mV and 500 mV to get a LMK/LMX lock.
 
 <img src="docs/images/CLK_REF.png" width="200">
 
 <!--- ######################################################## -->
 
-# RF Balun Daughter card
+# Analog Loopback Cables
 
-Assumes you are using the Xilinx XM500 daughter card.
-Only RFMC_ADC_03_P/N and RFMC_DAC_05_P/N are implemented in firmware,
-which is a "1-4GHz Channels Anaren Balun [HF]" balun path.
-A loopback SMA cable between XM500.J1 and XM500.J8 is required.
+A loopback SMA cables between DAC_A and ADC_A and between DAC_B and ADC_B are required.
 
 <img src="docs/images/LOOPBACK.png" width="200">
 
@@ -48,7 +47,7 @@ $ source kek-bpm-rfsoc-dev/firmware/vivado_setup.sh
 2) Go to the target directory and make the firmware:
 
 ```bash
-$ cd kek-bpm-rfsoc-dev/firmware/targets/KekBpmRfsocDevZcu111/
+$ cd kek-bpm-rfsoc-dev/firmware/targets/KekBpmRfSoc4x2/
 $ make
 ```
 
@@ -58,15 +57,15 @@ $ make
 $ make gui
 ```
 
-The .bit and .XSA files are dumped into the KekBpmRfsocDevZcu111/image directory:
+The .bit and .XSA files are dumped into the KekBpmRfSoc4x2/image directory:
 
 ```bash
-$ ls -lath KekBpmRfsocDevZcu111/images/
+$ ls -lath KekBpmRfSoc4x2/images/
 total 47M
 drwxr-xr-x 5 ruckman re 2.0K Feb  7 07:13 ..
 drwxr-xr-x 2 ruckman re 2.0K Feb  4 21:15 .
--rw-r--r-- 1 ruckman re  14M Feb  4 21:15 KekBpmRfsocDevZcu111-0x01000000-20220204204648-ruckman-90df89c.xsa
--rw-r--r-- 1 ruckman re  33M Feb  4 21:14 KekBpmRfsocDevZcu111-0x01000000-20220204204648-ruckman-90df89c.bit
+-rw-r--r-- 1 ruckman re  14M Feb  4 21:15 KekBpmRfSoc4x2-0x01000000-20220204204648-ruckman-90df89c.xsa
+-rw-r--r-- 1 ruckman re  33M Feb  4 21:14 KekBpmRfSoc4x2-0x01000000-20220204204648-ruckman-90df89c.bit
 ```
 
 <!--- ######################################################## -->
@@ -86,8 +85,8 @@ $ source /path/to/petalinux/2022.2/settings.sh
 3) Go to the target directory and run the `CreatePetalinuxProject.sh` script with arg pointing to path of .XSA file:
 
 ```bash
-$ cd kek-bpm-rfsoc-dev/firmware/targets/KekBpmRfsocDevZcu111/
-$ source CreatePetalinuxProject.sh images/KekBpmRfsocDevZcu111-0x01000000-20220204204648-ruckman-90df89c.xsa
+$ cd kek-bpm-rfsoc-dev/firmware/targets/KekBpmRfSoc4x2/
+$ source CreatePetalinuxProject.sh images/KekBpmRfSoc4x2-0x01000000-20220204204648-ruckman-90df89c.xsa
 ```
 
 <!--- ######################################################## -->
@@ -106,10 +105,10 @@ Note: Assumes SD memory FAT32 is `/dev/sde1` in instructions below
 ```bash
 sudo mkdir -p boot
 sudo mount /dev/sde1 boot
-sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfsocDevZcu111/images/linux/system.bit boot/.
-sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfsocDevZcu111/images/linux/BOOT.BIN   boot/.
-sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfsocDevZcu111/images/linux/image.ub   boot/.
-sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfsocDevZcu111/images/linux/boot.scr   boot/.
+sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfSoc4x2/images/linux/system.bit boot/.
+sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfSoc4x2/images/linux/BOOT.BIN   boot/.
+sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfSoc4x2/images/linux/image.ub   boot/.
+sudo cp kek-bpm-rfsoc-dev/firmware/build/petalinux/KekBpmRfSoc4x2/images/linux/boot.scr   boot/.
 sudo sync boot/
 sudo umount boot
 ```
@@ -132,7 +131,7 @@ sudo umount boot
 
 ```bash
 ssh-keygen -f "$HOME/.ssh/known_hosts" -R "10.0.0.10" # https://jira.slac.stanford.edu/browse/ESRFOC-54
-scp KekBpmRfsocDevZcu111-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.10:/boot/system.bit
+scp KekBpmRfSoc4x2-0x01000000-20220204204648-ruckman-90df89c.bit root@10.0.0.10:/boot/system.bit
 ```
 
 2) Send a "sync" and "reboot" command to the RFSoC to load new firmware:  Here's an example:
