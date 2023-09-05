@@ -24,8 +24,8 @@ RoguePackages:
   # - ../software/scripts/devGui
 
 Targets:
-  KekBpmRfsocDevZcu111:
-    ImageDir: targets/KekBpmRfsocDevZcu111/images
+  KekBpmRfSoc4x2:
+    ImageDir: targets/KekBpmRfSoc4x2/images
     Extensions:
       - petalinux.tar.gz
       - ltx
@@ -34,6 +34,6 @@ Releases:
   all:
     Primary: True
     Targets:
-      - KekBpmRfsocDevZcu111
+      - KekBpmRfSoc4x2
     Types:
       - petalinux
