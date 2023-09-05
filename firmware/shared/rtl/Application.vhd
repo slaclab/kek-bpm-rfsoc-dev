@@ -40,10 +40,10 @@ entity Application is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspAdcI         : in  Slv32Array(NUM_ADC_CH_C-1 downto 0);
-      dspAdcQ         : in  Slv32Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspAdcI         : in  Slv32Array(3 downto 0);
+      dspAdcQ         : in  Slv32Array(3 downto 0);
+      dspDacI         : out Slv32Array(1 downto 0);
+      dspDacQ         : out Slv32Array(1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -69,10 +69,10 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adcI : Slv32Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal adcQ : Slv32Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal adcI : Slv32Array(3 downto 0) := (others => (others => '0'));
+   signal adcQ : Slv32Array(3 downto 0) := (others => (others => '0'));
+   signal dacI : Slv32Array(1 downto 0) := (others => (others => '0'));
+   signal dacQ : Slv32Array(1 downto 0) := (others => (others => '0'));
 
    signal sigGenTrig : sl;
 
@@ -118,7 +118,7 @@ begin
       generic map (
          TPD_G               => TPD_G,
          SYNTH_MODE_G        => "xpm",
-         DATA_BYTES_G        => 16,
+         DATA_BYTES_G        => 48,
          RAM_ADDR_WIDTH_G    => RAM_ADDR_WIDTH_C,
          -- AXI Stream Configurations
          AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
@@ -128,14 +128,30 @@ begin
          extTrig => sigGenTrig,
 
          -- Organize data for simpler software processing
-         dataValue(15 downto 0)    => adcI(0)(15 downto 0), -- 1st I sample
-         dataValue(31 downto 16)   => adcQ(0)(15 downto 0), -- 1st Q sample
-         dataValue(47 downto 32)   => dacI(0)(15 downto 0), -- 1st I sample
-         dataValue(63 downto 48)   => dacQ(0)(15 downto 0), -- 1st Q sample
-         dataValue(79 downto 64)   => adcI(0)(31 downto 16), -- 2nd I sample
-         dataValue(95 downto 80)   => adcQ(0)(31 downto 16), -- 2nd Q sample
-         dataValue(111 downto 96)  => dacI(0)(31 downto 16), -- 2nd I sample
-         dataValue(127 downto 112) => dacQ(0)(31 downto 16), -- 2nd Q sample
+         dataValue(0*16+15 downto 0*16+0)   => adcI(0)(15 downto 0),  -- 1st I sample
+         dataValue(1*16+15 downto 1*16+0)   => adcQ(0)(15 downto 0),  -- 1st Q sample
+         dataValue(2*16+15 downto 2*16+0)   => adcI(1)(15 downto 0),  -- 1st I sample
+         dataValue(3*16+15 downto 3*16+0)   => adcQ(1)(15 downto 0),  -- 1st Q sample
+         dataValue(4*16+15 downto 4*16+0)   => adcI(2)(15 downto 0),  -- 1st I sample
+         dataValue(5*16+15 downto 5*16+0)   => adcQ(2)(15 downto 0),  -- 1st Q sample
+         dataValue(6*16+15 downto 6*16+0)   => adcI(3)(15 downto 0),  -- 1st I sample
+         dataValue(7*16+15 downto 7*16+0)   => adcQ(3)(15 downto 0),  -- 1st Q sample
+         dataValue(8*16+15 downto 8*16+0)   => dacI(0)(15 downto 0),  -- 1st I sample
+         dataValue(9*16+15 downto 9*16+0)   => dacQ(0)(15 downto 0),  -- 1st Q sample
+         dataValue(10*16+15 downto 10*16+0) => dacI(1)(15 downto 0),  -- 1st I sample
+         dataValue(11*16+15 downto 11*16+0) => dacQ(1)(15 downto 0),  -- 1st Q sample
+         dataValue(12*16+15 downto 12*16+0) => adcI(0)(31 downto 16),  -- 2nd I sample
+         dataValue(13*16+15 downto 13*16+0) => adcQ(0)(31 downto 16),  -- 2nd Q sample
+         dataValue(14*16+15 downto 14*16+0) => adcI(1)(31 downto 16),  -- 2nd I sample
+         dataValue(15*16+15 downto 15*16+0) => adcQ(1)(31 downto 16),  -- 2nd Q sample
+         dataValue(16*16+15 downto 16*16+0) => adcI(2)(31 downto 16),  -- 2nd I sample
+         dataValue(17*16+15 downto 17*16+0) => adcQ(2)(31 downto 16),  -- 2nd Q sample
+         dataValue(18*16+15 downto 18*16+0) => adcI(3)(31 downto 16),  -- 2nd I sample
+         dataValue(19*16+15 downto 19*16+0) => adcQ(3)(31 downto 16),  -- 2nd Q sample
+         dataValue(20*16+15 downto 20*16+0) => dacI(0)(31 downto 16),  -- 2nd I sample
+         dataValue(21*16+15 downto 21*16+0) => dacQ(0)(31 downto 16),  -- 2nd Q sample
+         dataValue(22*16+15 downto 22*16+0) => dacI(1)(31 downto 16),  -- 2nd I sample
+         dataValue(23*16+15 downto 23*16+0) => dacQ(1)(31 downto 16),  -- 2nd Q sample
 
          -- AXI-Lite interface (axilClk domain)
          axilClk         => axilClk,
@@ -153,7 +169,7 @@ begin
    U_DacSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
-         NUM_CH_G           => (2*NUM_DAC_CH_C), -- I/Q pairs
+         NUM_CH_G           => (2*2),   --  2 x I/Q pairs
          RAM_ADDR_WIDTH_G   => RAM_ADDR_WIDTH_C,
          SAMPLE_PER_CYCLE_G => SAMPLE_PER_CYCLE_C,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
@@ -163,6 +179,8 @@ begin
          dspRst          => dspRst,
          dspDacOut0      => dacI(0),
          dspDacOut1      => dacQ(0),
+         dspDacOut2      => dacI(1),
+         dspDacOut3      => dacQ(1),
          extTrigIn       => sigGenTrig,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,

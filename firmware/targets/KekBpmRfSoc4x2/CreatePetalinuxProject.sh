@@ -3,7 +3,7 @@
 
 # Define the hardware type
 # Note: Must match the axi-soc-ultra-plus-core/hardware directory name
-hwType=XilinxZcu111
+hwType=RealDigitalRfSoC4x2
 
 # Define number of DMA lanes
 numLane=2

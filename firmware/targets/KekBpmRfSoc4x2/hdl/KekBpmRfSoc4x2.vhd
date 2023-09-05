@@ -26,31 +26,34 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfsocDevZcu111 is
+entity KekBpmRfSoc4x2 is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
    port (
-      -- LMK/LMX Ports
-      i2cScl  : inout slv(1 downto 0);
-      i2cSda  : inout slv(1 downto 0);
+      -- System Ports
+      userLed   : out slv(3 downto 0);
       -- RF DATA CONVERTER Ports
-      adcClkP : in    slv(3 downto 0);
-      adcClkN : in    slv(3 downto 0);
-      adcP    : in    slv(7 downto 0);
-      adcN    : in    slv(7 downto 0);
-      dacClkP : in    slv(1 downto 0);
-      dacClkN : in    slv(1 downto 0);
-      dacP    : out   slv(7 downto 0);
-      dacN    : out   slv(7 downto 0);
-      sysRefP : in    sl;
-      sysRefN : in    sl;
+      adcClkP   : in  slv(1 downto 0);
+      adcClkN   : in  slv(1 downto 0);
+      adcP      : in  slv(7 downto 0);
+      adcN      : in  slv(7 downto 0);
+      dacClkP   : in  slv(1 downto 0);
+      dacClkN   : in  slv(1 downto 0);
+      dacP      : out slv(2 downto 0);
+      dacN      : out slv(2 downto 0);
+      sysRefP   : in  sl;
+      sysRefN   : in  sl;
+      plClkP    : in  sl;
+      plClkN    : in  sl;
+      plSysRefP : in  sl;
+      plSysRefN : in  sl;
       -- SYSMON Ports
-      vPIn    : in    sl;
-      vNIn    : in    sl);
-end KekBpmRfsocDevZcu111;
+      vPIn      : in  sl;
+      vNIn      : in  sl);
+end KekBpmRfSoc4x2;
 
-architecture top_level of KekBpmRfsocDevZcu111 is
+architecture top_level of KekBpmRfSoc4x2 is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
@@ -82,12 +85,17 @@ architecture top_level of KekBpmRfsocDevZcu111 is
 
    signal dspClk  : sl;
    signal dspRst  : sl;
-   signal dspAdcI : Slv32Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspAdcQ : Slv32Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspDacI : Slv32Array(NUM_DAC_CH_C-1 downto 0);
-   signal dspDacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspAdcI : Slv32Array(3 downto 0);
+   signal dspAdcQ : Slv32Array(3 downto 0);
+   signal dspDacI : Slv32Array(1 downto 0);
+   signal dspDacQ : Slv32Array(1 downto 0);
 
 begin
+
+   userLed(0) <= not(axilRst);
+   userLed(1) <= not(dmaRst);
+   userLed(2) <= not(dspRst);
+   userLed(3) <= '1';
 
    ------------------------------
    -- User's AXI-Lite Clock/Reset
@@ -169,32 +177,6 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   -----------
-   -- Hardware
-   -----------
-   U_Hardware : entity axi_soc_ultra_plus_core.Hardware
-      generic map (
-         TPD_G            => TPD_G,
-         AXIL_CLK_FREQ_G  => AXIL_CLK_FREQ_C,
-         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(HW_INDEX_C).baseAddr)
-      port map (
-         --------------------------
-         --       Ports
-         --------------------------
-         -- LMK Ports
-         i2cScl          => i2cScl,
-         i2cSda          => i2cSda,
-         --------------------------
-         --       Interfaces
-         --------------------------
-         -- Slave AXI-Lite Interface
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilWriteMaster => axilWriteMasters(HW_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(HW_INDEX_C),
-         axilReadMaster  => axilReadMasters(HW_INDEX_C),
-         axilReadSlave   => axilReadSlaves(HW_INDEX_C));
-
    --------------------
    -- RF DATA CONVERTER
    --------------------
@@ -214,6 +196,10 @@ begin
          dacN            => dacN,
          sysRefP         => sysRefP,
          sysRefN         => sysRefN,
+         plClkP          => plClkP,
+         plClkN          => plClkN,
+         plSysRefP       => plSysRefP,
+         plSysRefN       => plSysRefN,
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,

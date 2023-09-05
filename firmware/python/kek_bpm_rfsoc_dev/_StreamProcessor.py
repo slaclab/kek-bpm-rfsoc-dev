@@ -59,7 +59,7 @@ class StreamProcessor(pr.DataReceiver):
             hidden      = True,
         ))
 
-        for i in range(1):
+        for i in range(4):
 
             self.add(pr.LocalVariable(
                 name        = f'AdcI[{i}]',
@@ -78,6 +78,24 @@ class StreamProcessor(pr.DataReceiver):
             ))
 
             self.add(pr.LocalVariable(
+                name        = f'AdcMag[{i}]',
+                typeStr     = 'Int16[np]',
+                disp        = '',
+                value       = np.zeros(shape=self._maxSize, dtype=np.int16, order='C'),
+                hidden      = True,
+            ))
+
+            self.add(pr.LocalVariable(
+                name        = f'FftAdcMag[{i}]',
+                description = 'Magnitude Frame Container',
+                typeStr     = 'Float[np]',
+                value       = np.zeros(shape=(self._maxSize>>1), dtype=np.float32, order='C'),
+                hidden      = True,
+            ))
+
+        for i in range(2):
+
+            self.add(pr.LocalVariable(
                 name        = f'DacI[{i}]',
                 typeStr     = 'Int16[np]',
                 disp        = '',
@@ -94,26 +112,10 @@ class StreamProcessor(pr.DataReceiver):
             ))
 
             self.add(pr.LocalVariable(
-                name        = f'AdcMag[{i}]',
-                typeStr     = 'Int16[np]',
-                disp        = '',
-                value       = np.zeros(shape=self._maxSize, dtype=np.int16, order='C'),
-                hidden      = True,
-            ))
-
-            self.add(pr.LocalVariable(
                 name        = f'DacMag[{i}]',
                 typeStr     = 'Int16[np]',
                 disp        = '',
                 value       = np.zeros(shape=self._maxSize, dtype=np.int16, order='C'),
-                hidden      = True,
-            ))
-
-            self.add(pr.LocalVariable(
-                name        = f'FftAdcMag[{i}]',
-                description = 'Magnitude Frame Container',
-                typeStr     = 'Float[np]',
-                value       = np.zeros(shape=(self._maxSize>>1), dtype=np.float32, order='C'),
                 hidden      = True,
             ))
 
@@ -134,41 +136,42 @@ class StreamProcessor(pr.DataReceiver):
             data = self.Data.value()[:].view(np.int16)
 
             # Double check the length
-            if len(data) != (4*self._maxSize):
-                print(f"Invalid frame size. Got {len(data)}, Exp {4*self._maxSize}")
+            if len(data) != (12*self._maxSize):
+                print(f"Invalid frame size. Got {len(data)}, Exp {12*self._maxSize}")
 
-            # Update the I/Q variables
-            for x in range(1):
+            # Prevent warning message when for divide by zero encountered in log10
+            # Checking for inf later to fix this in the display
+            np.seterr(divide = 'ignore')
 
-                with self.AdcI[x].lock, self.AdcQ[x].lock, self.DacI[x].lock, self.DacQ[x].lock:
-
+            # Update the ADC I/Q variables
+            for x in range(4):
+                with self.AdcI[x].lock, self.AdcQ[x].lock:
                     # Lst[ Initial : End : IndexJump ]
-                    self.AdcI[x].value()[:] = data[0::4]
-                    self.AdcQ[x].value()[:] = data[1::4]
-                    self.DacI[x].value()[:] = data[2::4]
-                    self.DacQ[x].value()[:] = data[3::4]
-
+                    self.AdcI[x].value()[:] = data[2*x+0::12]
+                    self.AdcQ[x].value()[:] = data[2*x+1::12]
                 self.writeAndVerifyBlocks(force=True, variable=self.AdcI[x])
                 self.writeAndVerifyBlocks(force=True, variable=self.AdcQ[x])
-                self.writeAndVerifyBlocks(force=True, variable=self.DacI[x])
-                self.writeAndVerifyBlocks(force=True, variable=self.DacQ[x])
 
                 magAdc = np.abs(np.vectorize(complex)(self.AdcI[x].value(), self.AdcQ[x].value()))
-                magDac = np.abs(np.vectorize(complex)(self.DacI[x].value(), self.DacQ[x].value()))
-
                 self.AdcMag[x].set(magAdc,write=True)
-                self.DacMag[x].set(magDac,write=True)
-
-                # Prevent warning message when for divide by zero encountered in log10
-                # Checking for inf later to fix this in the display
-                np.seterr(divide = 'ignore')
 
                 # Calculate the FFT
-                freq = np.fft.fft(self.AdcI[x].value())/float(len(magAdc))
-                # freq = np.fft.fft(magAdc)/float(len(magAdc))
+                freq = np.fft.fft(magAdc)/float(len(magAdc))
                 freq = freq[range(len(magAdc)//2)]
                 mag = 20.0*np.log10(np.abs(freq)/32767.0) # Units of dBFS
                 self.FftAdcMag[x].set(mag,write=True)
+
+            # Update the DAC I/Q variables
+            for x in range(2):
+                with self.DacI[x].lock, self.DacQ[x].lock:
+                    # Lst[ Initial : End : IndexJump ]
+                    self.DacI[x].value()[:] = data[2*x+8::12]
+                    self.DacQ[x].value()[:] = data[2*x+9::12]
+                self.writeAndVerifyBlocks(force=True, variable=self.DacI[x])
+                self.writeAndVerifyBlocks(force=True, variable=self.DacQ[x])
+
+                magDac = np.abs(np.vectorize(complex)(self.DacI[x].value(), self.DacQ[x].value()))
+                self.DacMag[x].set(magDac,write=True)
 
                 # Calculate the FFT
                 freq = np.fft.fft(magDac)/float(len(magDac))

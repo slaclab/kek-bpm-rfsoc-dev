@@ -51,10 +51,24 @@ SetDebugCoreClk ${ilaName} {U_App/dspClk}
 
 ConfigProbe ${ilaName} {U_App/dspRst}
 ConfigProbe ${ilaName} {U_App/sigGenTrig}
+
 ConfigProbe ${ilaName} {U_App/adcI[0][*]}
 ConfigProbe ${ilaName} {U_App/adcQ[0][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[1][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[1][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[2][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[2][*]}
+
+ConfigProbe ${ilaName} {U_App/adcI[3][*]}
+ConfigProbe ${ilaName} {U_App/adcQ[3][*]}
+
 ConfigProbe ${ilaName} {U_App/dacI[0][*]}
 ConfigProbe ${ilaName} {U_App/dacQ[0][*]}
+
+ConfigProbe ${ilaName} {U_App/dacI[1][*]}
+ConfigProbe ${ilaName} {U_App/dacQ[1][*]}
 
 ##########################
 ## Write the port map file
