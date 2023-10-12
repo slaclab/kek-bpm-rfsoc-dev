@@ -32,33 +32,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ip",
         type     = str,
-        required = False,
-        default  = '10.0.0.10',
+        required = True,
         help     = "ETH Host Name (or IP address)",
     )
 
     parser.add_argument(
-        "--pollEn",
-        type     = argBool,
-        required = False,
-        default  = True,
-        help     = "Enable auto-polling",
-    )
-
-    parser.add_argument(
-        "--initRead",
-        type     = argBool,
-        required = False,
-        default  = True,
-        help     = "Enable read all variables at start",
-    )
-
-    parser.add_argument(
-        "--defaultFile",
+        "--boardType",
         type     = str,
-        required = False,
-        default  = 'config/defaults.yml',
-        help     = "Sets the default YAML configuration file to be loaded at the root.start()",
+        required = True,
+        help     = "Board Type: only zcu111 and rfsoc4x2 are support",
     )
 
     # Get the arguments
@@ -70,10 +52,8 @@ if __name__ == "__main__":
     #################################################################
 
     with kek_bpm_rfsoc_dev.Root(
-        ip          = args.ip,
-        pollEn      = args.pollEn,
-        initRead    = args.initRead,
-        defaultFile = args.defaultFile,
+        ip        = args.ip,
+        boardType = args.boardType,
     ) as root:
         axi_soc_ultra_plus_core.rfsoc_utility.pydm.runPyDM(
             serverList = root.zmqServer.address,

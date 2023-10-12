@@ -63,16 +63,24 @@ class GuiTop(Display):
         var = DebugTree(parent=None, init_channel=Channel)
         self.tab.addTab(var,'Debug Tree')
 
-        # Time Live Display (Tab Index=2)
-        liveDisplay = guiUser.LiveDisplay(parent=None, init_channel=Channel)
-        self.tab.addTab(liveDisplay,'Waveforms')
+        # ADC Live Display (Tab Index=2)
+        adcDisplay = guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4)
+        self.tab.addTab(adcDisplay,'ADC Live')
 
-        # Freq Live Display (Tab Index=3)
-        liveDisplay = guiUser.LiveDisplayFft(parent=None, init_channel=Channel)
-        self.tab.addTab(liveDisplay,'Frequency')
+        # AMP Live Display (Tab Index=3)
+        dacDisplay = guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp', numCh=4)
+        self.tab.addTab(dacDisplay,'AMP Live')
+
+        # ADC Fault Display (Tab Index=4)
+        adcDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AdcFault', numCh=4)
+        self.tab.addTab(adcDisplay,'ADC Fault')
+
+        # AMP Fault Display (Tab Index=5)
+        dacDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AmpFault', numCh=4)
+        self.tab.addTab(dacDisplay,'AMP Fault')
 
         # Set the default Tab view
-        self.tab.setCurrentIndex(2)
+        self.tab.setCurrentIndex(1)
 
         # Resize the window
         self.resize(self.sizeX, self.sizeY)

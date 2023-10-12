@@ -76,8 +76,9 @@ begin
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Map the read registers
-      axiSlaveRegister (axilEp, x"0", 0, v.sigGenTrig);
-      axiSlaveRegister (axilEp, x"4", 0, v.ncoConfig);  -- 48-bits, address: [0x4:0x6]
+      axiSlaveRegister (axilEp, x"00", 0, v.sigGenTrig(0)); -- Live Display
+      axiSlaveRegister (axilEp, x"04", 0, v.sigGenTrig(1)); -- Fault Buffering
+      axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 48-bits, address: [0x8:0xF]
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);

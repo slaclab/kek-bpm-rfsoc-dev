@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------------
 
 import time
+import click
 
 import rogue
 import rogue.interfaces.stream as stream
@@ -25,18 +26,19 @@ import pyrogue.protocols.epicsV4
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import axi_soc_ultra_plus_core as soc_core
+import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
 
-rogue.Version.minVersion('6.0.0')
+rogue.Version.minVersion('6.1.1')
 
 class Root(pr.Root):
     def __init__(self,
-            ip          = '10.0.0.10', # ETH Host Name (or IP address)
+            ip          = '', # ETH Host Name (or IP address)
+            boardType   = '', # zcu111 or rfsoc4x2
             top_level   = '',
-            defaultFile = 'config/defaults.yml',
-            lmkConfig   = 'config/lmk/HexRegisterValues.txt',
-            lmxConfig   = 'config/lmx/HexRegisterValues.txt',
+            defaultFile = 'defaults.yml',
+            lmkConfig   = 'lmk/HexRegisterValues.txt',
+            lmxConfig   = 'lmx/HexRegisterValues.txt',
             zmqSrvEn    = True,  # Flag to include the ZMQ server
-            rateDropEn  = True,  # Flag to include the rate dropper for live display
             **kwargs):
 
         # Pass custom value to parent via super function
@@ -49,15 +51,16 @@ class Root(pr.Root):
         #################################################################
 
         # Local Variables
-        self.top_level   = top_level
+        self.top_level = top_level
+        self.boardType = boardType
         if self.top_level != '':
-            self.defaultFile = f'{top_level}/{defaultFile}'
-            self.lmkConfig   = f'{top_level}/{lmkConfig}'
-            self.lmxConfig   = f'{top_level}/{lmxConfig}'
+            self.defaultFile = f'{top_level}/config/{defaultFile}'
+            self.lmkConfig   = f'{top_level}/config/{boardType}/{lmkConfig}'
+            self.lmxConfig   = f'{top_level}/config/{boardType}/{lmxConfig}'
         else:
-            self.defaultFile = defaultFile
-            self.lmkConfig   = lmkConfig
-            self.lmxConfig   = lmxConfig
+            self.defaultFile = f'config/{defaultFile}'
+            self.lmkConfig   = f'config/{boardType}/{lmkConfig}'
+            self.lmxConfig   = f'config/{boardType}/{lmxConfig}'
 
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
@@ -73,11 +76,18 @@ class Root(pr.Root):
         # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
         self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
 
+        if (self.boardType == 'rfsoc4x2'):
+            # Add RfSoC4x2 PS hardware control
+            self.add(rfsoc_hw.Hardware(
+                memBase    = self.memMap,
+            ))
+
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
-            memBase    = self.memMap,
-            offset     = 0x04_0000_0000, # Full 40-bit address space
-            expand     = True,
+            memBase   = self.memMap,
+            boardType = self.boardType,
+            offset    = 0x04_0000_0000, # Full 40-bit address space
+            expand    = True,
         ))
 
         ##################################################################################
@@ -85,20 +95,40 @@ class Root(pr.Root):
         ##################################################################################
 
         # Create rogue stream objects
-        if ip != None:
-            self.ringBuffer = stream.TcpClient(ip,10000)
-        else:
-            self.ringBuffer = rogue.hardware.axi.AxiStreamDma('/dev/axi_stream_dma_0', 0, True)
-        self.waveform = rfsoc.StreamProcessor(name='Waveform')
-        self.add(self.waveform)
+        self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
+        self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
 
-        # Connect the rogue stream to guiDisplay
-        self.ringBuffer >> self.dataWriter.getChannel(0)
-        if rateDropEn:
-            self.rateDrop = stream.RateDrop(True,1.0)
-            self.ringBuffer >> self.rateDrop >> self.waveform
-        else:
-            self.ringBuffer >> self.waveform
+        self.adcFaultBuff = [stream.TcpClient(ip,10000+2*(i+8))  for i in range(4)]
+        self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+12)) for i in range(4)]
+
+        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+        self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+
+        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+
+        # Connect the rogue stream arrays
+        for i in range(4):
+
+            # ADC Live Display Path
+            self.adcDispBuff[i] >> self.dataWriter.getChannel(i+0)
+            self.adcDispBuff[i] >> self.adcDispProc[i]
+            self.add(self.adcDispProc[i])
+
+            # AMP Live Display Path
+            self.ampDispBuff[i] >> self.dataWriter.getChannel(i+4)
+            self.ampDispBuff[i] >> self.ampDispProc[i]
+            self.add(self.ampDispProc[i])
+
+            # ADC Fault Display Path
+            self.adcFaultBuff[i] >> self.dataWriter.getChannel(i+8)
+            self.adcFaultBuff[i] >> self.adcFaultProc[i]
+            self.add(self.adcFaultProc[i])
+
+            # AMP Fault Display Path
+            self.ampFaultBuff[i] >> self.dataWriter.getChannel(i+12)
+            self.ampFaultBuff[i] >> self.ampFaultProc[i]
+            self.add(self.ampFaultProc[i])
 
         ##################################################################################
 
@@ -116,14 +146,22 @@ class Root(pr.Root):
     def start(self,**kwargs):
         super(Root, self).start(**kwargs)
 
-        # Useful pointers
-        dacSigGen = self.RFSoC.Application.DacSigGen
-
         # Issue a reset to the user logic
         self.RFSoC.AxiSocCore.AxiVersion.UserRst()
 
         # Update all SW remote registers
         self.ReadAll()
+
+        # Check the board type
+        hwType = self.RFSoC.AxiSocCore.AxiVersion.HW_TYPE_C.getDisp()
+        if (self.boardType == 'zcu111') and (hwType == 'XilinxZcu111'):
+            hardware = self.RFSoC.Hardware
+        elif (self.boardType == 'rfsoc4x2') and (hwType == 'RealDigitalRfSoC4x2'):
+            hardware = self.Hardware
+        else:
+            errMsg = f'boardType = {self.boardType} != zcu111 or rfsoc4x2'
+            click.secho(errMsg, bg='red')
+            raise ValueError(errMsg)
 
         # Load the Default YAML file
         print(f'Loading path={self.defaultFile} Default Configuration File...')
@@ -131,7 +169,7 @@ class Root(pr.Root):
         self.ReadAll()
 
         # Initialize the LMK/LMX Clock chips
-        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
+        hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
 
         # Wait for DSP Clock to be stable after initializing LMK/LMX Clock chips
         while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
@@ -145,7 +183,7 @@ class Root(pr.Root):
             time.sleep(0.01)
 
         # Load the waveform data into DacSigGen
-        self.RFSoC.Application.DacSigGenLoader.LoadRectFunction()
+        self.RFSoC.Application.DacSigGenLoader.LoadPulseModFunction()
 
         # Update all SW remote registers
         self.CountReset()
