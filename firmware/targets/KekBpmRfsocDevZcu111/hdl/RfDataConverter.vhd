@@ -46,9 +46,9 @@ entity RfDataConverter is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
-      dspAdc          : out Slv128Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : in  Slv16Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv16Array(NUM_DAC_CH_C-1 downto 0);
+      dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -139,12 +139,11 @@ architecture mapping of RfDataConverter is
    signal dspReset  : sl := '1';
    signal dspResetL : sl := '0';
 
-   signal dacClock  : sl := '0';
-   signal dacReset  : sl := '1';
-   signal dacResetL : sl := '0';
+   signal adcClock  : sl := '0';
+   signal adcReset  : sl := '1';
+   signal adcResetL : sl := '0';
 
-   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0);
-   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+   signal adc : Slv128Array(NUM_ADC_CH_C-1 downto 0);
 
 begin
 
@@ -199,37 +198,37 @@ begin
          vout11_p      => dacP(5),
          vout11_n      => dacN(5),
 
-         -- ADC[3:0] AXI Stream Interface     
-         m0_axis_aresetn => dspResetL,
-         m0_axis_aclk    => dspClock,
-         m00_axis_tdata  => dspAdc(0),
+         -- ADC[3:0] AXI Stream Interface
+         m0_axis_aresetn => adcResetL,
+         m0_axis_aclk    => adcClock,
+         m00_axis_tdata  => adc(0),
          m00_axis_tvalid => open,
          m00_axis_tready => '1',
-         m02_axis_tdata  => dspAdc(1),
+         m02_axis_tdata  => adc(1),
          m02_axis_tvalid => open,
          m02_axis_tready => '1',
-         m1_axis_aresetn => dspResetL,
-         m1_axis_aclk    => dspClock,
-         m10_axis_tdata  => dspAdc(2),
+         m1_axis_aresetn => adcResetL,
+         m1_axis_aclk    => adcClock,
+         m10_axis_tdata  => adc(2),
          m10_axis_tvalid => open,
          m10_axis_tready => '1',
-         m12_axis_tdata  => dspAdc(3),
+         m12_axis_tdata  => adc(3),
          m12_axis_tvalid => open,
          m12_axis_tready => '1',
 
          -- DAC[5:4] AXI Stream Interface
-         s1_axis_aresetn              => dacResetL,
-         s1_axis_aclk                 => dacClock,
-         s10_axis_tdata(15 downto 0)  => dacI(0)(15 downto 0),  -- I[1st sample)
-         s10_axis_tdata(31 downto 16) => dacQ(0)(15 downto 0),  -- Q[1st sample)
-         s10_axis_tdata(47 downto 32) => dacI(0)(31 downto 16),  -- I[2nd sample)
-         s10_axis_tdata(63 downto 48) => dacQ(0)(31 downto 16),  -- Q[2nd sample)
+         s1_axis_aresetn              => dspResetL,
+         s1_axis_aclk                 => dspClock,
+         s10_axis_tdata(15 downto 0)  => dspDacI(0)(15 downto 0),  -- I[1st sample)
+         s10_axis_tdata(31 downto 16) => dspDacQ(0)(15 downto 0),  -- Q[1st sample)
+         s10_axis_tdata(47 downto 32) => dspDacI(0)(31 downto 16),  -- I[2nd sample)
+         s10_axis_tdata(63 downto 48) => dspDacQ(0)(31 downto 16),  -- Q[2nd sample)
          s10_axis_tvalid              => '1',
          s10_axis_tready              => open,
-         s11_axis_tdata(15 downto 0)  => dacI(1)(15 downto 0),  -- I[1st sample)
-         s11_axis_tdata(31 downto 16) => dacQ(1)(15 downto 0),  -- Q[1st sample)
-         s11_axis_tdata(47 downto 32) => dacI(1)(31 downto 16),  -- I[2nd sample)
-         s11_axis_tdata(63 downto 48) => dacQ(1)(31 downto 16),  -- Q[2nd sample)
+         s11_axis_tdata(15 downto 0)  => dspDacI(1)(15 downto 0),  -- I[1st sample)
+         s11_axis_tdata(31 downto 16) => dspDacQ(1)(15 downto 0),  -- Q[1st sample)
+         s11_axis_tdata(47 downto 32) => dspDacI(1)(31 downto 16),  -- I[2nd sample)
+         s11_axis_tdata(63 downto 48) => dspDacQ(1)(31 downto 16),  -- Q[2nd sample)
          s11_axis_tvalid              => '1',
          s11_axis_tready              => open);
 
@@ -244,56 +243,48 @@ begin
          -- MMCM attributes
          CLKIN_PERIOD_G    => 3.929,    -- 254.5 MHz
          CLKFBOUT_MULT_G   => 4,        -- 1018 MHz = 4 x 254.5MHz
-         CLKOUT0_DIVIDE_G  => 4,        -- 254.5 MHz = 1018MHz/4
-         CLKOUT1_DIVIDE_G  => 2)        -- 509 MHz = 1018MHz/2
+         CLKOUT0_DIVIDE_G  => 2,        -- 509 MHz = 1018MHz/2
+         CLKOUT1_DIVIDE_G  => 4)        -- 254.5 MHz = 1018MHz/4
       port map(
          -- Clock Input
          clkIn     => refClk,
          rstIn     => axilRst,
          -- Clock Outputs
-         clkOut(0) => dacClock,
+         clkOut(0) => adcClock,
          clkOut(1) => dspClock,
          -- Reset Outputs
-         rstOut(0) => dacReset,
+         rstOut(0) => adcReset,
          rstOut(1) => dspReset);
 
    axilRstL  <= not(axilRst);
-   dacResetL <= not(dacReset);
+   adcResetL <= not(adcReset);
    dspResetL <= not(dspReset);
 
    dspClk <= dspClock;
    dspRst <= dspReset;
 
    GEN_VEC :
-   for i in 1 downto 0 generate
+   for i in NUM_ADC_CH_C-1 downto 0 generate
       U_Gearbox : entity surf.AsyncGearbox
          generic map (
             TPD_G              => TPD_G,
-            SLAVE_WIDTH_G      => 32,
-            MASTER_WIDTH_G     => 64,
+            SLAVE_WIDTH_G      => 128,
+            MASTER_WIDTH_G     => 256,
             EN_EXT_CTRL_G      => false,
             -- Async FIFO generics
             FIFO_MEMORY_TYPE_G => "block",
             FIFO_ADDR_WIDTH_G  => 8)
          port map (
             -- Slave Interface
-            slaveClk => dspClock,
-            slaveRst => dspReset,
-
-            slaveData(15 downto 0)  => dspDacI(i),  -- I
-            slaveData(31 downto 16) => dspDacQ(i),  -- Q
-
+            slaveClk   => adcClock,
+            slaveRst   => adcReset,
+            slaveData  => adc(i),
             slaveValid => '1',
             slaveReady => open,
             -- Master Interface
-            masterClk  => dacClock,
-            masterRst  => dacReset,
-
-            masterData(15 downto 0)  => dacI(i)(15 downto 0),  -- I[1st sample)
-            masterData(31 downto 16) => dacQ(i)(15 downto 0),  -- Q[1st sample)
-            masterData(47 downto 32) => dacI(i)(31 downto 16),  -- I[2nd sample)
-            masterData(63 downto 48) => dacQ(i)(31 downto 16),  -- Q[2nd sample)            
-
+            masterClk   => dspClock,
+            masterRst   => dspReset,
+            masterData  => dspAdc(i),
             masterValid => open,
             masterReady => '1');
    end generate GEN_VEC;

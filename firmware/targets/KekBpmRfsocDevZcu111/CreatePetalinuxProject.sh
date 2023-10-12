@@ -6,13 +6,13 @@
 hwType=XilinxZcu111
 
 # Define number of DMA lanes
-numLane=2
+numLane=1
 
 # Define number of DEST per DMA lane
-numDest=32
+numDest=16
 
 # Define number of DMA TX/RX Buffers
-rxBuffCnt=256
+rxBuffCnt=1024
 txBuffCnt=16
 
 # Define DMA Buffer Size

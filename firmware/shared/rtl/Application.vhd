@@ -40,9 +40,9 @@ entity Application is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspAdc          : in  Slv128Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : out Slv16Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv16Array(NUM_DAC_CH_C-1 downto 0);
+      dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspDacI         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -66,10 +66,10 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc  : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal amp  : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacI : Slv16Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
-   signal dacQ : Slv16Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal adc  : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal amp  : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
 
    signal sigGenTrig : slv(1 downto 0);
    signal ncoConfig  : slv(47 downto 0);
@@ -117,9 +117,9 @@ begin
    U_DacSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
-         NUM_CH_G           => (4*NUM_DAC_CH_C),  -- I/Q pairs
+         NUM_CH_G           => (2*NUM_DAC_CH_C),  -- I/Q pairs
          RAM_ADDR_WIDTH_G   => 9,
-         SAMPLE_PER_CYCLE_G => 1,
+         SAMPLE_PER_CYCLE_G => 2,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
@@ -195,8 +195,8 @@ begin
                14              => x"FF",
                15              => x"FF"),
             NUM_CH_G           => 8,
-            SAMPLE_PER_CYCLE_G => 8,
-            RAM_ADDR_WIDTH_G   => 12,
+            SAMPLE_PER_CYCLE_G => 16,
+            RAM_ADDR_WIDTH_G   => 9,
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
             -- AXI-Stream Interface (axisClk domain)
