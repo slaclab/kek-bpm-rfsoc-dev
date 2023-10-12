@@ -29,7 +29,7 @@ class SigGenLoader(pr.Device):
             # Generate the waveform
             for i in range(self.length):
                 I[i] = 0 if (i%2==1) else 30000
-                Q[i] = 0
+                Q[i] = 0 if (i%2==1) else 30000
 
             # Write the waveforms to hardware
             for x in range(self.DacSigGen.numCh//2):
