@@ -40,10 +40,9 @@ entity Application is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspAdcI         : in  Slv32Array(NUM_ADC_CH_C-1 downto 0);
-      dspAdcQ         : in  Slv32Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspAdc          : in  Slv128Array(NUM_ADC_CH_C-1 downto 0);
+      dspDacI         : out Slv16Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out Slv16Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -55,12 +54,10 @@ end Application;
 
 architecture mapping of Application is
 
-   constant RAM_ADDR_WIDTH_C : positive := 9;
-
-   constant RING_INDEX_C       : natural := 0;
+   constant SW_TRIG_INDEX_C    : natural := 0;
    constant DAC_SIG_INDEX_C    : natural := 1;
-   constant SW_TRIG_INDEX_C    : natural := 2;
-   constant NUM_AXIL_MASTERS_C : natural := 3;
+   constant RING_INDEX_C       : natural := 2;  -- 2:3
+   constant NUM_AXIL_MASTERS_C : natural := 4;
 
    constant AXIL_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, AXIL_BASE_ADDR_G, 28, 24);
 
@@ -69,19 +66,23 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adcI : Slv32Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal adcQ : Slv32Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal adc  : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal amp  : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacI : Slv16Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal dacQ : Slv16Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
 
-   signal sigGenTrig : sl;
+   signal sigGenTrig : slv(1 downto 0);
+   signal ncoConfig  : slv(47 downto 0);
+
+   signal axisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal axisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
    attribute dont_touch               : string;
    attribute dont_touch of sigGenTrig : signal is "TRUE";
-   attribute dont_touch of adcI       : signal is "TRUE";
-   attribute dont_touch of adcQ       : signal is "TRUE";
+   attribute dont_touch of adc        : signal is "TRUE";
    attribute dont_touch of dacI       : signal is "TRUE";
    attribute dont_touch of dacQ       : signal is "TRUE";
+   attribute dont_touch of amp        : signal is "TRUE";
 
 begin
 
@@ -89,10 +90,9 @@ begin
    begin
       -- Help with making timing
       if rising_edge(dspClk) then
-         adcI    <= dspAdcI after TPD_G;
-         adcQ    <= dspAdcQ after TPD_G;
-         dspDacI <= dacI    after TPD_G;
-         dspDacQ <= dacQ    after TPD_G;
+         adc     <= dspAdc after TPD_G;
+         dspDacI <= dacI   after TPD_G;
+         dspDacQ <= dacQ   after TPD_G;
       end if;
    end process;
 
@@ -114,48 +114,12 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   U_AxiStreamRingBuffer : entity surf.AxiStreamRingBuffer
-      generic map (
-         TPD_G               => TPD_G,
-         SYNTH_MODE_G        => "xpm",
-         DATA_BYTES_G        => 16,
-         RAM_ADDR_WIDTH_G    => RAM_ADDR_WIDTH_C,
-         -- AXI Stream Configurations
-         AXI_STREAM_CONFIG_G => DMA_AXIS_CONFIG_C)
-      port map (
-         -- Data to store in ring buffer (dataClk domain)
-         dataClk => dspClk,
-         extTrig => sigGenTrig,
-
-         -- Organize data for simpler software processing
-         dataValue(15 downto 0)    => adcI(0)(15 downto 0), -- 1st I sample
-         dataValue(31 downto 16)   => adcQ(0)(15 downto 0), -- 1st Q sample
-         dataValue(47 downto 32)   => dacI(0)(15 downto 0), -- 1st I sample
-         dataValue(63 downto 48)   => dacQ(0)(15 downto 0), -- 1st Q sample
-         dataValue(79 downto 64)   => adcI(0)(31 downto 16), -- 2nd I sample
-         dataValue(95 downto 80)   => adcQ(0)(31 downto 16), -- 2nd Q sample
-         dataValue(111 downto 96)  => dacI(0)(31 downto 16), -- 2nd I sample
-         dataValue(127 downto 112) => dacQ(0)(31 downto 16), -- 2nd Q sample
-
-         -- AXI-Lite interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilReadMaster  => axilReadMasters(RING_INDEX_C),
-         axilReadSlave   => axilReadSlaves(RING_INDEX_C),
-         axilWriteMaster => axilWriteMasters(RING_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(RING_INDEX_C),
-         -- AXI-Stream Interface (axisClk domain)
-         axisClk         => dmaClk,
-         axisRst         => dmaRst,
-         axisMaster      => dmaIbMaster,
-         axisSlave       => dmaIbSlave);
-
    U_DacSigGen : entity axi_soc_ultra_plus_core.SigGen
       generic map (
          TPD_G              => TPD_G,
-         NUM_CH_G           => (2*NUM_DAC_CH_C), -- I/Q pairs
-         RAM_ADDR_WIDTH_G   => RAM_ADDR_WIDTH_C,
-         SAMPLE_PER_CYCLE_G => SAMPLE_PER_CYCLE_C,
+         NUM_CH_G           => (4*NUM_DAC_CH_C),  -- I/Q pairs
+         RAM_ADDR_WIDTH_G   => 9,
+         SAMPLE_PER_CYCLE_G => 1,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
@@ -163,7 +127,9 @@ begin
          dspRst          => dspRst,
          dspDacOut0      => dacI(0),
          dspDacOut1      => dacQ(0),
-         extTrigIn       => sigGenTrig,
+         dspDacOut2      => dacI(1),
+         dspDacOut3      => dacQ(1),
+         extTrigIn       => sigGenTrig(0),
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -172,7 +138,20 @@ begin
          axilWriteMaster => axilWriteMasters(DAC_SIG_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DAC_SIG_INDEX_C));
 
-   U_SwDacTrig : entity work.SwDacTrig
+   GEN_DDC :
+   for i in NUM_ADC_CH_C-1 downto 0 generate
+      U_SsrDdc : entity work.SsrDdcWrapper
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            dspClk    => dspClk,
+            dspRst    => dspRst,
+            ncoConfig => ncoConfig,
+            adcIn     => adc(i),
+            ampOut    => amp(i));
+   end generate GEN_DDC;
+
+   U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -180,6 +159,7 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          sigGenTrig      => sigGenTrig,
+         ncoConfig       => ncoConfig,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -187,5 +167,80 @@ begin
          axilReadSlave   => axilReadSlaves(SW_TRIG_INDEX_C),
          axilWriteMaster => axilWriteMasters(SW_TRIG_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(SW_TRIG_INDEX_C));
+
+   ------------------------------
+   -- BUFFER[0] - Live Display
+   -- BUFFER[1] - Fault Buffering
+   ------------------------------
+   GEN_BUFFER :
+   for i in 1 downto 0 generate
+      U_RingBuffer : entity axi_soc_ultra_plus_core.AppRingBufferEngine
+         generic map (
+            TPD_G              => TPD_G,
+            TDEST_ROUTES_G     => (
+               0               => toSlv(8*i+0, 8),
+               1               => toSlv(8*i+1, 8),
+               2               => toSlv(8*i+2, 8),
+               3               => toSlv(8*i+3, 8),
+               4               => toSlv(8*i+4, 8),
+               5               => toSlv(8*i+5, 8),
+               6               => toSlv(8*i+6, 8),
+               7               => toSlv(8*i+7, 8),
+               8               => x"FF",
+               9               => x"FF",
+               10              => x"FF",
+               11              => x"FF",
+               12              => x"FF",
+               13              => x"FF",
+               14              => x"FF",
+               15              => x"FF"),
+            NUM_CH_G           => 8,
+            SAMPLE_PER_CYCLE_G => 8,
+            RAM_ADDR_WIDTH_G   => 12,
+            AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
+         port map (
+            -- AXI-Stream Interface (axisClk domain)
+            axisClk         => dmaClk,
+            axisRst         => dmaRst,
+            axisMaster      => axisMasters(i),
+            axisSlave       => axisSlaves(i),
+            -- DATA Interface (dataClk domain)
+            dataClk         => dspClk,
+            dataRst         => dspRst,
+            data0           => adc(0),
+            data1           => adc(1),
+            data2           => adc(2),
+            data3           => adc(3),
+            data4           => amp(0),
+            data5           => amp(1),
+            data6           => amp(2),
+            data7           => amp(3),
+            extTrigIn       => sigGenTrig(i),
+            -- AXI-Lite Interface (axilClk domain)
+            axilClk         => axilClk,
+            axilRst         => axilRst,
+            axilReadMaster  => axilReadMasters(RING_INDEX_C+i),
+            axilReadSlave   => axilReadSlaves(RING_INDEX_C+i),
+            axilWriteMaster => axilWriteMasters(RING_INDEX_C+i),
+            axilWriteSlave  => axilWriteSlaves(RING_INDEX_C+i));
+
+   end generate GEN_BUFFER;
+
+   U_Mux : entity surf.AxiStreamMux
+      generic map (
+         TPD_G         => TPD_G,
+         NUM_SLAVES_G  => 2,
+         MODE_G        => "PASSTHROUGH",
+         PIPE_STAGES_G => 1)
+      port map (
+         -- Clock and reset
+         axisClk      => dmaClk,
+         axisRst      => dmaRst,
+         -- Slaves
+         sAxisMasters => axisMasters,
+         sAxisSlaves  => axisSlaves,
+         -- Master
+         mAxisMaster  => dmaIbMaster,
+         mAxisSlave   => dmaIbSlave);
 
 end mapping;

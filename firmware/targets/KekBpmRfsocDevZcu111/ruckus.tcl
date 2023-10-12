@@ -7,3 +7,6 @@ loadRuckusTcl $::env(TOP_DIR)/shared
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/hdl"
 loadConstraints -dir "$::DIR_PATH/hdl"
+
+# Load IP cores
+loadIpCore -dir "$::DIR_PATH/ip"

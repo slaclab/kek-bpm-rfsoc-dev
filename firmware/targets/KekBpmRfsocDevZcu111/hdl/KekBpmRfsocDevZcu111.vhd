@@ -82,10 +82,9 @@ architecture top_level of KekBpmRfsocDevZcu111 is
 
    signal dspClk  : sl;
    signal dspRst  : sl;
-   signal dspAdcI : Slv32Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspAdcQ : Slv32Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspDacI : Slv32Array(NUM_DAC_CH_C-1 downto 0);
-   signal dspDacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspAdc  : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspDacI : Slv16Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspDacQ : Slv16Array(NUM_DAC_CH_C-1 downto 0);
 
 begin
 
@@ -217,8 +216,7 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspAdcI         => dspAdcI,
-         dspAdcQ         => dspAdcQ,
+         dspAdc          => dspAdc,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -245,8 +243,7 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspAdcI         => dspAdcI,
-         dspAdcQ         => dspAdcQ,
+         dspAdc          => dspAdc,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -256,11 +253,5 @@ begin
          axilWriteSlave  => axilWriteSlaves(APP_INDEX_C),
          axilReadMaster  => axilReadMasters(APP_INDEX_C),
          axilReadSlave   => axilReadSlaves(APP_INDEX_C));
-
-   ----------------------
-   --- Loopback Debugging
-   ----------------------
-   dmaIbMasters(1) <= dmaObMasters(1);
-   dmaObSlaves(1)  <= dmaIbSlaves(1);
 
 end top_level;

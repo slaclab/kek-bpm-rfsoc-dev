@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Software Playback DAC Signal Generator Trigger Module
+-- Description: Readout Control Module
 -------------------------------------------------------------------------------
 -- This file is part of 'kek_bpm_rfsoc_dev'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -21,14 +21,15 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
-entity SwDacTrig is
+entity ReadoutCtrl is
    generic (
       TPD_G : time := 1 ns);
    port (
       -- DSP Interface
       dspClk          : in  sl;
       dspRst          : in  sl;
-      sigGenTrig      : out sl;
+      sigGenTrig      : out slv(1 downto 0);
+      ncoConfig       : out slv(47 downto 0);
       -- AXI-Lite Interface
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -36,17 +37,19 @@ entity SwDacTrig is
       axilReadSlave   : out AxiLiteReadSlaveType;
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType);
-end SwDacTrig;
+end ReadoutCtrl;
 
-architecture rtl of SwDacTrig is
+architecture rtl of ReadoutCtrl is
 
    type RegType is record
-      sigGenTrig     : sl;
+      sigGenTrig     : slv(1 downto 0);
+      ncoConfig      : slv(47 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
    constant REG_INIT_C : RegType := (
-      sigGenTrig     => '0',
+      sigGenTrig     => (others => '0'),
+      ncoConfig      => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -63,7 +66,7 @@ begin
       v := r;
 
       -- Reset strobes
-      v.sigGenTrig := '0';
+      v.sigGenTrig := (others => '0');
 
       ----------------------------------------------------------------------
       --                AXI-Lite Register Logic
@@ -74,6 +77,7 @@ begin
 
       -- Map the read registers
       axiSlaveRegister (axilEp, x"0", 0, v.sigGenTrig);
+      axiSlaveRegister (axilEp, x"4", 0, v.ncoConfig);  -- 48-bits, address: [0x4:0x6]
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -101,12 +105,22 @@ begin
       end if;
    end process seq;
 
-   U_OneShot : entity surf.SynchronizerOneShot
+   U_sigGenTrig : entity surf.SynchronizerOneShotVector
       generic map(
-         TPD_G => TPD_G)
+         TPD_G   => TPD_G,
+         WIDTH_G => 2)
       port map(
          clk     => dspClk,
          dataIn  => r.sigGenTrig,
          dataOut => sigGenTrig);
+
+   U_ncoConfig : entity surf.SynchronizerVector
+      generic map(
+         TPD_G   => TPD_G,
+         WIDTH_G => 48)
+      port map(
+         clk     => dspClk,
+         dataIn  => r.ncoConfig,
+         dataOut => ncoConfig);
 
 end rtl;

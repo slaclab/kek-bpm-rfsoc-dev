@@ -22,16 +22,13 @@ use surf.AxiStreamPkg.all;
 
 package AppPkg is
 
-   constant SAMPLE_PER_CYCLE_C : positive := 2;
-
-   constant NUM_ADC_CH_C     : positive := 1;
-   constant NUM_DAC_CH_C     : positive := 1;
+   constant NUM_ADC_CH_C     : positive := 4;
+   constant NUM_DAC_CH_C     : positive := 2;
 
    -------------------------------------------------
    -- DMA[lane=0].inbound  = ADC/DAC ring buffers
-   -- DMA[lane=1]          = loopback debugging
    -------------------------------------------------
-   constant DMA_SIZE_C : positive := 2;
+   constant DMA_SIZE_C : positive := 1;
 
    constant AXIL_CLK_FREQ_C   : real := 100.0E+6;               -- Units of Hz
    constant AXIL_CLK_PERIOD_C : real := (1.0/AXIL_CLK_FREQ_C);  -- Units of seconds
