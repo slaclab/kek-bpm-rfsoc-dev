@@ -24,7 +24,7 @@ entity SsrDdcWrapper is
    port (
       dspClk    : in  sl;
       dspRst    : in  sl;
-      ncoConfig : in  slv(47 downto 0);
+      ncoConfig : in  slv(31 downto 0);
       adcIn     : in  slv(255 downto 0);
       ampOut    : out slv(255 downto 0));
 end SsrDdcWrapper;
@@ -33,6 +33,7 @@ architecture mapping of SsrDdcWrapper is
 
    component ssr_ddc_0
       port (
+         enablenco    : in  std_logic_vector (0 to 0);
          adcin_0      : in  std_logic_vector (11 downto 0);
          adcin_1      : in  std_logic_vector (11 downto 0);
          adcin_2      : in  std_logic_vector (11 downto 0);
@@ -49,22 +50,22 @@ architecture mapping of SsrDdcWrapper is
          adcin_13     : in  std_logic_vector (11 downto 0);
          adcin_14     : in  std_logic_vector (11 downto 0);
          adcin_15     : in  std_logic_vector (11 downto 0);
-         ncoconfig_0  : in  std_logic_vector (47 downto 0);
-         ncoconfig_1  : in  std_logic_vector (47 downto 0);
-         ncoconfig_2  : in  std_logic_vector (47 downto 0);
-         ncoconfig_3  : in  std_logic_vector (47 downto 0);
-         ncoconfig_4  : in  std_logic_vector (47 downto 0);
-         ncoconfig_5  : in  std_logic_vector (47 downto 0);
-         ncoconfig_6  : in  std_logic_vector (47 downto 0);
-         ncoconfig_7  : in  std_logic_vector (47 downto 0);
-         ncoconfig_8  : in  std_logic_vector (47 downto 0);
-         ncoconfig_9  : in  std_logic_vector (47 downto 0);
-         ncoconfig_10 : in  std_logic_vector (47 downto 0);
-         ncoconfig_11 : in  std_logic_vector (47 downto 0);
-         ncoconfig_12 : in  std_logic_vector (47 downto 0);
-         ncoconfig_13 : in  std_logic_vector (47 downto 0);
-         ncoconfig_14 : in  std_logic_vector (47 downto 0);
-         ncoconfig_15 : in  std_logic_vector (47 downto 0);
+         ncoconfig_0  : in  std_logic_vector (31 downto 0);
+         ncoconfig_1  : in  std_logic_vector (31 downto 0);
+         ncoconfig_2  : in  std_logic_vector (31 downto 0);
+         ncoconfig_3  : in  std_logic_vector (31 downto 0);
+         ncoconfig_4  : in  std_logic_vector (31 downto 0);
+         ncoconfig_5  : in  std_logic_vector (31 downto 0);
+         ncoconfig_6  : in  std_logic_vector (31 downto 0);
+         ncoconfig_7  : in  std_logic_vector (31 downto 0);
+         ncoconfig_8  : in  std_logic_vector (31 downto 0);
+         ncoconfig_9  : in  std_logic_vector (31 downto 0);
+         ncoconfig_10 : in  std_logic_vector (31 downto 0);
+         ncoconfig_11 : in  std_logic_vector (31 downto 0);
+         ncoconfig_12 : in  std_logic_vector (31 downto 0);
+         ncoconfig_13 : in  std_logic_vector (31 downto 0);
+         ncoconfig_14 : in  std_logic_vector (31 downto 0);
+         ncoconfig_15 : in  std_logic_vector (31 downto 0);
          clk          : in  std_logic;
          ampout_0     : out std_logic_vector (15 downto 0);
          ampout_1     : out std_logic_vector (15 downto 0);
@@ -117,11 +118,13 @@ architecture mapping of SsrDdcWrapper is
          );
    end component;
 
-   signal nco : slv(47 downto 0)        := (others => '0');
+   signal nco : slv(31 downto 0)        := (others => '0');
    signal adc : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal amp : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal I   : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal Q   : Slv16Array(15 downto 0) := (others => (others => '0'));
+
+   signal enableNco : sl := '0';
 
    attribute dont_touch        : string;
    attribute dont_touch of adc : signal is "TRUE";
@@ -135,7 +138,8 @@ begin
    process(dspClk)
    begin
       if rising_edge(dspClk) then
-         nco <= ncoConfig after TPD_G;
+         enableNco <= not(dspRst) after TPD_G;
+         nco       <= ncoConfig   after TPD_G;
          for i in 0 to 15 loop
 
             adc(i) <= adcIn(i*16+15 downto i*16) after TPD_G;
@@ -148,6 +152,7 @@ begin
 
    U_SsrDdc : ssr_ddc_0
       port map (
+         enableNco(0) => enableNco,
          adcin_0      => adc(0)(15 downto 4),
          adcin_1      => adc(1)(15 downto 4),
          adcin_2      => adc(2)(15 downto 4),

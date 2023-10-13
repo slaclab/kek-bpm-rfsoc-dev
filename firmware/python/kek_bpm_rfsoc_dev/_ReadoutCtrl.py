@@ -11,8 +11,10 @@
 import pyrogue as pr
 
 class ReadoutCtrl(pr.Device):
-    def __init__(self,**kwargs):
+    def __init__(self,sampleRate=0.0,**kwargs):
         super().__init__(**kwargs)
+
+        self.smplTime = 1/sampleRate
 
         self.add(pr.RemoteVariable(
             name         = 'LiveDispTrigRaw',
@@ -60,29 +62,47 @@ class ReadoutCtrl(pr.Device):
             hidden       = True,
         ))
 
-        # self.add(pr.RemoteVariable(
-            # name         = 'NcoConfig',
-            # description  = """
-                # I = (desired output Frequency * Sampling time *2^(Frequency Resolution))
-                # """,
-            # offset       = 0x8,
-            # bitSize      = 32,
-            # mode         = 'RW',
-            # # hidden       = True,
-        # ))
+        self.add(pr.RemoteVariable(
+            name         = 'NcoConfig',
+            description  = """
+                I = (desired output Frequency * Sampling time *2^(Frequency Resolution))
+                """,
+            offset       = 0x8,
+            bitSize      = 32,
+            mode         = 'RW',
+            hidden       = True,
+        ))
 
-        # # Sampling time *2^(Frequency Resolution))
-        # self._ncoConstant = 1/float(2**32) # units of MHz/count
+        # Sampling time *2^(Frequency Resolution))
+        self._ncoConstant = 1E6*self.smplTime*4294967296.0 # Units of MHz
 
-        # self.add(pr.LinkVariable( # Software Variable
-            # name         = 'NcoFreqMHz',
-            # description  = 'frequency for local VCO',
-            # mode         = "RW",
-            # units        = "MHz",
-            # disp         = '{:1.3f}',
-            # typeStr      = 'Float',
-            # value        = 2000.0,
-            # linkedGet    = lambda: float(self.NcoConfig.value())*self._ncoConstant,
-            # linkedSet    = lambda value, write: self.NcoConfig.set( int(value/self._ncoConstant) ),
-            # dependencies = [self.NcoConfig],
-        # ))
+        self.add(pr.LinkVariable( # Software Variable
+            name         = 'NcoFreqMHz',
+            description  = 'frequency for local VCO',
+            mode         = "RW",
+            units        = "MHz",
+            disp         = '{:1.3f}',
+            typeStr      = 'Float',
+            value        = 1000.0,
+            linkedGet    = lambda: float(self.NcoConfig.value())/(self._ncoConstant),
+            linkedSet    = lambda value, write: self.NcoConfig.set( int(value*self._ncoConstant) ),
+            dependencies = [self.NcoConfig],
+        ))
+
+        self.addRemoteVariables(
+            name         = 'DacDebug',
+            offset       = 0x10,
+            bitSize      = 16,
+            base         = pr.Int,
+            mode         = 'RW',
+            number       = 8,
+            stride       = 2,
+        )
+
+        self.add(pr.RemoteVariable(
+            name         = 'DacDebugEnable',
+            offset       = 0x20,
+            bitSize      = 1,
+            base         = pr.Bool,
+            mode         = 'RW',
+        ))

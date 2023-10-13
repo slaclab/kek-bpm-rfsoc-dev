@@ -43,12 +43,15 @@ entity RfDataConverter is
       dacN            : out slv(7 downto 0);
       sysRefP         : in  sl;
       sysRefN         : in  sl;
-      -- ADC/DAC Interface (dspClk domain)
+      -- ADC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
       dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      -- DAC Interface (dacClk domain)
+      dacClk          : out sl;
+      dacRst          : out sl;
+      dspDacI         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -219,16 +222,16 @@ begin
          -- DAC[5:4] AXI Stream Interface
          s1_axis_aresetn              => dspResetL,
          s1_axis_aclk                 => dspClock,
-         s10_axis_tdata(15 downto 0)  => dspDacI(0)(15 downto 0),  -- I[1st sample)
-         s10_axis_tdata(31 downto 16) => dspDacQ(0)(15 downto 0),  -- Q[1st sample)
-         s10_axis_tdata(47 downto 32) => dspDacI(0)(31 downto 16),  -- I[2nd sample)
-         s10_axis_tdata(63 downto 48) => dspDacQ(0)(31 downto 16),  -- Q[2nd sample)
+         s10_axis_tdata(15 downto 0)  => x"7777",  -- I[1st sample)
+         s10_axis_tdata(31 downto 16) => x"7777",  -- Q[1st sample)
+         s10_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
+         s10_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
          s10_axis_tvalid              => '1',
          s10_axis_tready              => open,
-         s11_axis_tdata(15 downto 0)  => dspDacI(1)(15 downto 0),  -- I[1st sample)
-         s11_axis_tdata(31 downto 16) => dspDacQ(1)(15 downto 0),  -- Q[1st sample)
-         s11_axis_tdata(47 downto 32) => dspDacI(1)(31 downto 16),  -- I[2nd sample)
-         s11_axis_tdata(63 downto 48) => dspDacQ(1)(31 downto 16),  -- Q[2nd sample)
+         s11_axis_tdata(15 downto 0)  => x"7777",  -- I[1st sample)
+         s11_axis_tdata(31 downto 16) => x"7777",  -- Q[1st sample)
+         s11_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
+         s11_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
          s11_axis_tvalid              => '1',
          s11_axis_tready              => open);
 
@@ -241,27 +244,29 @@ begin
          RST_IN_POLARITY_G => '1',
          NUM_CLOCKS_G      => 2,
          -- MMCM attributes
-         CLKIN_PERIOD_G    => 3.929,    -- 254.5 MHz
-         CLKFBOUT_MULT_G   => 4,        -- 1018 MHz = 4 x 254.5MHz
-         CLKOUT0_DIVIDE_G  => 2,        -- 509 MHz = 1018MHz/2
-         CLKOUT1_DIVIDE_G  => 4)        -- 254.5 MHz = 1018MHz/4
+         CLKIN_PERIOD_G    => 5.239,    -- 190.875 MHz
+         CLKFBOUT_MULT_G   => 6,        -- 1145.25 MHz
+         CLKOUT0_DIVIDE_G  => 3,
+         CLKOUT1_DIVIDE_G  => 6)
       port map(
          -- Clock Input
          clkIn     => refClk,
          rstIn     => axilRst,
          -- Clock Outputs
-         clkOut(0) => adcClock,
-         clkOut(1) => dspClock,
+         clkOut(0) => adcClock,         -- 381.750 MHz
+         clkOut(1) => dspClock,         -- 190.875 MHz
          -- Reset Outputs
          rstOut(0) => adcReset,
          rstOut(1) => dspReset);
 
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
-   dspResetL <= not(dspReset);
 
    dspClk <= dspClock;
    dspRst <= dspReset;
+
+   dacClk <= dspClock;
+   dacRst <= dspReset;
 
    GEN_VEC :
    for i in NUM_ADC_CH_C-1 downto 0 generate

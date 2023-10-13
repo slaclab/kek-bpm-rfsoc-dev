@@ -44,6 +44,8 @@ class Root(pr.Root):
         # Pass custom value to parent via super function
         super().__init__(**kwargs)
 
+        self.sampleRate=3.054E+9
+
         #################################################################
         if zmqSrvEn:
             self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
@@ -84,10 +86,11 @@ class Root(pr.Root):
 
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
-            memBase   = self.memMap,
-            boardType = self.boardType,
-            offset    = 0x04_0000_0000, # Full 40-bit address space
-            expand    = True,
+            memBase    = self.memMap,
+            boardType  = self.boardType,
+            sampleRate = self.sampleRate,
+            offset     = 0x04_0000_0000, # Full 40-bit address space
+            expand     = True,
         ))
 
         ##################################################################################
@@ -101,11 +104,11 @@ class Root(pr.Root):
         self.adcFaultBuff = [stream.TcpClient(ip,10000+2*(i+8))  for i in range(4)]
         self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+12)) for i in range(4)]
 
-        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
-        self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
+        self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
 
-        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
-        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=4.072E+9,maxSize=16*2**9) for i in range(4)]
+        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
+        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
 
         # Connect the rogue stream arrays
         for i in range(4):

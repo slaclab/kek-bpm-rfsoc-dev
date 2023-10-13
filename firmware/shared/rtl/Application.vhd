@@ -37,12 +37,15 @@ entity Application is
       dmaRst          : in  sl;
       dmaIbMaster     : out AxiStreamMasterType;
       dmaIbSlave      : in  AxiStreamSlaveType;
-      -- ADC/DAC Interface (dspClk domain)
+      -- ADC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
       dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
-      dspDacI         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      -- DAC Interface (dacClk domain)
+      dacClk          : in  sl;
+      dacRst          : in  sl;
+      dspDacI         : out Slv128Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out Slv128Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -66,13 +69,17 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc  : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal amp  : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
-   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+
+   signal dacI : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacQ : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+
+   signal dacDbgEn : sl;
+   signal dacDbg   : slv(127 downto 0);
 
    signal sigGenTrig : slv(1 downto 0);
-   signal ncoConfig  : slv(47 downto 0);
+   signal ncoConfig  : slv(31 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
@@ -80,8 +87,6 @@ architecture mapping of Application is
    attribute dont_touch               : string;
    attribute dont_touch of sigGenTrig : signal is "TRUE";
    attribute dont_touch of adc        : signal is "TRUE";
-   attribute dont_touch of dacI       : signal is "TRUE";
-   attribute dont_touch of dacQ       : signal is "TRUE";
    attribute dont_touch of amp        : signal is "TRUE";
 
 begin
@@ -90,9 +95,20 @@ begin
    begin
       -- Help with making timing
       if rising_edge(dspClk) then
-         adc     <= dspAdc after TPD_G;
-         dspDacI <= dacI   after TPD_G;
-         dspDacQ <= dacQ   after TPD_G;
+         adc <= dspAdc after TPD_G;
+      end if;
+   end process;
+
+   process(dacClk)
+   begin
+      if rising_edge(dacClk) then
+         if dacDbgEn = '0' then
+            dspDacI <= dacI after TPD_G;
+            dspDacQ <= dacQ after TPD_G;
+         else
+            dspDacI <= (others => dacDbg) after TPD_G;
+            dspDacQ <= (others => dacDbg) after TPD_G;
+         end if;
       end if;
    end process;
 
@@ -119,12 +135,12 @@ begin
          TPD_G              => TPD_G,
          NUM_CH_G           => (2*NUM_DAC_CH_C),  -- I/Q pairs
          RAM_ADDR_WIDTH_G   => 9,
-         SAMPLE_PER_CYCLE_G => 2,
+         SAMPLE_PER_CYCLE_G => 8,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
+         dspClk          => dacClk,
+         dspRst          => dacRst,
          dspDacOut0      => dacI(0),
          dspDacOut1      => dacQ(0),
          dspDacOut2      => dacI(1),
@@ -160,6 +176,11 @@ begin
          dspRst          => dspRst,
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
+         -- DAC Interface (dacClk domain)
+         dacClk          => dacClk,
+         dacRst          => dacRst,
+         dacDbgEn        => dacDbgEn,
+         dacDbg          => dacDbg,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

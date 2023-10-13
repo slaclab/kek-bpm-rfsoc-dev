@@ -15,7 +15,7 @@ import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import surf.axi                              as axi
 
 class Application(pr.Device):
-    def __init__(self,**kwargs):
+    def __init__(self,sampleRate=0.0,**kwargs):
         super().__init__(**kwargs)
 
         self.add(rfsoc_utility.SigGen(
@@ -23,7 +23,7 @@ class Application(pr.Device):
             offset       = 0x01_000000,
             numCh        = 4,  # Must match NUM_CH_G config
             ramWidth     = 9, # Must match RAM_ADDR_WIDTH_G config
-            smplPerCycle = 2, # Must match SAMPLE_PER_CYCLE_G config
+            smplPerCycle = 8, # Must match SAMPLE_PER_CYCLE_G config
             # expand       = True,
         ))
 
@@ -34,6 +34,7 @@ class Application(pr.Device):
         ))
 
         self.add(rfsoc.ReadoutCtrl(
-            offset = 0x00_000000,
-            expand = True,
+            offset     = 0x00_000000,
+            sampleRate = sampleRate,
+            expand     = True,
         ))

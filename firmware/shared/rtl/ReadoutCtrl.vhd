@@ -29,7 +29,12 @@ entity ReadoutCtrl is
       dspClk          : in  sl;
       dspRst          : in  sl;
       sigGenTrig      : out slv(1 downto 0);
-      ncoConfig       : out slv(47 downto 0);
+      ncoConfig       : out slv(31 downto 0);
+      -- DAC Interface (dacClk domain)
+      dacClk          : in  sl;
+      dacRst          : in  sl;
+      dacDbgEn        : out sl;
+      dacDbg          : out slv(127 downto 0);
       -- AXI-Lite Interface
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -43,13 +48,17 @@ architecture rtl of ReadoutCtrl is
 
    type RegType is record
       sigGenTrig     : slv(1 downto 0);
-      ncoConfig      : slv(47 downto 0);
+      ncoConfig      : slv(31 downto 0);
+      dacDbgEn       : sl;
+      dacDbg         : slv(127 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
    constant REG_INIT_C : RegType := (
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
+      dacDbgEn       => '1',
+      dacDbg         => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -76,9 +85,14 @@ begin
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Map the read registers
-      axiSlaveRegister (axilEp, x"00", 0, v.sigGenTrig(0)); -- Live Display
-      axiSlaveRegister (axilEp, x"04", 0, v.sigGenTrig(1)); -- Fault Buffering
-      axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 48-bits, address: [0x8:0xF]
+      axiSlaveRegister (axilEp, x"00", 0, v.sigGenTrig(0));  -- Live Display
+      axiSlaveRegister (axilEp, x"04", 0, v.sigGenTrig(1));  -- Fault Buffering
+      axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 32-bits, address: [0x8:0xB]
+      -- Reserved: address: [0xC:0xF]
+
+      axiSlaveRegister (axilEp, x"10", 0, v.dacDbg);  --  address: [0x10:0x1F]
+      axiSlaveRegister (axilEp, x"20", 0, v.dacDbgEn);
+
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -118,10 +132,27 @@ begin
    U_ncoConfig : entity surf.SynchronizerVector
       generic map(
          TPD_G   => TPD_G,
-         WIDTH_G => 48)
+         WIDTH_G => 32)
       port map(
          clk     => dspClk,
          dataIn  => r.ncoConfig,
          dataOut => ncoConfig);
+
+   U_dacDbg : entity surf.SynchronizerVector
+      generic map(
+         TPD_G   => TPD_G,
+         WIDTH_G => 128)
+      port map(
+         clk     => dacClk,
+         dataIn  => r.dacDbg,
+         dataOut => dacDbg);
+
+   U_dacDbgEn : entity surf.Synchronizer
+      generic map(
+         TPD_G => TPD_G)
+      port map(
+         clk     => dacClk,
+         dataIn  => r.dacDbgEn,
+         dataOut => dacDbgEn);
 
 end rtl;

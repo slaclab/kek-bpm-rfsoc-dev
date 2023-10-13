@@ -16,7 +16,7 @@ import surf.xilinx                                   as xil
 import kek_bpm_rfsoc_dev                             as rfsoc
 
 class RFSoC(pr.Device):
-    def __init__(self,boardType='',**kwargs):
+    def __init__(self,boardType='',sampleRate=0.0,**kwargs):
         super().__init__(**kwargs)
 
         self.add(socCore.AxiSocCore(
@@ -60,6 +60,7 @@ class RFSoC(pr.Device):
                 self.RfDataConverter.dacTile[i].dacBlock[0].samplingRate._default = 4072.0 # In units of MHz,
 
         self.add(rfsoc.Application(
-            offset       = 0xA000_0000,
-            expand       = True,
+            offset     = 0xA000_0000,
+            sampleRate = sampleRate,
+            expand     = True,
         ))

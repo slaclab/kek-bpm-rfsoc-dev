@@ -83,11 +83,14 @@ architecture top_level of KekBpmRfSoc4x2 is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal dspClk  : sl;
-   signal dspRst  : sl;
-   signal dspAdc  : Slv256Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspDacI : Slv32Array(NUM_DAC_CH_C-1 downto 0);
-   signal dspDacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspClk : sl;
+   signal dspRst : sl;
+   signal dspAdc : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+
+   signal dacClk  : sl;
+   signal dacRst  : sl;
+   signal dspDacI : Slv128Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspDacQ : Slv128Array(NUM_DAC_CH_C-1 downto 0);
 
 begin
 
@@ -199,10 +202,13 @@ begin
          plClkN          => plClkN,
          plSysRefP       => plSysRefP,
          plSysRefN       => plSysRefN,
-         -- ADC/DAC Interface (dspClk domain)
+         -- ADC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         -- DAC Interface (dacClk domain)
+         dacClk          => dacClk,
+         dacRst          => dacRst,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -226,10 +232,13 @@ begin
          dmaRst          => dmaRst,
          dmaIbMaster     => dmaIbMasters(0),
          dmaIbSlave      => dmaIbSlaves(0),
-         -- ADC/DAC Interface (dspClk domain)
+         -- ADC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         -- DAC Interface (dacClk domain)
+         dacClk          => dacClk,
+         dacRst          => dacRst,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
