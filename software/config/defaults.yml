@@ -11,13 +11,12 @@ Root:
         enable: True
         NcoFreqMHz: 1054.0
         DacDebugEnable: 1
-        DacDebug[:]: 10000
-        # DacDebug[0]: 0
-        # DacDebug[1]: 0
-        # DacDebug[2]: 0
-        # DacDebug[3]: 0
-        # DacDebug[4]: 0
-        # DacDebug[5]: 0
-        # DacDebug[6]: 0
-        # DacDebug[7]: 0
+        DacDebug[0]: 0
+        DacDebug[1]: 0
+        DacDebug[2]: 5000
+        DacDebug[3]: 10000
+        DacDebug[4]: 5000
+        DacDebug[5]: 0
+        DacDebug[6]: 0
+        DacDebug[7]: 0
       ########################################################
