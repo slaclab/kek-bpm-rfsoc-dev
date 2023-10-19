@@ -27,15 +27,9 @@ class SigGenLoader(pr.Device):
             Q = np.zeros(shape=self.length, dtype=np.int32, order='C')
 
             # Generate the waveform
-            for i in range(self.length//8):
-                I[8*i+0] = 1000
-                I[8*i+1] = 10000
-                I[8*i+2] = 20000
-                I[8*i+3] = 30000
-                I[8*i+4] = 20000
-                I[8*i+5] = 10000
-                I[8*i+6] = 1000
-                I[8*i+7] = 0
+            for i in range(self.length//2):
+                I[2*i+0] = 10000
+                I[2*i+1] = 0
             Q = I
 
             # Write the waveforms to hardware

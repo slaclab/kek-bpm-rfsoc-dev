@@ -21,6 +21,9 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
+library work;
+use work.AppPkg.all;
+
 entity ReadoutCtrl is
    generic (
       TPD_G : time := 1 ns);
@@ -34,7 +37,8 @@ entity ReadoutCtrl is
       dacClk          : in  sl;
       dacRst          : in  sl;
       dacDbgEn        : out sl;
-      dacDbg          : out slv(127 downto 0);
+      dacIDbg         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dacQDbg         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -50,7 +54,8 @@ architecture rtl of ReadoutCtrl is
       sigGenTrig     : slv(1 downto 0);
       ncoConfig      : slv(31 downto 0);
       dacDbgEn       : sl;
-      dacDbg         : slv(127 downto 0);
+      dacIDbg        : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dacQDbg        : Slv32Array(NUM_DAC_CH_C-1 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -58,7 +63,8 @@ architecture rtl of ReadoutCtrl is
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
       dacDbgEn       => '1',
-      dacDbg         => (others => '0'),
+      dacIDbg        => (others => (others => '0')),
+      dacQDbg        => (others => (others => '0')),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -90,9 +96,11 @@ begin
       axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 32-bits, address: [0x8:0xB]
       -- Reserved: address: [0xC:0xF]
 
-      axiSlaveRegister (axilEp, x"10", 0, v.dacDbg);  --  address: [0x10:0x1F]
-      axiSlaveRegister (axilEp, x"20", 0, v.dacDbgEn);
-
+      axiSlaveRegister (axilEp, x"10", 0, v.dacDbgEn);
+      axiSlaveRegister (axilEp, x"20", 0, v.dacIDbg(0));
+      axiSlaveRegister (axilEp, x"24", 0, v.dacQDbg(0));
+      axiSlaveRegister (axilEp, x"28", 0, v.dacIDbg(1));
+      axiSlaveRegister (axilEp, x"2C", 0, v.dacQDbg(1));
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -138,14 +146,28 @@ begin
          dataIn  => r.ncoConfig,
          dataOut => ncoConfig);
 
-   U_dacDbg : entity surf.SynchronizerVector
-      generic map(
-         TPD_G   => TPD_G,
-         WIDTH_G => 128)
-      port map(
-         clk     => dacClk,
-         dataIn  => r.dacDbg,
-         dataOut => dacDbg);
+   GEN_VEC :
+   for i in NUM_DAC_CH_C-1 downto 0 generate
+
+      U_dacIDbg : entity surf.SynchronizerVector
+         generic map(
+            TPD_G   => TPD_G,
+            WIDTH_G => 32)
+         port map(
+            clk     => dacClk,
+            dataIn  => r.dacIDbg(i),
+            dataOut => dacIDbg(i));
+
+      U_dacQDbg : entity surf.SynchronizerVector
+         generic map(
+            TPD_G   => TPD_G,
+            WIDTH_G => 32)
+         port map(
+            clk     => dacClk,
+            dataIn  => r.dacQDbg(i),
+            dataOut => dacQDbg(i));
+
+   end generate GEN_VEC;
 
    U_dacDbgEn : entity surf.Synchronizer
       generic map(

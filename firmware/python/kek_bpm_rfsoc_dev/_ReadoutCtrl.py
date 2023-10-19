@@ -89,20 +89,50 @@ class ReadoutCtrl(pr.Device):
             dependencies = [self.NcoConfig],
         ))
 
-        self.addRemoteVariables(
-            name         = 'DacDebug',
-            offset       = 0x10,
-            bitSize      = 16,
-            base         = pr.Int,
-            mode         = 'RW',
-            number       = 8,
-            stride       = 2,
-        )
-
         self.add(pr.RemoteVariable(
             name         = 'DacDebugEnable',
-            offset       = 0x20,
+            offset       = 0x10,
             bitSize      = 1,
             base         = pr.Bool,
             mode         = 'RW',
         ))
+
+        self.addRemoteVariables(
+            name         = 'DbgDacCh0I',
+            offset       = 0x20,
+            bitSize      = 16,
+            base         = pr.Int,
+            mode         = 'RW',
+            number       = 2,
+            stride       = 2,
+        )
+
+        self.addRemoteVariables(
+            name         = 'DbgDacCh0Q',
+            offset       = 0x24,
+            bitSize      = 16,
+            base         = pr.Int,
+            mode         = 'RW',
+            number       = 2,
+            stride       = 2,
+        )
+
+        self.addRemoteVariables(
+            name         = 'DbgDacCh1I',
+            offset       = 0x28,
+            bitSize      = 16,
+            base         = pr.Int,
+            mode         = 'RW',
+            number       = 2,
+            stride       = 2,
+        )
+
+        self.addRemoteVariables(
+            name         = 'DbgDacCh1Q',
+            offset       = 0x2C,
+            bitSize      = 16,
+            base         = pr.Int,
+            mode         = 'RW',
+            number       = 2,
+            stride       = 2,
+        )
