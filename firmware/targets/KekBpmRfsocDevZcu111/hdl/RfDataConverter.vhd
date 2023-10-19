@@ -50,8 +50,8 @@ entity RfDataConverter is
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
       dacRst          : out sl;
-      dspDacI         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -222,14 +222,14 @@ begin
          -- DAC[5:4] AXI Stream Interface
          s1_axis_aresetn              => dspResetL,
          s1_axis_aclk                 => dspClock,
-         s10_axis_tdata(15 downto 0)  => x"7777",  -- I[1st sample)
-         s10_axis_tdata(31 downto 16) => x"7777",  -- Q[1st sample)
+         s10_axis_tdata(15 downto 0)  => x"0000",  -- I[1st sample)
+         s10_axis_tdata(31 downto 16) => x"0000",  -- Q[1st sample)
          s10_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
          s10_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
          s10_axis_tvalid              => '1',
          s10_axis_tready              => open,
-         s11_axis_tdata(15 downto 0)  => x"7777",  -- I[1st sample)
-         s11_axis_tdata(31 downto 16) => x"7777",  -- Q[1st sample)
+         s11_axis_tdata(15 downto 0)  => x"0000",  -- I[1st sample)
+         s11_axis_tdata(31 downto 16) => x"0000",  -- Q[1st sample)
          s11_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
          s11_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
          s11_axis_tvalid              => '1',

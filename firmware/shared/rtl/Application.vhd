@@ -44,8 +44,8 @@ entity Application is
       -- DAC Interface (dacClk domain)
       dacClk          : in  sl;
       dacRst          : in  sl;
-      dspDacI         : out Slv128Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv128Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -72,11 +72,12 @@ architecture mapping of Application is
    signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
    signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
 
-   signal dacI : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacQ : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacI : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacQ : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal dacDbgEn : sl;
-   signal dacDbg   : slv(127 downto 0);
+   signal dacIDbg  : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacQDbg  : Slv32Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal sigGenTrig : slv(1 downto 0);
    signal ncoConfig  : slv(31 downto 0);
@@ -106,8 +107,8 @@ begin
             dspDacI <= dacI after TPD_G;
             dspDacQ <= dacQ after TPD_G;
          else
-            dspDacI <= (others => dacDbg) after TPD_G;
-            dspDacQ <= (others => dacDbg) after TPD_G;
+            dspDacI <= dacIDbg after TPD_G;
+            dspDacQ <= dacQDbg after TPD_G;
          end if;
       end if;
    end process;
@@ -135,7 +136,7 @@ begin
          TPD_G              => TPD_G,
          NUM_CH_G           => (2*NUM_DAC_CH_C),  -- I/Q pairs
          RAM_ADDR_WIDTH_G   => 9,
-         SAMPLE_PER_CYCLE_G => 8,
+         SAMPLE_PER_CYCLE_G => 2,
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
@@ -180,7 +181,8 @@ begin
          dacClk          => dacClk,
          dacRst          => dacRst,
          dacDbgEn        => dacDbgEn,
-         dacDbg          => dacDbg,
+         dacIDbg         => dacIDbg,
+         dacQDbg         => dacQDbg,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

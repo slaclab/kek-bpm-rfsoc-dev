@@ -57,8 +57,8 @@ entity RfDataConverter is
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
       dacRst          : out sl;
-      dspDacI         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv128Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -160,17 +160,17 @@ architecture mapping of RfDataConverter is
          m32_axis_tready : in  std_logic;
          s0_axis_aresetn : in  std_logic;
          s0_axis_aclk    : in  std_logic;
-         s00_axis_tdata  : in  std_logic_vector(255 downto 0);
+         s00_axis_tdata  : in  std_logic_vector(63 downto 0);
          s00_axis_tvalid : in  std_logic;
          s00_axis_tready : out std_logic;
          s1_axis_aresetn : in  std_logic;
          s1_axis_aclk    : in  std_logic;
-         s10_axis_tdata  : in  std_logic_vector(255 downto 0);
+         s10_axis_tdata  : in  std_logic_vector(63 downto 0);
          s10_axis_tvalid : in  std_logic;
          s10_axis_tready : out std_logic;
          s2_axis_aresetn : in  std_logic;
          s2_axis_aclk    : in  std_logic;
-         s20_axis_tdata  : in  std_logic_vector(255 downto 0);
+         s20_axis_tdata  : in  std_logic_vector(63 downto 0);
          s20_axis_tvalid : in  std_logic;
          s20_axis_tready : out std_logic
          );
@@ -193,7 +193,7 @@ architecture mapping of RfDataConverter is
    signal dacResetL : sl := '0';
 
    signal adc : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dac : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dac : Slv64Array(NUM_ADC_CH_C-1 downto 0)  := (others => (others => '0'));
 
 begin
 
@@ -323,7 +323,7 @@ begin
    begin
       if rising_edge(dacClock) then
          for ch in NUM_DAC_CH_C-1 downto 0 loop
-            for i in 7 downto 0 loop
+            for i in 1 downto 0 loop
                -- I/Q pairs being mapped into the RFDC's input vector
                dac(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;
                dac(ch)(31+32*i downto 16+32*i) <= dspDacQ(ch)(15+16*i downto 16*i) after TPD_G;
