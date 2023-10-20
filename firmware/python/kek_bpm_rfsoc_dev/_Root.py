@@ -107,8 +107,8 @@ class Root(pr.Root):
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
         self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
 
-        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
-        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
+        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
+        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
 
         # Connect the rogue stream arrays
         for i in range(4):
@@ -166,11 +166,6 @@ class Root(pr.Root):
             click.secho(errMsg, bg='red')
             raise ValueError(errMsg)
 
-        # Load the Default YAML file
-        print(f'Loading path={self.defaultFile} Default Configuration File...')
-        self.LoadConfig(self.defaultFile)
-        self.ReadAll()
-
         # Initialize the LMK/LMX Clock chips
         hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
 
@@ -184,6 +179,11 @@ class Root(pr.Root):
         # Wait for DSP Clock to be stable after changing NCO value
         while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
             time.sleep(0.01)
+
+        # Load the Default YAML file
+        print(f'Loading path={self.defaultFile} Default Configuration File...')
+        self.LoadConfig(self.defaultFile)
+        self.ReadAll()
 
         # Load the waveform data into DacSigGen
         self.RFSoC.Application.DacSigGenLoader.LoadPulseModFunction()

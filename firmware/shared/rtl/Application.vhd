@@ -69,6 +69,11 @@ architecture mapping of Application is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
+   signal buffReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal buffReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal buffWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal buffWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
    signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
    signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
 
@@ -197,6 +202,28 @@ begin
    ------------------------------
    GEN_BUFFER :
    for i in 1 downto 0 generate
+
+      U_AxiLiteAsync : entity surf.AxiLiteAsync
+         generic map (
+            TPD_G           => TPD_G,
+            COMMON_CLK_G    => false,
+            NUM_ADDR_BITS_G => 32)
+         port map (
+            -- Slave Interface
+            sAxiClk         => axilClk,
+            sAxiClkRst      => axilRst,
+            sAxiReadMaster  => axilReadMasters(RING_INDEX_C+i),
+            sAxiReadSlave   => axilReadSlaves(RING_INDEX_C+i),
+            sAxiWriteMaster => axilWriteMasters(RING_INDEX_C+i),
+            sAxiWriteSlave  => axilWriteSlaves(RING_INDEX_C+i),
+            -- Master Interface
+            mAxiClk         => dspClk,
+            mAxiClkRst      => dspRst,
+            mAxiReadMaster  => buffReadMasters(i),
+            mAxiReadSlave   => buffReadSlaves(i),
+            mAxiWriteMaster => buffWriteMasters(i),
+            mAxiWriteSlave  => buffWriteSlaves(i));
+
       U_RingBuffer : entity axi_soc_ultra_plus_core.AppRingBufferEngine
          generic map (
             TPD_G              => TPD_G,
@@ -219,7 +246,13 @@ begin
                15              => x"FF"),
             NUM_CH_G           => 8,
             SAMPLE_PER_CYCLE_G => 16,
-            RAM_ADDR_WIDTH_G   => 9,
+            RAM_ADDR_WIDTH_G   => ite(i=0,9,12),
+            MEMORY_TYPE_G      => ite(i=0,"block","ultra"),
+            COMMON_CLK_G       => true,  -- true if dataClk=axilClk
+            FIFO_MEMORY_TYPE_G  => "block",
+            FIFO_ADDR_WIDTH_G   => 9,
+            -- FIFO_MEMORY_TYPE_G  => "distributed",
+            -- FIFO_ADDR_WIDTH_G   => 5,
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
             -- AXI-Stream Interface (axisClk domain)
@@ -240,12 +273,12 @@ begin
             data7           => amp(3),
             extTrigIn       => sigGenTrig(i),
             -- AXI-Lite Interface (axilClk domain)
-            axilClk         => axilClk,
-            axilRst         => axilRst,
-            axilReadMaster  => axilReadMasters(RING_INDEX_C+i),
-            axilReadSlave   => axilReadSlaves(RING_INDEX_C+i),
-            axilWriteMaster => axilWriteMasters(RING_INDEX_C+i),
-            axilWriteSlave  => axilWriteSlaves(RING_INDEX_C+i));
+            axilClk         => dspClk,
+            axilRst         => dspRst,
+            axilReadMaster  => buffReadMasters(i),
+            axilReadSlave   => buffReadSlaves(i),
+            axilWriteMaster => buffWriteMasters(i),
+            axilWriteSlave  => buffWriteSlaves(i));
 
    end generate GEN_BUFFER;
 
