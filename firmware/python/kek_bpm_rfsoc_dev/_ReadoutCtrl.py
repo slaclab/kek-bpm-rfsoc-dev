@@ -45,7 +45,7 @@ class ReadoutCtrl(pr.Device):
         self.add(pr.LocalVariable(
             name   = 'EnableSoftTrig',
             mode   = 'RW',
-            value  = True,
+            value  = False,
             hidden = True,
         ))
 

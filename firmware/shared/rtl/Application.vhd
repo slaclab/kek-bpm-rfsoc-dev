@@ -249,8 +249,10 @@ begin
             RAM_ADDR_WIDTH_G   => ite(i=0,9,12),
             MEMORY_TYPE_G      => ite(i=0,"block","ultra"),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
-            FIFO_MEMORY_TYPE_G  => "distributed",
-            FIFO_ADDR_WIDTH_G   => 5,
+            FIFO_MEMORY_TYPE_G  => "block",
+            FIFO_ADDR_WIDTH_G   => 9,
+            -- FIFO_MEMORY_TYPE_G  => "distributed",
+            -- FIFO_ADDR_WIDTH_G   => 5,
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
             -- AXI-Stream Interface (axisClk domain)

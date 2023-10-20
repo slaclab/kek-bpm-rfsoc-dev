@@ -8,9 +8,7 @@ Root:
         Continuous: 0x1 # Continuous mode
       ########################################################
       ReadoutCtrl:
-        enable: True
         NcoFreqMHz: 1054.0
-        DacDebugEnable: 1
         ####################
         DbgDacCh0I[0]: 10000
         DbgDacCh0Q[0]: 10000
@@ -21,4 +19,7 @@ Root:
         DbgDacCh1Q[0]: 10000
         DbgDacCh1I[1]: 0
         DbgDacCh1Q[1]: 0         
+        ####################
+        DacDebugEnable: True
+        EnableSoftTrig: True
       ########################################################
