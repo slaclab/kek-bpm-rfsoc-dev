@@ -81,7 +81,7 @@ class ReadoutCtrl(pr.Device):
             description  = 'frequency for local VCO',
             mode         = "RW",
             units        = "MHz",
-            disp         = '{:1.9f}',
+            disp         = '{:1.6f}',
             typeStr      = 'Float',
             value        = 1054.0,
             linkedGet    = lambda: float(self.NcoConfig.value())/(self._ncoConstant),
