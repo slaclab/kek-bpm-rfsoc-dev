@@ -160,18 +160,15 @@ begin
          axilWriteMaster => axilWriteMasters(DAC_SIG_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DAC_SIG_INDEX_C));
 
-   GEN_DDC :
-   for i in NUM_ADC_CH_C-1 downto 0 generate
-      U_SsrDdc : entity work.SsrDdcWrapper
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            dspClk    => dspClk,
-            dspRst    => dspRst,
-            ncoConfig => ncoConfig,
-            adcIn     => adc(i),
-            ampOut    => amp(i));
-   end generate GEN_DDC;
+   U_SsrDdc : entity work.SsrDdcWrapper
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         dspClk    => dspClk,
+         dspRst    => dspRst,
+         ncoConfig => ncoConfig,
+         adcIn     => adc,
+         ampOut    => amp);
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
