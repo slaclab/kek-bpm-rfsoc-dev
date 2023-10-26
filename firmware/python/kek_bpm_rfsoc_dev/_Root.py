@@ -136,7 +136,7 @@ class Root(pr.Root):
         ##################################################################################
 
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
-            base      = 'rfsoc_ioc',
+            base      = 'kek_bpm_rfsoc_demo_ioc',
             root      = self,
             pvMap     = None,
             incGroups = None,
