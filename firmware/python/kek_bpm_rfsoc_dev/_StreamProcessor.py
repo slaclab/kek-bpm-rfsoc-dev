@@ -75,6 +75,15 @@ class StreamProcessor(pr.DataReceiver):
             hidden      = True,
         ))
 
+        self.add(pr.LocalVariable(
+            name        = 'noise_threshold',
+            description = 'threshold in peak search',
+            typeStr     = 'Int16',
+            disp        = '',
+            value       = 0,
+            hidden      = True,
+        ))
+
         coeffX = np.zeros(shape=[18,10], dtype=np.float32, order='C')
         coeffY = np.zeros(shape=[18,10], dtype=np.float32, order='C')
 
@@ -153,6 +162,8 @@ class StreamProcessor(pr.DataReceiver):
                 hidden      = True,
             ))
 
+
+            
         #-----------------------------------------------------------------------------
         # Inputs
         #-----------------------------------------------------------------------------
@@ -186,8 +197,8 @@ class StreamProcessor(pr.DataReceiver):
         self._resultSize  = 2**10
 
         self.add(pr.LocalVariable(
-            name        = 'Xp',
-            description = 'positive X polarity',
+            name        = 'Ain',
+            description = 'electrode A',
             typeStr     = 'Float[np]',
             disp        = '',
             value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
@@ -195,8 +206,8 @@ class StreamProcessor(pr.DataReceiver):
         ))
 
         self.add(pr.LocalVariable(
-            name        = 'Xn',
-            description = 'negative X polarity',
+            name        = 'Bin',
+            description = 'electrode B',
             typeStr     = 'Float[np]',
             disp        = '',
             value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
@@ -204,8 +215,8 @@ class StreamProcessor(pr.DataReceiver):
         ))
 
         self.add(pr.LocalVariable(
-            name        = 'Yp',
-            description = 'positive Y polarity',
+            name        = 'Cin',
+            description = 'electrode C',
             typeStr     = 'Float[np]',
             disp        = '',
             value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
@@ -213,8 +224,8 @@ class StreamProcessor(pr.DataReceiver):
         ))
 
         self.add(pr.LocalVariable(
-            name        = 'Yn',
-            description = 'negative Y polarity',
+            name        = 'Din',
+            description = 'electrode D',
             typeStr     = 'Float[np]',
             disp        = '',
             value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
@@ -264,12 +275,53 @@ class StreamProcessor(pr.DataReceiver):
                 self.writeAndVerifyBlocks(force=True, variable=self.AMP[x])
 
             # BPM sub process
+            self.Ain.value()[:] = self.AMP[0].value()[:]
+            self.Bin.value()[:] = self.AMP[1].value()[:]
+            self.Cin.value()[:] = self.AMP[2].value()[:]
+            self.Din.value()[:] = self.AMP[3].value()[:]
             gpSubProcess()
 
     # Method which is called to run BPM sub process
     def gpSubProcess(self):
-        poscalc()
+        a_peak = peak_search(waveform=self.Ain.value())
+        b_peak = peak_search(waveform=self.Bin.value())
+        c_peak = peak_search(waveform=self.Cin.value())
+        d_peak = peak_search(waveform=self.Din.value())
+
+        position = poscalc(sel=self.chamberType.value() , a=a_peak , b=b_peak , c=c_peak , d=d_peak)
+        
+        self.Xpos.value()[:len(position[0])] = position[0]
+        self.Ypos.value()[:len(position[1])] = position[1]
+
 
     # Method which is called to run chamber calculation
-    def poscalc(self,h,v,sel):
-        pass
+    def poscalc(self,sel,a,b,c,d):
+        print(f"Chamber type is {sel}")
+        if len(a) == len(b) == len(c) == len(d):
+            h = (a - b - c + d) / (a + b + c + d)
+            v = (a + b - c - d) / (a + b + c + d)
+        else:
+            h = np.zeros(shape=self._resultSize)
+            v = np.zeros(shape=self._resultSize)
+        
+        xx = self.coeffX[sel].value()[0] + \
+             self.coeffX[sel].value()[1] * h + self.coeffX[sel].value()[2] * v + \
+             self.coeffX[sel].value()[3] * h**2 + self.coeffX[sel].value()[4] * h * v + self.coeffX[sel].value()[5] * v**2 + \
+             self.coeffX[sel].value()[6] * h**3 + self.coeffX[sel].value()[7] * h**2 * v + self.coeffX[sel].value()[8] * h * v**2 + self.coeffX[sel].value()[9] * v**3
+        yy = self.coeffY[sel].value()[0] + \
+             self.coeffY[sel].value()[1] * h + self.coeffY[sel].value()[2] * v + \
+             self.coeffY[sel].value()[3] * h**2 + self.coeffY[sel].value()[4] * h * v + self.coeffY[sel].value()[5] * v**2 + \
+             self.coeffY[sel].value()[6] * h**3 + self.coeffY[sel].value()[7] * h**2 * v + self.coeffY[sel].value()[8] * h * v**2 + self.coeffY[sel].value()[9] * v**3
+
+        return xx , yy
+
+    # Method which is called to run peak search
+    def peak_search(self,waveform):
+        mountain_maxima = []
+        for i in range(1, self._waveformSize - 1):
+            if waveform[i] > waveform[i - 1] and waveform[i] > waveform[i + 1]:
+                candidate_peak = waveform[i]
+                if candidate_peak > self.noise_threshold.value():
+                    mountain_maxima.append(candidate_peak)
+        
+        return np.array(mountain_maxima)
