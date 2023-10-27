@@ -16,6 +16,7 @@ import sys
 import argparse
 import importlib
 import rogue
+import pyrogue
 import axi_soc_ultra_plus_core.rfsoc_utility.pydm
 
 if __name__ == "__main__":
@@ -43,6 +44,14 @@ if __name__ == "__main__":
         help     = "Board Type: only zcu111 and rfsoc4x2 are support",
     )
 
+    parser.add_argument(
+        "--guiType",
+        type     = str,
+        required = False,
+        default  = 'PyDM',
+        help     = "Sets the GUI type (PyDM or None)",
+    )
+
     # Get the arguments
     args = parser.parse_args()
 
@@ -55,11 +64,29 @@ if __name__ == "__main__":
         ip        = args.ip,
         boardType = args.boardType,
     ) as root:
-        axi_soc_ultra_plus_core.rfsoc_utility.pydm.runPyDM(
-            serverList = root.zmqServer.address,
-            ui         = ui,
-            sizeX      = 800,
-            sizeY      = 800,
-        )
+
+        ######################
+        # Development PyDM GUI
+        ######################
+        if (args.guiType == 'PyDM'):
+            axi_soc_ultra_plus_core.rfsoc_utility.pydm.runPyDM(
+                serverList = root.zmqServer.address,
+                ui         = ui,
+                sizeX      = 800,
+                sizeY      = 800,
+            )
+
+        #################
+        # No GUI
+        #################
+        elif (args.guiType == 'None'):
+            print("Running without GUI...")
+            pyrogue.waitCntrlC()
+
+        ####################
+        # Undefined GUI type
+        ####################
+        else:
+            raise ValueError("Invalid GUI type (%s)" % (args.guiType) )
 
     #################################################################
