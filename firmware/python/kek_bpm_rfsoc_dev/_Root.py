@@ -135,6 +135,49 @@ class Root(pr.Root):
 
         ##################################################################################
 
+        self.add(pr.LinkVariable(
+            name         = 'NewDataDisp',
+            mode         = 'RO',
+            typeStr      = 'bool',
+            value        = False,
+            linkedGet    = lambda: self.AmpDispProcessor[0].NewDataReady.value() and self.AmpDispProcessor[1].NewDataReady.value() and self.AmpDispProcessor[2].NewDataReady.value() and self.AmpDispProcessor[3].NewDataReady.value(),
+            dependencies = [self.AmpDispProcessor[i].NewDataReady for x in range(4)],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'NewDataFault',
+            mode         = 'RO',
+            typeStr      = 'bool',
+            value        = False,
+            linkedGet    = lambda: self.AmpFaultProcessor[0].NewDataReady.value() and self.AmpFaultProcessor[1].NewDataReady.value() and self.AmpFaultProcessor[2].NewDataReady.value() and self.AmpFaultProcessor[3].NewDataReady.value(),
+            dependencies = [self.AmpFaultProcessor[i].NewDataReady for x in range(4)],
+            hidden       = True,
+        ))
+
+        ##################################################################################
+
+        self.add(rfsoc.StreamProcessor(name='BpmDispProc', waveformRx = [self.AmpDispProcessor[i]  for i in range(4)]))
+        self.add(rfsoc.StreamProcessor(name='BpmFaultProc',waveformRx = [self.AmpFaultProcessor[i] for i in range(4)]))
+
+        self.add(pr.LinkVariable(
+            name         = 'MonNewDataDisp',
+            mode         = 'RO',
+            linkedGet    = lambda: self.BpmDispProc.gpSubProcess() if self.NewDataDisp.value() else False ,
+            dependencies = [self.NewDataDisp],
+            hidden       = True,
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = 'MonNewDataFault',
+            mode         = 'RO',
+            linkedGet    = lambda: self.BpmFaultProc.gpSubProcess() if self.NewDataFault.value() else False ,
+            dependencies = [self.NewDataFault],
+            hidden       = True,
+        ))
+
+        ##################################################################################
+
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
             base      = 'kek_bpm_rfsoc_demo_ioc',
             root      = self,

@@ -24,13 +24,13 @@ class Application(pr.Device):
             numCh        = 4,  # Must match NUM_CH_G config
             ramWidth     = 9, # Must match RAM_ADDR_WIDTH_G config
             smplPerCycle = 2, # Must match SAMPLE_PER_CYCLE_G config
-            # expand       = True,
+            expand       = False,
         ))
 
         self.add(rfsoc.SigGenLoader(
             name         = 'DacSigGenLoader',
             DacSigGen    = self.DacSigGen,
-            # expand       = True,
+            expand       = False,
         ))
 
         self.add(rfsoc.ReadoutCtrl(

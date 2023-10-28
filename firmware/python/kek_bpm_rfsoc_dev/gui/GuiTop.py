@@ -64,11 +64,11 @@ class GuiTop(Display):
         self.tab.addTab(var,'Debug Tree')
 
         # ADC Live Display (Tab Index=2)
-        adcDisplay = guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4)
+        adcDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4)
         self.tab.addTab(adcDisplay,'ADC Live')
 
         # AMP Live Display (Tab Index=3)
-        dacDisplay = guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp', numCh=4)
+        dacDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AmpDisp', numCh=4)
         self.tab.addTab(dacDisplay,'AMP Live')
 
         # ADC Fault Display (Tab Index=4)

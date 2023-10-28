@@ -38,7 +38,7 @@ class RFSoC(pr.Device):
                 gen3      = False, # True if using RFSoC GEN3 Hardware
                 enAdcTile = [True,True,False,False],   # adcTile[0,1]
                 enDacTile = [False,True,False,False],  # dacTile[1]
-                expand       = True,
+                # expand       = True,
             ))
 
             # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
