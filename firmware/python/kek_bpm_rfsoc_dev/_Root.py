@@ -176,6 +176,10 @@ class Root(pr.Root):
             hidden       = True,
         ))
 
+        # Connect StreamProcessor to the file writer
+        self.BpmDispProc  >> self.dataWriter.getChannel(16)
+        self.BpmFaultProc >> self.dataWriter.getChannel(17)
+
         ##################################################################################
 
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(

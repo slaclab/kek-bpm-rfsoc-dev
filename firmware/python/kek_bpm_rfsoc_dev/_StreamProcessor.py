@@ -9,17 +9,27 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
+import rogue.interfaces.stream as ris
 
 import numpy as np
 import math
+import struct
 
 # Class for streaming RX
-class StreamProcessor(pr.Device):
+class StreamProcessor(pr.Device,ris.Master):
     # Init method must call the parent class init
     def __init__(self,waveformRx,**kwargs):
         pr.Device.__init__(self, **kwargs)
+        ris.Master.__init__(self)
 
+        # Pointer to the waveform receiver devices
         self.waveformRx = waveformRx
+
+        # Local Variables
+        self._xx = np.nan
+        self._yy = np.nan
+        self._lenXX = 0
+        self._lenYY = 0
 
         #-----------------------------------------------------------------------------
         # Configurable variables
@@ -183,7 +193,7 @@ class StreamProcessor(pr.Device):
 
         self.add(pr.LocalVariable(
             name        = 'StepsX',
-            description = 'X position steps',
+            description = 'X position steps for GUI display',
             typeStr     = 'Float[np]',
             disp        = '',
             value       = np.linspace(0, 0, num=1),
@@ -192,7 +202,7 @@ class StreamProcessor(pr.Device):
 
         self.add(pr.LocalVariable(
             name        = 'StepsY',
-            description = 'X position steps',
+            description = 'X position steps for GUI display',
             typeStr     = 'Float[np]',
             # disp        = '',
             value       = np.linspace(0, 0, num=1),
@@ -256,8 +266,55 @@ class StreamProcessor(pr.Device):
         # Run chamber calculation
         self.poscalc(sel=self.chamberType.value() , a=a_peak , b=b_peak , c=c_peak , d=d_peak)
 
+        # Generate the streaming frame with results
+        self.ResultsFrameGen()
+
         # Increment the counter
         self.EventCnt.set(self.EventCnt.value()+1)
+
+    # Method for generating a frame with the results
+    def ResultsFrameGen(self):
+
+        # event counter (UInt32)
+        # length(UInt32) + Float32[array]
+        # length(UInt32) + Float32[array]
+        size  = 4 \
+              + 4 + 4*self._lenXX \
+              + 4 + 4*self._lenYY
+
+        # Here we request a frame capable of holding size bytes
+        frame = self._reqFrame(size, True)
+        offset = 0
+
+        # Write the Event counter into the frame
+        ba = bytearray(struct.pack("<I", self.EventCnt.value() ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Xpos Length into the frame
+        ba = bytearray(struct.pack("<I", self._lenXX ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Xpos into the frame
+        for i in range(self._lenXX):
+            ba = bytearray(struct.pack("<f", self._xx[i] ))
+            frame.write(ba,offset)
+            offset += 4
+
+        # Write the Ypos Length into the frame
+        ba = bytearray(struct.pack("<I", self._lenYY ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Ypos into the frame
+        for i in range(self._lenYY):
+            ba = bytearray(struct.pack("<f", self._yy[i] ))
+            frame.write(ba,offset)
+            offset += 4
+
+        # Send the frame results
+        self._sendFrame(frame)
 
     # Method which is called to run chamber calculation
     def poscalc(self,sel,a,b,c,d):
@@ -276,33 +333,33 @@ class StreamProcessor(pr.Device):
         coeffY = self.coeffY[sel].value()
 
         # Perform the chamber calculation
-        xx = coeffX[0] + \
-             coeffX[1] * h    + coeffX[2] * v + \
-             coeffX[3] * h**2 + coeffX[4] * h * v + coeffX[5] * v**2 + \
-             coeffX[6] * h**3 + coeffX[7] * h**2 * v + coeffX[8] * h * v**2 + coeffX[9] * v**3
-        yy = coeffY[0] + \
-             coeffY[1] * h    + coeffY[2] * v + \
-             coeffY[3] * h**2 + coeffY[4] * h * v + coeffY[5] * v**2 + \
-             coeffY[6] * h**3 + coeffY[7] * h**2 * v + coeffY[8] * h * v**2 + coeffY[9] * v**3
-        lenXX = len(xx)
-        lenYY = len(yy)
+        self._xx = coeffX[0] + \
+            coeffX[1] * h    + coeffX[2] * v + \
+            coeffX[3] * h**2 + coeffX[4] * h * v + coeffX[5] * v**2 + \
+            coeffX[6] * h**3 + coeffX[7] * h**2 * v + coeffX[8] * h * v**2 + coeffX[9] * v**3
+        self._yy = coeffY[0] + \
+            coeffY[1] * h    + coeffY[2] * v + \
+            coeffY[3] * h**2 + coeffY[4] * h * v + coeffY[5] * v**2 + \
+            coeffY[6] * h**3 + coeffY[7] * h**2 * v + coeffY[8] * h * v**2 + coeffY[9] * v**3
+        self._lenXX = len(self._xx)
+        self._lenYY = len(self._yy)
 
         # Write the results to local variables
-        self.Xpos.set(xx)
-        self.Ypos.set(yy)
-        self.StepsX.set(np.linspace(0, lenXX-1, num=lenXX))
-        self.StepsY.set(np.linspace(0, lenYY-1, num=lenYY))
+        self.Xpos.set(self._xx)
+        self.Ypos.set(self._yy)
+        self.StepsX.set(np.linspace(0, self._lenXX-1, num=self._lenXX))
+        self.StepsY.set(np.linspace(0, self._lenYY-1, num=self._lenYY))
 
         # Calculate RMS and STD
-        if lenXX>0:
-            self.XposSTD.set(np.std(xx))
-            self.XposRMS.set(np.sqrt(np.mean(xx**2)))
+        if self._lenXX>0:
+            self.XposSTD.set(np.std(self._xx))
+            self.XposRMS.set(np.sqrt(np.mean(self._xx**2)))
         else:
             self.XposSTD.set(np.nan)
             self.XposRMS.set(np.nan)
-        if lenYY>0:
-            self.YposSTD.set(np.std(yy))
-            self.YposRMS.set(np.sqrt(np.mean(yy**2)))
+        if self._lenYY>0:
+            self.YposSTD.set(np.std(self._yy))
+            self.YposRMS.set(np.sqrt(np.mean(self._yy**2)))
         else:
             self.YposSTD.set(np.nan)
             self.YposRMS.set(np.nan)
@@ -317,3 +374,13 @@ class StreamProcessor(pr.Device):
                     mountain_maxima.append(candidate_peak)
 
         return np.array(mountain_maxima)
+
+    # Overload the `>>` python operator for a connection for this custom master stream module
+    def __rshift__(self,other):
+        pr.streamConnect(self,other)
+        return other
+
+    # Overload the `<<` python operator for a connection for this custom master stream module
+    def __lshift__(self,other):
+        pr.streamConnect(other,self)
+        return other
