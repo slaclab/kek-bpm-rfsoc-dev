@@ -63,21 +63,29 @@ class GuiTop(Display):
         var = DebugTree(parent=None, init_channel=Channel)
         self.tab.addTab(var,'Debug Tree')
 
+        ######################################################################################################
+
         # ADC Live Display (Tab Index=2)
-        adcDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4)
-        self.tab.addTab(adcDisplay,'ADC Live')
+        self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp'),'ADC Live')
 
         # AMP Live Display (Tab Index=3)
-        dacDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AmpDisp', numCh=4)
-        self.tab.addTab(dacDisplay,'AMP Live')
+        self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp'),'AMP Live')
 
-        # ADC Fault Display (Tab Index=4)
-        adcDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AdcFault', numCh=4)
-        self.tab.addTab(adcDisplay,'ADC Fault')
+        # BPM Live Display (Tab Index=4)
+        self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmDispProc'),'BPM Live')
 
-        # AMP Fault Display (Tab Index=5)
-        dacDisplay = guiUser.FaultDisplay(parent=None, init_channel=Channel, dispType='AmpFault', numCh=4)
-        self.tab.addTab(dacDisplay,'AMP Fault')
+        ######################################################################################################
+
+        # ADC Fault Display (Tab Index=5)
+        self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcFault'),'ADC Fault')
+
+        # AMP Fault Display (Tab Index=6)
+        self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpFault'),'AMP Fault')
+
+        # BPM Fault Display (Tab Index=7)
+        self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmFaultProc'),'BPM Fault')
+
+        ######################################################################################################
 
         # Set the default Tab view
         self.tab.setCurrentIndex(1)
