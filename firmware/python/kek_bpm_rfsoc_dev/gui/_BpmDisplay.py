@@ -9,10 +9,10 @@
 #-----------------------------------------------------------------------------
 
 from pydm.widgets.frame import PyDMFrame
-from pydm.widgets import PyDMWaveformPlot, PyDMSpinbox, PyDMPushButton
+from pydm.widgets import PyDMWaveformPlot, PyDMSpinbox, PyDMPushButton, PyDMLabel
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox, QDoubleSpinBox
+from qtpy.QtWidgets import QVBoxLayout, QHBoxLayout, QFormLayout, QGroupBox, QDoubleSpinBox, QLabel
 
 from pyrogue.pydm.data_plugins.rogue_plugin import nodeFromAddress
 from pyrogue.pydm.widgets import PyRogueLineEdit
@@ -97,11 +97,48 @@ class BpmDisplay(PyDMFrame):
         gb = QGroupBox( f'{self._dispType} Display Controls')
         vb.addWidget(gb)
 
-        fl = QFormLayout()
-        fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-        fl.setLabelAlignment(Qt.AlignRight)
+        fl = QHBoxLayout()
         gb.setLayout(fl)
+
+        w = QLabel('EventCnt:')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.path}.EventCnt')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = QLabel('XposSTD:')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.path}.XposSTD')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = QLabel('XposRMS:')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.path}.XposRMS')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = QLabel('YposSTD:')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.path}.YposSTD')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = QLabel('YposRMS:')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
+
+        w = PyDMLabel(parent=None, init_channel=f'{self.path}.YposRMS')
+        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        fl.addWidget(w)
 
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)

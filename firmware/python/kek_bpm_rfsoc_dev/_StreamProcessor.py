@@ -182,24 +182,86 @@ class StreamProcessor(pr.Device):
         ))
 
         self.add(pr.LocalVariable(
-            name        = 'nord',
-            description = 'number of ????',
-            typeStr     = 'UInt16',
-            value       = 1,
+            name        = 'StepsX',
+            description = 'X position steps',
+            typeStr     = 'Float[np]',
+            disp        = '',
+            value       = np.linspace(0, 0, num=1),
+            hidden      = True,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'StepsY',
+            description = 'X position steps',
+            typeStr     = 'Float[np]',
+            # disp        = '',
+            value       = np.linspace(0, 0, num=1),
+            hidden      = True,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'XposSTD',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'YposSTD',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'XposRMS',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'YposRMS',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'EventCnt',
+            description = 'Increments per gpSubProcess() execution',
+            typeStr     = 'UInt32',
+            value       = 0,
         ))
 
     # Method which is called to run BPM sub process
     def gpSubProcess(self):
+
+        # Lock the waveform variables while processing them
         with self.waveformRx[0].WaveformData.lock, self.waveformRx[1].WaveformData.lock, self.waveformRx[2].WaveformData.lock, self.waveformRx[3].WaveformData.lock:
+
+            # Find the peaks per waveforms
             a_peak = self.peak_search(waveform=self.waveformRx[0].WaveformData.value())
             b_peak = self.peak_search(waveform=self.waveformRx[1].WaveformData.value())
             c_peak = self.peak_search(waveform=self.waveformRx[2].WaveformData.value())
             d_peak = self.peak_search(waveform=self.waveformRx[3].WaveformData.value())
+
+            # Clear the flag from each receiver
             [self.waveformRx[i].NewDataReady.set(False) for i in range(4)]
+
+        # Run chamber calculation
         self.poscalc(sel=self.chamberType.value() , a=a_peak , b=b_peak , c=c_peak , d=d_peak)
+
+        # Increment the counter
+        self.EventCnt.set(self.EventCnt.value()+1)
 
     # Method which is called to run chamber calculation
     def poscalc(self,sel,a,b,c,d):
+        # Check if the lengths are all the same
         if len(a) == len(b) == len(c) == len(d):
             h = (a - b - c + d) / (a + b + c + d)
             v = (a + b - c - d) / (a + b + c + d)
@@ -209,9 +271,11 @@ class StreamProcessor(pr.Device):
             h = np.zeros(shape=minLen)
             v = np.zeros(shape=minLen)
 
+        # Select the X/Y coefficients
         coeffX = self.coeffX[sel].value()
         coeffY = self.coeffY[sel].value()
 
+        # Perform the chamber calculation
         xx = coeffX[0] + \
              coeffX[1] * h    + coeffX[2] * v + \
              coeffX[3] * h**2 + coeffX[4] * h * v + coeffX[5] * v**2 + \
@@ -220,10 +284,28 @@ class StreamProcessor(pr.Device):
              coeffY[1] * h    + coeffY[2] * v + \
              coeffY[3] * h**2 + coeffY[4] * h * v + coeffY[5] * v**2 + \
              coeffY[6] * h**3 + coeffY[7] * h**2 * v + coeffY[8] * h * v**2 + coeffY[9] * v**3
+        lenXX = len(xx)
+        lenYY = len(yy)
 
-        self.Xpos.set(xx,write=True)
-        self.Ypos.set(yy,write=True)
-        self.nord.set(len(yy),write=True)
+        # Write the results to local variables
+        self.Xpos.set(xx)
+        self.Ypos.set(yy)
+        self.StepsX.set(np.linspace(0, lenXX-1, num=lenXX))
+        self.StepsY.set(np.linspace(0, lenYY-1, num=lenYY))
+
+        # Calculate RMS and STD
+        if lenXX>0:
+            self.XposSTD.set(np.std(xx))
+            self.XposRMS.set(np.sqrt(np.mean(xx**2)))
+        else:
+            self.XposSTD.set(np.nan)
+            self.XposRMS.set(np.nan)
+        if lenYY>0:
+            self.YposSTD.set(np.std(yy))
+            self.YposRMS.set(np.sqrt(np.mean(yy**2)))
+        else:
+            self.YposSTD.set(np.nan)
+            self.YposRMS.set(np.nan)
 
     # Method which is called to run peak search
     def peak_search(self,waveform):
