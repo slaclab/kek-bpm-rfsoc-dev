@@ -8,18 +8,28 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
-import rogue.interfaces.stream as ris
 import pyrogue as pr
+import rogue.interfaces.stream as ris
+
 import numpy as np
 import math
+import struct
 
 # Class for streaming RX
-class StreamProcessor(pr.DataReceiver):
+class StreamProcessor(pr.Device,ris.Master):
     # Init method must call the parent class init
-    def __init__( self,hidden=True,**kwargs):
-        pr.Device.__init__(self, hidden=hidden, **kwargs)
-        ris.Slave.__init__(self)
-        pr.DataReceiver.__init__(self, enableOnStart=True, hideData=True, hidden=hidden, **kwargs)
+    def __init__(self,waveformRx,**kwargs):
+        pr.Device.__init__(self, **kwargs)
+        ris.Master.__init__(self)
+
+        # Pointer to the waveform receiver devices
+        self.waveformRx = waveformRx
+
+        # Local Variables
+        self._xx = np.nan
+        self._yy = np.nan
+        self._lenXX = 0
+        self._lenYY = 0
 
         #-----------------------------------------------------------------------------
         # Configurable variables
@@ -47,7 +57,7 @@ class StreamProcessor(pr.DataReceiver):
         self.add(pr.LocalVariable(
             name        = 'chamberType',
             description = 'BPM chamber type',
-            typeStr     = 'UInt32',
+            typeStr     = 'UInt8',
             disp        = '',
             value       = 0,
             minimum     = 0,
@@ -72,16 +82,13 @@ class StreamProcessor(pr.DataReceiver):
                 16 : 'f20',
                 17 : 'f70',
             },
-            hidden      = True,
         ))
 
         self.add(pr.LocalVariable(
             name        = 'noise_threshold',
             description = 'threshold in peak search',
-            typeStr     = 'Int16',
-            disp        = '',
-            value       = 0,
-            hidden      = True,
+            typeStr     = 'UInt16',
+            value       = 1000,
         ))
 
         coeffX = np.zeros(shape=[18,10], dtype=np.float32, order='C')
@@ -148,8 +155,8 @@ class StreamProcessor(pr.DataReceiver):
                 name        = f'coeffX[{i}]',
                 description = 'coefficient_x',
                 typeStr     = 'Float[np]',
-                disp        = '',
                 value       = coeffX[i],
+                mode        = 'RO',
                 hidden      = True,
             ))
 
@@ -157,80 +164,10 @@ class StreamProcessor(pr.DataReceiver):
                 name        = f'coeffY[{i}]',
                 description = 'coefficient_y',
                 typeStr     = 'Float[np]',
-                disp        = '',
                 value       = coeffY[i],
+                mode        = 'RO',
                 hidden      = True,
             ))
-
-
-            
-        #-----------------------------------------------------------------------------
-        # Inputs
-        #-----------------------------------------------------------------------------
-
-        self._waveformSize  = 2**10
-
-        for i in range(4):
-
-            self.add(pr.LocalVariable(
-                name        = f'ADC[{i}]',
-                description = 'Direct RF sampled waveform',
-                typeStr     = 'Int16[np]',
-                disp        = '',
-                value       = np.zeros(shape=self._waveformSize, dtype=np.int16, order='C'),
-                hidden      = True,
-            ))
-
-            self.add(pr.LocalVariable(
-                name        = f'AMP[{i}]',
-                description = 'Calculated amplitude waveform',
-                typeStr     = 'Int16[np]',
-                disp        = '',
-                value       = np.zeros(shape=self._waveformSize, dtype=np.int16, order='C'),
-                hidden      = True,
-            ))
-
-        #-----------------------------------------------------------------------------
-        # Local Variable
-        #-----------------------------------------------------------------------------
-
-        self._resultSize  = 2**10
-
-        self.add(pr.LocalVariable(
-            name        = 'Ain',
-            description = 'electrode A',
-            typeStr     = 'Float[np]',
-            disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
-            hidden      = True,
-        ))
-
-        self.add(pr.LocalVariable(
-            name        = 'Bin',
-            description = 'electrode B',
-            typeStr     = 'Float[np]',
-            disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
-            hidden      = True,
-        ))
-
-        self.add(pr.LocalVariable(
-            name        = 'Cin',
-            description = 'electrode C',
-            typeStr     = 'Float[np]',
-            disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
-            hidden      = True,
-        ))
-
-        self.add(pr.LocalVariable(
-            name        = 'Din',
-            description = 'electrode D',
-            typeStr     = 'Float[np]',
-            disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
-            hidden      = True,
-        ))
 
         #-----------------------------------------------------------------------------
         # Outputs
@@ -241,7 +178,7 @@ class StreamProcessor(pr.DataReceiver):
             description = 'X position',
             typeStr     = 'Float[np]',
             disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
+            value       = np.zeros(shape=1, dtype=np.float32, order='C'),
             hidden      = True,
         ))
 
@@ -250,78 +187,200 @@ class StreamProcessor(pr.DataReceiver):
             description = 'Y position',
             typeStr     = 'Float[np]',
             disp        = '',
-            value       = np.zeros(shape=self._resultSize, dtype=np.float32, order='C'),
+            value       = np.zeros(shape=1, dtype=np.float32, order='C'),
             hidden      = True,
         ))
 
-    # Method which is called when a frame is received
-    def process(self,frame):
-        with self.root.updateGroup():
-            pr.DataReceiver.process(self,frame)
+        self.add(pr.LocalVariable(
+            name        = 'StepsX',
+            description = 'X position steps for GUI display',
+            typeStr     = 'Float[np]',
+            disp        = '',
+            value       = np.linspace(0, 0, num=1),
+            hidden      = True,
+        ))
 
-            # Convert the numpy array to 16-bit values
-            data = self.Data.value()[:].view(np.int16)
+        self.add(pr.LocalVariable(
+            name        = 'StepsY',
+            description = 'X position steps for GUI display',
+            typeStr     = 'Float[np]',
+            # disp        = '',
+            value       = np.linspace(0, 0, num=1),
+            hidden      = True,
+        ))
 
-            # Double check the length
-            if len(data) != (8*self._waveformSize):
-                print(f"Invalid frame size. Got {len(data)}, Exp {8*self._waveformSize}")
+        self.add(pr.LocalVariable(
+            name        = 'XposSTD',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
 
-            # Update the ADC/AMP variables
-            for x in range(4):
-                with self.ADC[x].lock, self.AMP[x].lock:
-                    self.ADC[x].value()[:] = data[x*2+0::8]
-                    self.AMP[x].value()[:] = data[x*2+0::8]
-                self.writeAndVerifyBlocks(force=True, variable=self.ADC[x])
-                self.writeAndVerifyBlocks(force=True, variable=self.AMP[x])
+        self.add(pr.LocalVariable(
+            name        = 'YposSTD',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
 
-            # BPM sub process
-            self.Ain.value()[:] = self.AMP[0].value()[:]
-            self.Bin.value()[:] = self.AMP[1].value()[:]
-            self.Cin.value()[:] = self.AMP[2].value()[:]
-            self.Din.value()[:] = self.AMP[3].value()[:]
-            gpSubProcess()
+        self.add(pr.LocalVariable(
+            name        = 'XposRMS',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'YposRMS',
+            typeStr     = 'Float[np]',
+            # disp        = '{:1.1f}',
+            units       = 'TBD',
+            value       = np.nan,
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'EventCnt',
+            description = 'Increments per gpSubProcess() execution',
+            typeStr     = 'UInt32',
+            value       = 0,
+        ))
 
     # Method which is called to run BPM sub process
     def gpSubProcess(self):
-        a_peak = peak_search(waveform=self.Ain.value())
-        b_peak = peak_search(waveform=self.Bin.value())
-        c_peak = peak_search(waveform=self.Cin.value())
-        d_peak = peak_search(waveform=self.Din.value())
 
-        position = poscalc(sel=self.chamberType.value() , a=a_peak , b=b_peak , c=c_peak , d=d_peak)
-        
-        self.Xpos.value()[:len(position[0])] = position[0]
-        self.Ypos.value()[:len(position[1])] = position[1]
+        # Lock the waveform variables while processing them
+        with self.waveformRx[0].WaveformData.lock, self.waveformRx[1].WaveformData.lock, self.waveformRx[2].WaveformData.lock, self.waveformRx[3].WaveformData.lock:
 
+            # Find the peaks per waveforms
+            a_peak = self.peak_search(waveform=self.waveformRx[0].WaveformData.value())
+            b_peak = self.peak_search(waveform=self.waveformRx[1].WaveformData.value())
+            c_peak = self.peak_search(waveform=self.waveformRx[2].WaveformData.value())
+            d_peak = self.peak_search(waveform=self.waveformRx[3].WaveformData.value())
+
+            # Clear the flag from each receiver
+            [self.waveformRx[i].NewDataReady.set(False) for i in range(4)]
+
+        # Run chamber calculation
+        self.poscalc(sel=self.chamberType.value() , a=a_peak , b=b_peak , c=c_peak , d=d_peak)
+
+        # Generate the streaming frame with results
+        self.ResultsFrameGen()
+
+        # Increment the counter
+        self.EventCnt.set(self.EventCnt.value()+1)
+
+    # Method for generating a frame with the results
+    def ResultsFrameGen(self):
+
+        # event counter (UInt32)
+        # length(UInt32) + Float32[array]
+        # length(UInt32) + Float32[array]
+        size  = 4 \
+              + 4 + 4*self._lenXX \
+              + 4 + 4*self._lenYY
+
+        # Here we request a frame capable of holding size bytes
+        frame = self._reqFrame(size, True)
+        offset = 0
+
+        # Write the Event counter into the frame
+        ba = bytearray(struct.pack("<I", self.EventCnt.value() ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Xpos Length into the frame
+        ba = bytearray(struct.pack("<I", self._lenXX ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Xpos into the frame
+        for i in range(self._lenXX):
+            ba = bytearray(struct.pack("<f", self._xx[i] ))
+            frame.write(ba,offset)
+            offset += 4
+
+        # Write the Ypos Length into the frame
+        ba = bytearray(struct.pack("<I", self._lenYY ))
+        frame.write(ba,offset)
+        offset += 4
+
+        # Write the Ypos into the frame
+        for i in range(self._lenYY):
+            ba = bytearray(struct.pack("<f", self._yy[i] ))
+            frame.write(ba,offset)
+            offset += 4
+
+        # Send the frame results
+        self._sendFrame(frame)
 
     # Method which is called to run chamber calculation
     def poscalc(self,sel,a,b,c,d):
-        print(f"Chamber type is {sel}")
+        # Check if the lengths are all the same
         if len(a) == len(b) == len(c) == len(d):
             h = (a - b - c + d) / (a + b + c + d)
             v = (a + b - c - d) / (a + b + c + d)
         else:
-            h = np.zeros(shape=self._resultSize)
-            v = np.zeros(shape=self._resultSize)
-        
-        xx = self.coeffX[sel].value()[0] + \
-             self.coeffX[sel].value()[1] * h + self.coeffX[sel].value()[2] * v + \
-             self.coeffX[sel].value()[3] * h**2 + self.coeffX[sel].value()[4] * h * v + self.coeffX[sel].value()[5] * v**2 + \
-             self.coeffX[sel].value()[6] * h**3 + self.coeffX[sel].value()[7] * h**2 * v + self.coeffX[sel].value()[8] * h * v**2 + self.coeffX[sel].value()[9] * v**3
-        yy = self.coeffY[sel].value()[0] + \
-             self.coeffY[sel].value()[1] * h + self.coeffY[sel].value()[2] * v + \
-             self.coeffY[sel].value()[3] * h**2 + self.coeffY[sel].value()[4] * h * v + self.coeffY[sel].value()[5] * v**2 + \
-             self.coeffY[sel].value()[6] * h**3 + self.coeffY[sel].value()[7] * h**2 * v + self.coeffY[sel].value()[8] * h * v**2 + self.coeffY[sel].value()[9] * v**3
+            # TODO: Need to determine what the shape should be
+            minLen = np.min([len(a),len(b),len(c),len(d)])
+            h = np.zeros(shape=minLen)
+            v = np.zeros(shape=minLen)
 
-        return xx , yy
+        # Select the X/Y coefficients
+        coeffX = self.coeffX[sel].value()
+        coeffY = self.coeffY[sel].value()
+
+        # Perform the chamber calculation
+        self._xx = coeffX[0] + \
+            coeffX[1] * h    + coeffX[2] * v + \
+            coeffX[3] * h**2 + coeffX[4] * h * v + coeffX[5] * v**2 + \
+            coeffX[6] * h**3 + coeffX[7] * h**2 * v + coeffX[8] * h * v**2 + coeffX[9] * v**3
+        self._yy = coeffY[0] + \
+            coeffY[1] * h    + coeffY[2] * v + \
+            coeffY[3] * h**2 + coeffY[4] * h * v + coeffY[5] * v**2 + \
+            coeffY[6] * h**3 + coeffY[7] * h**2 * v + coeffY[8] * h * v**2 + coeffY[9] * v**3
+        self._lenXX = len(self._xx)
+        self._lenYY = len(self._yy)
+
+        # Write the results to local variables
+        self.Xpos.set(self._xx)
+        self.Ypos.set(self._yy)
+        self.StepsX.set(np.linspace(0, self._lenXX-1, num=self._lenXX))
+        self.StepsY.set(np.linspace(0, self._lenYY-1, num=self._lenYY))
+
+        # Calculate RMS and STD
+        if self._lenXX>0:
+            self.XposSTD.set(np.std(self._xx))
+            self.XposRMS.set(np.sqrt(np.mean(self._xx**2)))
+        else:
+            self.XposSTD.set(np.nan)
+            self.XposRMS.set(np.nan)
+        if self._lenYY>0:
+            self.YposSTD.set(np.std(self._yy))
+            self.YposRMS.set(np.sqrt(np.mean(self._yy**2)))
+        else:
+            self.YposSTD.set(np.nan)
+            self.YposRMS.set(np.nan)
 
     # Method which is called to run peak search
     def peak_search(self,waveform):
         mountain_maxima = []
-        for i in range(1, self._waveformSize - 1):
+        for i in range(1, len(waveform) - 1):
             if waveform[i] > waveform[i - 1] and waveform[i] > waveform[i + 1]:
                 candidate_peak = waveform[i]
                 if candidate_peak > self.noise_threshold.value():
                     mountain_maxima.append(candidate_peak)
-        
+
         return np.array(mountain_maxima)
+
+    # Overload the `>>` python operator for a connection for this custom master stream module
+    def __rshift__(self,other):
+        pr.streamConnect(self,other)
+        return other
+
+    # Overload the `<<` python operator for a connection for this custom master stream module
+    def __lshift__(self,other):
+        pr.streamConnect(other,self)
+        return other

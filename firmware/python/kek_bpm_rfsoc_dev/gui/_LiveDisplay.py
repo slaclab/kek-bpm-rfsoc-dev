@@ -19,8 +19,8 @@ from pyrogue.pydm.widgets import PyRogueLineEdit
 
 import pyrogue as pr
 
-class FaultDisplay(PyDMFrame):
-    def __init__(self, parent=None, init_channel=None, dispType='Adc', numCh=8):
+class LiveDisplay(PyDMFrame):
+    def __init__(self, parent=None, init_channel=None, dispType='Adc', numCh=4):
         PyDMFrame.__init__(self, parent, init_channel)
         self._node     = None
         self._dispType = dispType
@@ -73,7 +73,7 @@ class FaultDisplay(PyDMFrame):
 
     def connection_changed(self, connected):
         build = (self._node is None) and (self._connected != connected and connected is True)
-        super(FaultDisplay, self).connection_changed(connected)
+        super(LiveDisplay, self).connection_changed(connected)
 
         if not build:
             return
