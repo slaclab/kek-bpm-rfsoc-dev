@@ -21,5 +21,6 @@ Root:
         DbgDacCh1Q[1]: 0         
         ####################
         DacDebugEnable: True
+        # DacDebugEnable: False # FALSE: Using DacSigGenLoader pattern instead
         EnableSoftTrig: True
       ########################################################

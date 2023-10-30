@@ -28,8 +28,10 @@ class SigGenLoader(pr.Device):
 
             # Generate the waveform
             for i in range(self.length//2):
-                I[2*i+0] = 10000
-                I[2*i+1] = 0
+                # Check if not the gap on 16th pulse
+                if (i%16 != 15):
+                    I[2*i+0] = 10000
+                    I[2*i+1] = 0
             Q = I
 
             # Write the waveforms to hardware

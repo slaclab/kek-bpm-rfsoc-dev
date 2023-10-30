@@ -105,6 +105,7 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
             number       = 2,
             stride       = 2,
+            hidden       = True,
         )
 
         self.addRemoteVariables(
@@ -115,6 +116,7 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
             number       = 2,
             stride       = 2,
+            hidden       = True,
         )
 
         self.addRemoteVariables(
@@ -125,6 +127,7 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
             number       = 2,
             stride       = 2,
+            hidden       = True,
         )
 
         self.addRemoteVariables(
@@ -135,4 +138,5 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
             number       = 2,
             stride       = 2,
+            hidden       = True,
         )
