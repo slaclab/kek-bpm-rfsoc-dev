@@ -90,10 +90,10 @@ architecture mapping of Application is
    signal axisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
-   attribute dont_touch               : string;
-   attribute dont_touch of sigGenTrig : signal is "TRUE";
-   attribute dont_touch of adc        : signal is "TRUE";
-   attribute dont_touch of amp        : signal is "TRUE";
+   -- attribute dont_touch               : string;
+   -- attribute dont_touch of sigGenTrig : signal is "TRUE";
+   -- attribute dont_touch of adc        : signal is "TRUE";
+   -- attribute dont_touch of amp        : signal is "TRUE";
 
 begin
 
@@ -241,13 +241,13 @@ begin
                13              => x"FF",
                14              => x"FF",
                15              => x"FF"),
-            NUM_CH_G           => 8,
+            NUM_CH_G           => ite(i = 0, 8, 4),
             SAMPLE_PER_CYCLE_G => 16,
-            RAM_ADDR_WIDTH_G   => ite(i=0,9,12),
-            MEMORY_TYPE_G      => ite(i=0,"block","ultra"),
+            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 12),
+            MEMORY_TYPE_G      => ite(i = 0, "block", "ultra"),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
-            FIFO_MEMORY_TYPE_G  => "block",
-            FIFO_ADDR_WIDTH_G   => 9,
+            FIFO_MEMORY_TYPE_G => "block",
+            FIFO_ADDR_WIDTH_G  => 9,
             -- FIFO_MEMORY_TYPE_G  => "distributed",
             -- FIFO_ADDR_WIDTH_G   => 5,
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -260,14 +260,14 @@ begin
             -- DATA Interface (dataClk domain)
             dataClk         => dspClk,
             dataRst         => dspRst,
-            data0           => adc(0),
-            data1           => adc(1),
-            data2           => adc(2),
-            data3           => adc(3),
-            data4           => amp(0),
-            data5           => amp(1),
-            data6           => amp(2),
-            data7           => amp(3),
+            data0           => amp(0),
+            data1           => amp(1),
+            data2           => amp(2),
+            data3           => amp(3),
+            data4           => adc(0),
+            data5           => adc(1),
+            data6           => adc(2),
+            data7           => adc(3),
             extTrigIn       => sigGenTrig(i),
             -- AXI-Lite Interface (axilClk domain)
             axilClk         => dspClk,

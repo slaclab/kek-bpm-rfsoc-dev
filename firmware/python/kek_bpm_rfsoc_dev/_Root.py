@@ -98,16 +98,16 @@ class Root(pr.Root):
         ##################################################################################
 
         # Create rogue stream objects
-        self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
-        self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
+        self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
+        self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
 
-        self.adcFaultBuff = [stream.TcpClient(ip,10000+2*(i+8))  for i in range(4)]
-        self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+12)) for i in range(4)]
+        # self.adcFaultBuff = [stream.TcpClient(ip,10000+2*(i+12))  for i in range(4)]
+        self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8)) for i in range(4)]
 
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
         self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
 
-        self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
+        # self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
         self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
 
         # Connect the rogue stream arrays
@@ -123,10 +123,10 @@ class Root(pr.Root):
             self.ampDispBuff[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
-            # ADC Fault Display Path
-            self.adcFaultBuff[i] >> self.dataWriter.getChannel(i+8)
-            self.adcFaultBuff[i] >> self.adcFaultProc[i]
-            self.add(self.adcFaultProc[i])
+            # # ADC Fault Display Path
+            # self.adcFaultBuff[i] >> self.dataWriter.getChannel(i+8)
+            # self.adcFaultBuff[i] >> self.adcFaultProc[i]
+            # self.add(self.adcFaultProc[i])
 
             # AMP Fault Display Path
             self.ampFaultBuff[i] >> self.dataWriter.getChannel(i+12)

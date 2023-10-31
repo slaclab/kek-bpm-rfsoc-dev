@@ -20,56 +20,20 @@ from pyrogue.pydm.widgets import PyRogueLineEdit
 import pyrogue as pr
 
 class LiveDisplay(PyDMFrame):
-    def __init__(self, parent=None, init_channel=None, dispType='Adc', numCh=4):
+    def __init__(self, parent=None, init_channel=None, dispType='Adc'):
         PyDMFrame.__init__(self, parent, init_channel)
         self._node     = None
         self._dispType = dispType
-        self.numCh     = numCh
         self.color     = ["white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink","white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink"]
-        self.path      = [f'{self.channel}.{self._dispType}Processor[{i}]' for i in range(self.numCh)]
-        self.idx       = 0
-        self.RxEnable  = [nodeFromAddress(self.path[i]+'.RxEnable') for i in range(self.numCh)]
+        self.path      = [f'{self.channel}.{self._dispType}Processor[{i}]' for i in range(4)]
+        self.RxEnable  = [nodeFromAddress(self.path[i]+'.RxEnable') for i in range(4)]
 
     def resetScales(self):
         # Reset the auto-ranging
-        self.timePlot.resetAutoRangeX()
-        self.timePlot.resetAutoRangeY()
-        self.freqPlot.resetAutoRangeX()
-        self.freqPlot.setMinYRange(-140.0)
-        self.freqPlot.setMaxYRange(0.0)
-
-    def changePlotCh(self, ch):
-        # # Disable processing on current channel
-        # self.RxEnable[self.idx].set(False)
-
-        # Convert float to int
-        self.idx = int(ch)
-
-        # # Enable processing on new channel
-        # self.RxEnable[self.idx].set(True)
-
-        # Remove curve items
-        self.timePlot.removeChannelAtIndex(0)
-        self.freqPlot.removeChannelAtIndex(0)
-
-        # Add new curve item with respect to channel select
-        self.timePlot.addChannel(
-            x_channel  = f'{self.path[self.idx]}.Time',
-            y_channel  = f'{self.path[self.idx]}.WaveformData',
-            color      = self.color[self.idx],
-            symbol     = 'o',
-            symbolSize = 3,
-        )
-        self.freqPlot.addChannel(
-            x_channel  = f'{self.path[self.idx]}.Freq',
-            y_channel  = f'{self.path[self.idx]}.Magnitude',
-            color      = self.color[self.idx],
-            symbol     = 'o',
-            symbolSize = 3,
-        )
-
-        # Reset the auto-ranging
-        self.resetScales()
+        self.xPosPlot.resetAutoRangeX()
+        self.xPosPlot.resetAutoRangeY()
+        self.yPosPlot.resetAutoRangeX()
+        self.yPosPlot.resetAutoRangeY()
 
     def connection_changed(self, connected):
         build = (self._node is None) and (self._connected != connected and connected is True)
@@ -81,7 +45,7 @@ class LiveDisplay(PyDMFrame):
         self._node = nodeFromAddress(self.channel)
 
         # Enable processing on new channel
-        for i in range(self.numCh):
+        for i in range(4):
             self.RxEnable[i].set(True)
 
         vb = QVBoxLayout()
@@ -89,7 +53,7 @@ class LiveDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('Time Domain')
+        gb = QGroupBox('X Position (white = + polarity, red = - polarity)')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -98,21 +62,29 @@ class LiveDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.timePlot = PyDMWaveformPlot()
-        self.timePlot.setLabel("bottom", text='Time (ns)')
-        self.timePlot.addChannel(
+        self.xPosPlot = PyDMWaveformPlot()
+        self.xPosPlot.setLabel("bottom", text='Time (ns)')
+        self.xPosPlot.addChannel(
             name       = 'Counts',
-            x_channel  = f'{self.path[self.idx]}.Time',
-            y_channel  = f'{self.path[self.idx]}.WaveformData',
-            color      = self.color[self.idx],
+            x_channel  = f'{self.path[0]}.Time',
+            y_channel  = f'{self.path[0]}.WaveformData',
+            color      = "white",
             symbol     = 'o',
             symbolSize = 3,
         )
-        fl.addWidget(self.timePlot)
+        self.xPosPlot.addChannel(
+            name       = 'Counts',
+            x_channel  = f'{self.path[1]}.Time',
+            y_channel  = f'{self.path[1]}.WaveformData',
+            color      = "red",
+            symbol     = 'o',
+            symbolSize = 3,
+        )
+        fl.addWidget(self.xPosPlot)
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('Frequency Domain')
+        gb = QGroupBox('Y Position (white = + polarity, red = - polarity)')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -121,20 +93,25 @@ class LiveDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.freqPlot = PyDMWaveformPlot()
-        self.freqPlot.setLabel("bottom", text='Frequency (MHz)')
-        self.freqPlot.addChannel(
-            name       = 'Amplitude (dBFS)',
-            x_channel  = f'{self.path[self.idx]}.Freq',
-            y_channel  = f'{self.path[self.idx]}.Magnitude',
-            color      = self.color[self.idx],
+        self.yPosPlot = PyDMWaveformPlot()
+        self.yPosPlot.setLabel("bottom", text='Time (ns)')
+        self.yPosPlot.addChannel(
+            name       = 'Counts',
+            x_channel  = f'{self.path[2]}.Time',
+            y_channel  = f'{self.path[2]}.WaveformData',
+            color      =  "white",
             symbol     = 'o',
             symbolSize = 3,
         )
-        self.freqPlot.setAutoRangeY(False)
-        self.freqPlot.setMinYRange(-140.0)
-        self.freqPlot.setMaxYRange(0.0)
-        fl.addWidget(self.freqPlot)
+        self.yPosPlot.addChannel(
+            name       = 'Counts',
+            x_channel  = f'{self.path[3]}.Time',
+            y_channel  = f'{self.path[3]}.WaveformData',
+            color      = "red",
+            symbol     = 'o',
+            symbolSize = 3,
+        )
+        fl.addWidget(self.yPosPlot)
 
         #-----------------------------------------------------------------------------
 
@@ -146,14 +123,6 @@ class LiveDisplay(PyDMFrame):
         fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
-
-        chSel = PyDMSpinbox()
-        chSel.writeOnPress = True
-        chSel.setMinimum(0)
-        chSel.setMaximum(self.numCh-1)
-        chSel.setEnabled(True)
-        chSel.valueChanged.connect(self.changePlotCh)
-        fl.addWidget(chSel)
 
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)
