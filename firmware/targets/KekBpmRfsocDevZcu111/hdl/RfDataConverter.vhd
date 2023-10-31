@@ -27,6 +27,9 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
+library unisim;
+use unisim.vcomponents.all;
+
 entity RfDataConverter is
    generic (
       TPD_G            : time             := 1 ns;
@@ -43,6 +46,8 @@ entity RfDataConverter is
       dacN            : out slv(7 downto 0);
       sysRefP         : in  sl;
       sysRefN         : in  sl;
+      plSysRefP       : in  sl;
+      plSysRefN       : in  sl;
       -- ADC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
@@ -65,37 +70,38 @@ architecture mapping of RfDataConverter is
 
    component RfDataConverterIpCore
       port (
-         s_axi_aclk      : in  std_logic;
-         s_axi_aresetn   : in  std_logic;
-         s_axi_awaddr    : in  std_logic_vector (17 downto 0);
-         s_axi_awvalid   : in  std_logic;
-         s_axi_awready   : out std_logic;
-         s_axi_wdata     : in  std_logic_vector (31 downto 0);
-         s_axi_wstrb     : in  std_logic_vector (3 downto 0);
-         s_axi_wvalid    : in  std_logic;
-         s_axi_wready    : out std_logic;
-         s_axi_bresp     : out std_logic_vector (1 downto 0);
-         s_axi_bvalid    : out std_logic;
-         s_axi_bready    : in  std_logic;
-         s_axi_araddr    : in  std_logic_vector (17 downto 0);
-         s_axi_arvalid   : in  std_logic;
-         s_axi_arready   : out std_logic;
-         s_axi_rdata     : out std_logic_vector (31 downto 0);
-         s_axi_rresp     : out std_logic_vector (1 downto 0);
-         s_axi_rvalid    : out std_logic;
-         s_axi_rready    : in  std_logic;
-         sysref_in_p     : in  std_logic;
-         sysref_in_n     : in  std_logic;
          adc0_clk_p      : in  std_logic;
          adc0_clk_n      : in  std_logic;
          clk_adc0        : out std_logic;
-         m0_axis_aclk    : in  std_logic;
-         m0_axis_aresetn : in  std_logic;
          adc1_clk_p      : in  std_logic;
          adc1_clk_n      : in  std_logic;
          clk_adc1        : out std_logic;
-         m1_axis_aclk    : in  std_logic;
-         m1_axis_aresetn : in  std_logic;
+         dac1_clk_p      : in  std_logic;
+         dac1_clk_n      : in  std_logic;
+         clk_dac1        : out std_logic;
+         s_axi_aclk      : in  std_logic;
+         s_axi_aresetn   : in  std_logic;
+         s_axi_awaddr    : in  std_logic_vector(17 downto 0);
+         s_axi_awvalid   : in  std_logic;
+         s_axi_awready   : out std_logic;
+         s_axi_wdata     : in  std_logic_vector(31 downto 0);
+         s_axi_wstrb     : in  std_logic_vector(3 downto 0);
+         s_axi_wvalid    : in  std_logic;
+         s_axi_wready    : out std_logic;
+         s_axi_bresp     : out std_logic_vector(1 downto 0);
+         s_axi_bvalid    : out std_logic;
+         s_axi_bready    : in  std_logic;
+         s_axi_araddr    : in  std_logic_vector(17 downto 0);
+         s_axi_arvalid   : in  std_logic;
+         s_axi_arready   : out std_logic;
+         s_axi_rdata     : out std_logic_vector(31 downto 0);
+         s_axi_rresp     : out std_logic_vector(1 downto 0);
+         s_axi_rvalid    : out std_logic;
+         s_axi_rready    : in  std_logic;
+         irq             : out std_logic;
+         sysref_in_p     : in  std_logic;
+         sysref_in_n     : in  std_logic;
+         user_sysref_adc : in  std_logic;
          vin0_01_p       : in  std_logic;
          vin0_01_n       : in  std_logic;
          vin0_23_p       : in  std_logic;
@@ -104,34 +110,34 @@ architecture mapping of RfDataConverter is
          vin1_01_n       : in  std_logic;
          vin1_23_p       : in  std_logic;
          vin1_23_n       : in  std_logic;
-         m00_axis_tdata  : out std_logic_vector (127 downto 0);
-         m00_axis_tvalid : out std_logic;
-         m00_axis_tready : in  std_logic;
-         m02_axis_tdata  : out std_logic_vector (127 downto 0);
-         m02_axis_tvalid : out std_logic;
-         m02_axis_tready : in  std_logic;
-         m10_axis_tdata  : out std_logic_vector (127 downto 0);
-         m10_axis_tvalid : out std_logic;
-         m10_axis_tready : in  std_logic;
-         m12_axis_tdata  : out std_logic_vector (127 downto 0);
-         m12_axis_tvalid : out std_logic;
-         m12_axis_tready : in  std_logic;
-         dac1_clk_p      : in  std_logic;
-         dac1_clk_n      : in  std_logic;
-         clk_dac1        : out std_logic;
-         s1_axis_aclk    : in  std_logic;
-         s1_axis_aresetn : in  std_logic;
          vout10_p        : out std_logic;
          vout10_n        : out std_logic;
          vout11_p        : out std_logic;
          vout11_n        : out std_logic;
-         s10_axis_tdata  : in  std_logic_vector (63 downto 0);
+         m0_axis_aresetn : in  std_logic;
+         m0_axis_aclk    : in  std_logic;
+         m00_axis_tdata  : out std_logic_vector(127 downto 0);
+         m00_axis_tvalid : out std_logic;
+         m00_axis_tready : in  std_logic;
+         m02_axis_tdata  : out std_logic_vector(127 downto 0);
+         m02_axis_tvalid : out std_logic;
+         m02_axis_tready : in  std_logic;
+         m1_axis_aresetn : in  std_logic;
+         m1_axis_aclk    : in  std_logic;
+         m10_axis_tdata  : out std_logic_vector(127 downto 0);
+         m10_axis_tvalid : out std_logic;
+         m10_axis_tready : in  std_logic;
+         m12_axis_tdata  : out std_logic_vector(127 downto 0);
+         m12_axis_tvalid : out std_logic;
+         m12_axis_tready : in  std_logic;
+         s1_axis_aresetn : in  std_logic;
+         s1_axis_aclk    : in  std_logic;
+         s10_axis_tdata  : in  std_logic_vector(63 downto 0);
          s10_axis_tvalid : in  std_logic;
          s10_axis_tready : out std_logic;
-         s11_axis_tdata  : in  std_logic_vector (63 downto 0);
+         s11_axis_tdata  : in  std_logic_vector(63 downto 0);
          s11_axis_tvalid : in  std_logic;
-         s11_axis_tready : out std_logic;
-         irq             : out std_logic
+         s11_axis_tready : out std_logic
          );
    end component;
 
@@ -146,9 +152,30 @@ architecture mapping of RfDataConverter is
    signal adcReset  : sl := '1';
    signal adcResetL : sl := '0';
 
-   signal adc : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
+   signal adcValid    : sl;
+   signal adcReadyVec : slv(NUM_ADC_CH_C-1 downto 0);
+   signal adcReady    : sl;
+
+   signal plSysRefRaw : sl := '0';
+   signal plSysRef    : sl := '0';
 
 begin
+
+   U_IBUFDS : IBUFDS
+      port map (
+         I  => plSysRefP,
+         IB => plSysRefN,
+         O  => plSysRefRaw);
+
+   U_Synchronizer : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => adcClock,
+         dataIn  => plSysRefRaw,
+         dataOut => plSysRef);
 
    U_IpCore : RfDataConverterIpCore
       port map (
@@ -182,42 +209,49 @@ begin
          s_axi_rresp   => axilReadSlave.rresp,
          s_axi_rvalid  => axilReadSlave.rvalid,
          s_axi_rready  => axilReadMaster.rready,
+
          -- Misc. Ports
-         irq           => open,
-         sysref_in_p   => sysRefP,
-         sysref_in_n   => sysRefN,
+         irq             => open,
+         sysref_in_p     => sysRefP,
+         sysref_in_n     => sysRefN,
+         user_sysref_adc => plSysRef,
+
          -- ADC Ports
-         vin0_01_p     => adcP(0),
-         vin0_01_n     => adcN(0),
-         vin0_23_p     => adcP(1),
-         vin0_23_n     => adcN(1),
-         vin1_01_p     => adcP(2),
-         vin1_01_n     => adcN(2),
-         vin1_23_p     => adcP(3),
-         vin1_23_n     => adcN(3),
+         vin0_01_p => adcP(0),
+         vin0_01_n => adcN(0),
+         vin0_23_p => adcP(1),
+         vin0_23_n => adcN(1),
+         vin1_01_p => adcP(2),
+         vin1_01_n => adcN(2),
+         vin1_23_p => adcP(3),
+         vin1_23_n => adcN(3),
          -- DAC Ports
-         vout10_p      => dacP(4),
-         vout10_n      => dacN(4),
-         vout11_p      => dacP(5),
-         vout11_n      => dacN(5),
+         vout10_p  => dacP(4),
+         vout10_n  => dacN(4),
+         vout11_p  => dacP(5),
+         vout11_n  => dacN(5),
 
          -- ADC[3:0] AXI Stream Interface
          m0_axis_aresetn => adcResetL,
          m0_axis_aclk    => adcClock,
-         m00_axis_tdata  => adc(0),
-         m00_axis_tvalid => open,
-         m00_axis_tready => '1',
-         m02_axis_tdata  => adc(1),
-         m02_axis_tvalid => open,
-         m02_axis_tready => '1',
+
+         m00_axis_tdata  => adcData(0),
+         m00_axis_tvalid => adcValidVec(0),
+         m00_axis_tready => adcReadyVec(0),
+
+         m02_axis_tdata  => adcData(1),
+         m02_axis_tvalid => adcValidVec(1),
+         m02_axis_tready => adcReadyVec(1),
+
          m1_axis_aresetn => adcResetL,
          m1_axis_aclk    => adcClock,
-         m10_axis_tdata  => adc(2),
-         m10_axis_tvalid => open,
-         m10_axis_tready => '1',
-         m12_axis_tdata  => adc(3),
-         m12_axis_tvalid => open,
-         m12_axis_tready => '1',
+         m10_axis_tdata  => adcData(2),
+         m10_axis_tvalid => adcValidVec(2),
+         m10_axis_tready => adcReadyVec(2),
+
+         m12_axis_tdata  => adcData(3),
+         m12_axis_tvalid => adcValidVec(3),
+         m12_axis_tready => adcReadyVec(3),
 
          -- DAC[5:4] AXI Stream Interface
          s1_axis_aresetn              => dspResetL,
@@ -268,6 +302,14 @@ begin
    dacClk <= dspClock;
    dacRst <= dspReset;
 
+   process(adcClock)
+   begin
+      if rising_edge(adcClock) then
+         adcReadyVec <= (others => adcValid) after TPD_G;
+         adcValid    <= uAnd(adcValidVec)    after TPD_G;
+      end if;
+   end process;
+
    GEN_VEC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
       U_Gearbox : entity surf.AsyncGearbox
@@ -281,11 +323,11 @@ begin
             FIFO_ADDR_WIDTH_G  => 8)
          port map (
             -- Slave Interface
-            slaveClk   => adcClock,
-            slaveRst   => adcReset,
-            slaveData  => adc(i),
-            slaveValid => '1',
-            slaveReady => open,
+            slaveClk    => adcClock,
+            slaveRst    => adcReset,
+            slaveData   => adcData(i),
+            slaveValid  => adcValid,
+            slaveReady  => open,
             -- Master Interface
             masterClk   => dspClock,
             masterRst   => dspReset,

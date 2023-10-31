@@ -20,7 +20,7 @@ Root:
         DbgDacCh1I[1]: 0
         DbgDacCh1Q[1]: 0         
         ####################
-        DacDebugEnable: True
-        # DacDebugEnable: False # FALSE: Using DacSigGenLoader pattern instead
+        DacDebugEnable: False # False: Using Application.DacSigGenLoader pattern
+        # DacDebugEnable: True # True: Using ReadoutCtrl.DbgDacCh[1:0][I,Q]
         EnableSoftTrig: True
       ########################################################
