@@ -88,7 +88,7 @@ class StreamProcessor(pr.Device,ris.Master):
             name        = 'noise_threshold',
             description = 'threshold in peak search',
             typeStr     = 'UInt16',
-            value       = 1000,
+            value       = 500,
         ))
 
         coeffX = np.zeros(shape=[18,10], dtype=np.float32, order='C')
@@ -255,10 +255,11 @@ class StreamProcessor(pr.Device,ris.Master):
         with self.waveformRx[0].WaveformData.lock, self.waveformRx[1].WaveformData.lock, self.waveformRx[2].WaveformData.lock, self.waveformRx[3].WaveformData.lock:
 
             # Find the peaks per waveforms
-            a_peak = self.peak_search(waveform=self.waveformRx[0].WaveformData.value())
-            b_peak = self.peak_search(waveform=self.waveformRx[1].WaveformData.value())
-            c_peak = self.peak_search(waveform=self.waveformRx[2].WaveformData.value())
-            d_peak = self.peak_search(waveform=self.waveformRx[3].WaveformData.value())
+            index=np.argmin(self.waveformRx[0].WaveformData.value()[:12])
+            a_peak = self.peak_search(waveform=self.waveformRx[0].WaveformData.value(),start_index=index)
+            b_peak = self.peak_search(waveform=self.waveformRx[1].WaveformData.value(),start_index=index)
+            c_peak = self.peak_search(waveform=self.waveformRx[2].WaveformData.value(),start_index=index)
+            d_peak = self.peak_search(waveform=self.waveformRx[3].WaveformData.value(),start_index=index)
 
             # Clear the flag from each receiver
             [self.waveformRx[i].NewDataReady.set(False) for i in range(4)]
@@ -318,15 +319,8 @@ class StreamProcessor(pr.Device,ris.Master):
 
     # Method which is called to run chamber calculation
     def poscalc(self,sel,a,b,c,d):
-        # Check if the lengths are all the same
-        if len(a) == len(b) == len(c) == len(d):
-            h = (a - b - c + d) / (a + b + c + d)
-            v = (a + b - c - d) / (a + b + c + d)
-        else:
-            # TODO: Need to determine what the shape should be
-            minLen = np.min([len(a),len(b),len(c),len(d)])
-            h = np.zeros(shape=minLen)
-            v = np.zeros(shape=minLen)
+        h = np.divide((a-b-c+d), (a+b+c+d), out=np.zeros_like(a,dtype=np.float64), where=~((a==0)|(b==0)|(c==0)|(d==0)))
+        v = np.divide((a+b-c-d), (a+b+c+d), out=np.zeros_like(a,dtype=np.float64), where=~((a==0)|(b==0)|(c==0)|(d==0)))
 
         # Select the X/Y coefficients
         coeffX = self.coeffX[sel].value()
@@ -365,14 +359,15 @@ class StreamProcessor(pr.Device,ris.Master):
             self.YposRMS.set(np.nan)
 
     # Method which is called to run peak search
-    def peak_search(self,waveform):
+    def peak_search(self,waveform,start_index):
         mountain_maxima = []
-        for i in range(1, len(waveform) - 1):
-            if waveform[i] > waveform[i - 1] and waveform[i] > waveform[i + 1]:
-                candidate_peak = waveform[i]
-                if candidate_peak > self.noise_threshold.value():
-                    mountain_maxima.append(candidate_peak)
-
+        points_per_bunch = 12
+        for i in range(start_index, len(waveform)-points_per_bunch+start_index, points_per_bunch):
+            peak = max(waveform[i:i+points_per_bunch])
+            if peak >= self.noise_threshold.value():
+                mountain_maxima.append(peak)
+            else:
+                mountain_maxima.append(0)
         return np.array(mountain_maxima)
 
     # Overload the `>>` python operator for a connection for this custom master stream module
