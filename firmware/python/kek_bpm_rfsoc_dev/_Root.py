@@ -221,11 +221,16 @@ class Root(pr.Root):
             time.sleep(0.01)
 
         # Initialize the RF Data Converter
-        self.RFSoC.RfDataConverter.Init(dynamicNco=True)
+        self.RFSoC.RfDataConverter.Init(dynamicNco=(self.boardType=='rfsoc4x2'))
 
         # Wait for DSP Clock to be stable after changing NCO value
         while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
             time.sleep(0.01)
+
+        # MTS Sync the RF Data Converter
+        self.RFSoC.RfDataConverter.MtsAdcSync()
+        if (self.boardType == 'rfsoc4x2'):
+            self.RFSoC.RfDataConverter.MtsDacSync()
 
         # Load the Default YAML file
         print(f'Loading path={self.defaultFile} Default Configuration File...')

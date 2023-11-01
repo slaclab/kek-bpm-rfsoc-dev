@@ -156,7 +156,6 @@ architecture mapping of RfDataConverter is
    signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
    signal adcValid    : sl;
    signal adcReadyVec : slv(NUM_ADC_CH_C-1 downto 0);
-   signal adcReady    : sl;
 
    signal plSysRefRaw : sl := '0';
    signal plSysRef    : sl := '0';
