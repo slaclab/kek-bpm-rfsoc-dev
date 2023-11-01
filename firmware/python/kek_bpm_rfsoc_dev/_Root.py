@@ -228,8 +228,9 @@ class Root(pr.Root):
             time.sleep(0.01)
 
         # MTS Sync the RF Data Converter
-        self.RFSoC.RfDataConverter.MtsAdcSync()
-        if (self.boardType == 'rfsoc4x2'):
+        if (self.boardType == 'zcu111'):
+            self.RFSoC.RfDataConverter.MtsAdcSync()
+        else:
             self.RFSoC.RfDataConverter.MtsDacSync()
 
         # Load the Default YAML file
