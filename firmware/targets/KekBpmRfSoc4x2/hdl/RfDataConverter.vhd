@@ -192,10 +192,31 @@ architecture mapping of RfDataConverter is
    signal dacReset  : sl := '1';
    signal dacResetL : sl := '0';
 
-   signal adc : Slv128Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
+   signal adcValid    : sl;
+   signal adcReadyVec : slv(NUM_ADC_CH_C-1 downto 0);
+
    signal dac : Slv64Array(NUM_ADC_CH_C-1 downto 0)  := (others => (others => '0'));
 
+   signal plSysRefRaw : sl := '0';
+   signal plSysRef    : sl := '0';
+
 begin
+
+   U_plSysRefRaw : IBUFDS
+      port map (
+         I  => plSysRefP,
+         IB => plSysRefN,
+         O  => plSysRefRaw);
+
+   U_plSysRef : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => dacClock,
+         dataIn  => plSysRefRaw,
+         dataOut => plSysRef);
 
    U_IpCore : RfDataConverterIpCore
       port map (
@@ -225,7 +246,7 @@ begin
          -- Misc. Ports
          sysref_in_p     => sysRefP,
          sysref_in_n     => sysRefN,
-         user_sysref_dac => '0',
+         user_sysref_dac => plSysRef,
          -- ADC Ports
          vin0_01_p       => adcP(0),
          vin0_01_n       => adcN(0),
@@ -261,12 +282,12 @@ begin
          -- ADC[1:0] AXI Stream Interface (ADC_VIN_TILE224)
          m0_axis_aresetn => adcResetL,
          m0_axis_aclk    => adcClock,
-         m00_axis_tdata  => adc(3),
-         m00_axis_tvalid => open,
-         m00_axis_tready => '1',
-         m02_axis_tdata  => adc(2),
-         m02_axis_tvalid => open,
-         m02_axis_tready => '1',
+         m00_axis_tdata  => adcData(3),
+         m00_axis_tvalid => adcValidVec(3),
+         m00_axis_tready => adcReadyVec(3),
+         m02_axis_tdata  => adcData(2),
+         m02_axis_tvalid => adcValidVec(2),
+         m02_axis_tready => adcReadyVec(2),
          -- Unused TILE but needed for CLK source from TILE228 distribution (ADC_VIN_TILE225)
          m1_axis_aresetn => adcResetL,
          m1_axis_aclk    => adcClock,
@@ -279,12 +300,12 @@ begin
          -- ADC[3:2] AXI Stream Interface (ADC_VIN_TILE226)
          m2_axis_aresetn => adcResetL,
          m2_axis_aclk    => adcClock,
-         m20_axis_tdata  => adc(1),
-         m20_axis_tvalid => open,
-         m20_axis_tready => '1',
-         m22_axis_tdata  => adc(0),
-         m22_axis_tvalid => open,
-         m22_axis_tready => '1',
+         m20_axis_tdata  => adcData(1),
+         m20_axis_tvalid => adcValidVec(1),
+         m20_axis_tready => adcReadyVec(1),
+         m22_axis_tdata  => adcData(0),
+         m22_axis_tvalid => adcValidVec(0),
+         m22_axis_tready => adcReadyVec(0),
          -- Unused TILE but needed for CLK source from TILE228 distribution (ADC_VIN_TILE227)
          m3_axis_aresetn => adcResetL,
          m3_axis_aclk    => adcClock,
@@ -396,6 +417,14 @@ begin
    dspClk <= dspClock;
    dspRst <= dspReset;
 
+   process(adcClock)
+   begin
+      if rising_edge(adcClock) then
+         adcReadyVec <= (others => adcValid) after TPD_G;
+         adcValid    <= uAnd(adcValidVec)    after TPD_G;
+      end if;
+   end process;
+
    GEN_VEC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
       U_Gearbox : entity surf.AsyncGearbox
@@ -411,8 +440,8 @@ begin
             -- Slave Interface
             slaveClk    => adcClock,
             slaveRst    => adcReset,
-            slaveData   => adc(i),
-            slaveValid  => '1',
+            slaveData   => adcData(i),
+            slaveValid  => adcValid,
             slaveReady  => open,
             -- Master Interface
             masterClk   => dspClock,
