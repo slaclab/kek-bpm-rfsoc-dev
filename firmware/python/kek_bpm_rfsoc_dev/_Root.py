@@ -33,11 +33,7 @@ rogue.Version.minVersion('6.1.1')
 class Root(pr.Root):
     def __init__(self,
             ip          = '', # ETH Host Name (or IP address)
-            boardType   = '', # zcu111 or rfsoc4x2
             top_level   = '',
-            defaultFile = 'defaults.yml',
-            lmkConfig   = 'lmk/HexRegisterValues.txt',
-            lmxConfig   = 'lmx/HexRegisterValues.txt',
             zmqSrvEn    = True,  # Flag to include the ZMQ server
             **kwargs):
 
@@ -54,15 +50,13 @@ class Root(pr.Root):
 
         # Local Variables
         self.top_level = top_level
-        self.boardType = boardType
         if self.top_level != '':
-            self.defaultFile = f'{top_level}/config/{defaultFile}'
-            self.lmkConfig   = f'{top_level}/config/{boardType}/{lmkConfig}'
-            self.lmxConfig   = f'{top_level}/config/{boardType}/{lmxConfig}'
+            self.configPath = f'{top_level}/config'
         else:
-            self.defaultFile = f'config/{defaultFile}'
-            self.lmkConfig   = f'config/{boardType}/{lmkConfig}'
-            self.lmxConfig   = f'config/{boardType}/{lmxConfig}'
+            self.configPath = 'config'
+        self.defaultFile = f'{self.configPath}/defaults.yml'
+        self.lmkConfig   = f'{self.configPath}/LmkConfig.txt'
+        self.lmxConfig   = [f'{self.configPath}/LmxConfig6108MSPS.txt',f'{self.configPath}/LmxConfig3054MSPS.txt',f'{self.configPath}/LmxConfig3054MSPS.txt']
 
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
@@ -78,16 +72,9 @@ class Root(pr.Root):
         # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
         self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
 
-        if (self.boardType == 'rfsoc4x2'):
-            # Add RfSoC4x2 PS hardware control
-            self.add(rfsoc_hw.Hardware(
-                memBase    = self.memMap,
-            ))
-
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
             memBase    = self.memMap,
-            boardType  = self.boardType,
             sampleRate = self.sampleRate,
             offset     = 0x04_0000_0000, # Full 40-bit address space
             expand     = True,
@@ -196,42 +183,35 @@ class Root(pr.Root):
     def start(self,**kwargs):
         super(Root, self).start(**kwargs)
 
+        # Useful pointers
+        axiVersion = self.RFSoC.AxiSocCore.AxiVersion
+        dacSigGen = self.RFSoC.Application.DacSigGen
+
         # Issue a reset to the user logic
-        self.RFSoC.AxiSocCore.AxiVersion.UserRst()
+        # axiVersion.UserRst()
+        while(axiVersion.AppReset.get() != 0):
+            time.sleep(0.01)
 
         # Update all SW remote registers
         self.ReadAll()
 
-        # Check the board type
-        hwType = self.RFSoC.AxiSocCore.AxiVersion.HW_TYPE_C.getDisp()
-        if (self.boardType == 'zcu111') and (hwType == 'XilinxZcu111'):
-            hardware = self.RFSoC.Hardware
-        elif (self.boardType == 'rfsoc4x2') and (hwType == 'RealDigitalRfSoC4x2'):
-            hardware = self.Hardware
-        else:
-            errMsg = f'boardType = {self.boardType} != zcu111 or rfsoc4x2'
-            click.secho(errMsg, bg='red')
-            raise ValueError(errMsg)
-
         # Initialize the LMK/LMX Clock chips
-        hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=[self.lmxConfig])
+        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
         # Wait for DSP Clock to be stable after initializing LMK/LMX Clock chips
-        while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
+        while(axiVersion.DspReset.get()):
             time.sleep(0.01)
 
         # Initialize the RF Data Converter
-        self.RFSoC.RfDataConverter.Init(dynamicNco=(self.boardType=='rfsoc4x2'))
+        self.RFSoC.RfDataConverter.Init()
 
         # Wait for DSP Clock to be stable after changing NCO value
-        while(self.RFSoC.AxiSocCore.AxiVersion.DspReset.get()):
+        while(axiVersion.DspReset.get()):
             time.sleep(0.01)
 
         # MTS Sync the RF Data Converter
-        if (self.boardType == 'zcu111'):
-            self.RFSoC.RfDataConverter.MtsAdcSync()
-        else:
-            self.RFSoC.RfDataConverter.MtsDacSync()
+        self.RFSoC.RfDataConverter.MtsAdcSync()
+        self.RFSoC.RfDataConverter.MtsDacSync()
 
         # Load the Default YAML file
         print(f'Loading path={self.defaultFile} Default Configuration File...')
@@ -239,7 +219,9 @@ class Root(pr.Root):
         self.ReadAll()
 
         # Load the waveform data into DacSigGen
-        self.RFSoC.Application.DacSigGenLoader.LoadPulseModFunction()
+        dacSigGen = self.RFSoC.Application.DacSigGen
+        dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
+        dacSigGen.LoadCsvFile()
 
         # Update all SW remote registers
         self.CountReset()

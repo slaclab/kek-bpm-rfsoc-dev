@@ -46,17 +46,16 @@ entity RfDataConverter is
       dacN            : out slv(7 downto 0);
       sysRefP         : in  sl;
       sysRefN         : in  sl;
+      plClkP          : in  sl;
+      plClkN          : in  sl;
       plSysRefP       : in  sl;
       plSysRefN       : in  sl;
-      -- ADC Interface (dspClk domain)
+      -- ADC/DAC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
       dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
-      -- DAC Interface (dacClk domain)
-      dacClk          : out sl;
-      dacRst          : out sl;
-      dspDacI         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -76,6 +75,9 @@ architecture mapping of RfDataConverter is
          adc1_clk_p      : in  std_logic;
          adc1_clk_n      : in  std_logic;
          clk_adc1        : out std_logic;
+         dac0_clk_p      : in  std_logic;
+         dac0_clk_n      : in  std_logic;
+         clk_dac0        : out std_logic;
          dac1_clk_p      : in  std_logic;
          dac1_clk_n      : in  std_logic;
          clk_dac1        : out std_logic;
@@ -102,6 +104,7 @@ architecture mapping of RfDataConverter is
          sysref_in_p     : in  std_logic;
          sysref_in_n     : in  std_logic;
          user_sysref_adc : in  std_logic;
+         user_sysref_dac : in  std_logic;
          vin0_01_p       : in  std_logic;
          vin0_01_n       : in  std_logic;
          vin0_23_p       : in  std_logic;
@@ -110,10 +113,22 @@ architecture mapping of RfDataConverter is
          vin1_01_n       : in  std_logic;
          vin1_23_p       : in  std_logic;
          vin1_23_n       : in  std_logic;
+         vout00_p        : out std_logic;
+         vout00_n        : out std_logic;
+         vout01_p        : out std_logic;
+         vout01_n        : out std_logic;
+         vout02_p        : out std_logic;
+         vout02_n        : out std_logic;
+         vout03_p        : out std_logic;
+         vout03_n        : out std_logic;
          vout10_p        : out std_logic;
          vout10_n        : out std_logic;
          vout11_p        : out std_logic;
          vout11_n        : out std_logic;
+         vout12_p        : out std_logic;
+         vout12_n        : out std_logic;
+         vout13_p        : out std_logic;
+         vout13_n        : out std_logic;
          m0_axis_aresetn : in  std_logic;
          m0_axis_aclk    : in  std_logic;
          m00_axis_tdata  : out std_logic_vector(127 downto 0);
@@ -130,17 +145,38 @@ architecture mapping of RfDataConverter is
          m12_axis_tdata  : out std_logic_vector(127 downto 0);
          m12_axis_tvalid : out std_logic;
          m12_axis_tready : in  std_logic;
+         s0_axis_aresetn : in  std_logic;
+         s0_axis_aclk    : in  std_logic;
+         s00_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s00_axis_tvalid : in  std_logic;
+         s00_axis_tready : out std_logic;
+         s01_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s01_axis_tvalid : in  std_logic;
+         s01_axis_tready : out std_logic;
+         s02_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s02_axis_tvalid : in  std_logic;
+         s02_axis_tready : out std_logic;
+         s03_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s03_axis_tvalid : in  std_logic;
+         s03_axis_tready : out std_logic;
          s1_axis_aresetn : in  std_logic;
          s1_axis_aclk    : in  std_logic;
-         s10_axis_tdata  : in  std_logic_vector(63 downto 0);
+         s10_axis_tdata  : in  std_logic_vector(95 downto 0);
          s10_axis_tvalid : in  std_logic;
          s10_axis_tready : out std_logic;
-         s11_axis_tdata  : in  std_logic_vector(63 downto 0);
+         s11_axis_tdata  : in  std_logic_vector(95 downto 0);
          s11_axis_tvalid : in  std_logic;
-         s11_axis_tready : out std_logic
+         s11_axis_tready : out std_logic;
+         s12_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s12_axis_tvalid : in  std_logic;
+         s12_axis_tready : out std_logic;
+         s13_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s13_axis_tvalid : in  std_logic;
+         s13_axis_tready : out std_logic
          );
    end component;
 
+   signal plClk    : sl := '0';
    signal refClk   : sl := '0';
    signal axilRstL : sl := '0';
 
@@ -152,29 +188,45 @@ architecture mapping of RfDataConverter is
    signal adcReset  : sl := '1';
    signal adcResetL : sl := '0';
 
+   signal dacClock  : sl := '0';
+   signal dacReset  : sl := '1';
+   signal dacResetL : sl := '0';
+
    signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
    signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
    signal adcValid    : sl;
    signal adcReadyVec : slv(NUM_ADC_CH_C-1 downto 0);
 
    signal plSysRefRaw : sl := '0';
-   signal plSysRef    : sl := '0';
+   signal adcSysRef   : sl := '0';
+   signal dacSysRef   : sl := '0';
+
+   signal dac     : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
 
 begin
 
-   U_IBUFDS : IBUFDS
+   U_plSysRefRaw : IBUFDS
       port map (
          I  => plSysRefP,
          IB => plSysRefN,
          O  => plSysRefRaw);
 
-   U_Synchronizer : entity surf.Synchronizer
+   U_adcSysRef : entity surf.Synchronizer
       generic map (
          TPD_G => TPD_G)
       port map (
          clk     => adcClock,
          dataIn  => plSysRefRaw,
-         dataOut => plSysRef);
+         dataOut => adcSysRef);
+
+   U_dacSysRef : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => dacClock,
+         dataIn  => plSysRefRaw,
+         dataOut => dacSysRef);
 
    U_IpCore : RfDataConverterIpCore
       port map (
@@ -183,11 +235,10 @@ begin
          adc0_clk_n    => adcClkN(0),
          adc1_clk_p    => adcClkP(1),
          adc1_clk_n    => adcClkN(1),
-         clk_adc0      => open,
-         clk_adc1      => refClk,
+         dac0_clk_p    => dacClkP(0),
+         dac0_clk_n    => dacClkN(0),
          dac1_clk_p    => dacClkP(1),
          dac1_clk_n    => dacClkN(1),
-         clk_dac1      => open,
          -- AXI-Lite Ports
          s_axi_aclk    => axilClk,
          s_axi_aresetn => axilRstL,
@@ -210,10 +261,10 @@ begin
          s_axi_rready  => axilReadMaster.rready,
 
          -- Misc. Ports
-         irq             => open,
          sysref_in_p     => sysRefP,
          sysref_in_n     => sysRefN,
-         user_sysref_adc => plSysRef,
+         user_sysref_adc => adcSysRef,
+         user_sysref_dac => dacSysRef,
 
          -- ADC Ports
          vin0_01_p => adcP(0),
@@ -225,10 +276,22 @@ begin
          vin1_23_p => adcP(3),
          vin1_23_n => adcN(3),
          -- DAC Ports
+         vout00_p  => dacP(0),
+         vout00_n  => dacN(0),
+         vout01_p  => dacP(1),
+         vout01_n  => dacN(1),
+         vout02_p  => dacP(2),
+         vout02_n  => dacN(2),
+         vout03_p  => dacP(3),
+         vout03_n  => dacN(3),
          vout10_p  => dacP(4),
          vout10_n  => dacN(4),
          vout11_p  => dacP(5),
          vout11_n  => dacN(5),
+         vout12_p  => dacP(6),
+         vout12_n  => dacN(6),
+         vout13_p  => dacP(7),
+         vout13_n  => dacN(7),
 
          -- ADC[3:0] AXI Stream Interface
          m0_axis_aresetn => adcResetL,
@@ -252,21 +315,65 @@ begin
          m12_axis_tvalid => adcValidVec(3),
          m12_axis_tready => adcReadyVec(3),
 
-         -- DAC[5:4] AXI Stream Interface
-         s1_axis_aresetn              => dspResetL,
-         s1_axis_aclk                 => dspClock,
-         s10_axis_tdata(15 downto 0)  => x"0000",  -- I[1st sample)
-         s10_axis_tdata(31 downto 16) => x"0000",  -- Q[1st sample)
-         s10_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
-         s10_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
-         s10_axis_tvalid              => '1',
-         s10_axis_tready              => open,
-         s11_axis_tdata(15 downto 0)  => x"0000",  -- I[1st sample)
-         s11_axis_tdata(31 downto 16) => x"0000",  -- Q[1st sample)
-         s11_axis_tdata(47 downto 32) => x"0000",  -- I[2nd sample)
-         s11_axis_tdata(63 downto 48) => x"0000",  -- Q[2nd sample)
-         s11_axis_tvalid              => '1',
-         s11_axis_tready              => open);
+         -- DAC[3:0] AXI Stream Interface
+         s0_axis_aresetn => dacResetL,
+         s0_axis_aclk    => dacClock,
+         s00_axis_tdata  => (others => '0'),  -- Unused
+         s00_axis_tvalid => '1',
+         s00_axis_tready => open,
+         s01_axis_tdata  => (others => '0'),  -- Unused
+         s01_axis_tvalid => '1',
+         s01_axis_tready => open,
+         s02_axis_tdata  => (others => '0'),  -- Unused
+         s02_axis_tvalid => '1',
+         s02_axis_tready => open,
+         s03_axis_tdata  => (others => '0'),  -- Unused
+         s03_axis_tvalid => '1',
+         s03_axis_tready => open,
+
+         -- DAC[7:4] AXI Stream Interface
+         s1_axis_aresetn => dacResetL,
+         s1_axis_aclk    => dacClock,
+         s10_axis_tdata  => dacData(0),
+         s10_axis_tvalid => '1',
+         s10_axis_tready => open,
+         s11_axis_tdata  => dacData(1),
+         s11_axis_tvalid => '1',
+         s11_axis_tready => open,
+         s12_axis_tdata  => dacData(0),
+         s12_axis_tvalid => '1',
+         s12_axis_tready => open,
+         s13_axis_tdata  => dacData(1),
+         s13_axis_tvalid => '1',
+         s13_axis_tready => open);
+
+   U_IBUFDS : IBUFDS
+      port map(
+         I  => plClkP,
+         IB => plClkN,
+         O  => plClk);
+
+   U_BUFG : BUFG
+      port map(
+         I => plClk,
+         O => refClk);
+
+   U_BUFGCE_DIV : BUFGCE_DIV
+      generic map (
+         BUFGCE_DIVIDE => 2)
+      port map (
+         I   => refClk,
+         CE  => '1',
+         CLR => '0',
+         O   => dacClock);
+
+   U_RstSync : entity surf.RstSync
+      generic map(
+         TPD_G => TPD_G)
+      port map (
+         clk      => dacClock,
+         asyncRst => axilRst,
+         syncRst  => dacReset);
 
    U_Pll : entity surf.ClockManagerUltraScale
       generic map(
@@ -277,10 +384,11 @@ begin
          RST_IN_POLARITY_G => '1',
          NUM_CLOCKS_G      => 2,
          -- MMCM attributes
-         CLKIN_PERIOD_G    => 5.239,    -- 190.875 MHz
-         CLKFBOUT_MULT_G   => 6,        -- 1145.25 MHz
-         CLKOUT0_DIVIDE_G  => 3,
-         CLKOUT1_DIVIDE_G  => 6)
+         CLKIN_PERIOD_G    => 1.964,
+         DIVCLK_DIVIDE_G   => 2,
+         CLKFBOUT_MULT_G   => 3,
+         CLKOUT0_DIVIDE_G  => 2,
+         CLKOUT1_DIVIDE_G  => 4)
       port map(
          -- Clock Input
          clkIn     => refClk,
@@ -294,12 +402,11 @@ begin
 
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
+   dacResetL <= not(dacReset);
+   dspResetL <= not(dspReset);
 
    dspClk <= dspClock;
    dspRst <= dspReset;
-
-   dacClk <= dspClock;
-   dacRst <= dspReset;
 
    process(adcClock)
    begin
@@ -309,7 +416,7 @@ begin
       end if;
    end process;
 
-   GEN_VEC :
+   GEN_ADC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
       U_Gearbox : entity surf.AsyncGearbox
          generic map (
@@ -333,6 +440,45 @@ begin
             masterData  => dspAdc(i),
             masterValid => open,
             masterReady => '1');
-   end generate GEN_VEC;
+   end generate GEN_ADC;
+
+   process(dspClock)
+   begin
+      if rising_edge(dspClock) then
+         for ch in NUM_DAC_CH_C-1 downto 0 loop
+            for i in 3 downto 0 loop
+               -- I/Q pairs being mapped into the RFDC's input vector
+               dac(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;
+               dac(ch)(31+32*i downto 16+32*i) <= dspDacQ(ch)(15+16*i downto 16*i) after TPD_G;
+            end loop;
+         end loop;
+      end if;
+   end process;
+
+   GEN_DAC :
+   for i in NUM_DAC_CH_C-1 downto 0 generate
+      U_Gearbox : entity surf.AsyncGearbox
+         generic map (
+            TPD_G              => TPD_G,
+            SLAVE_WIDTH_G      => 128,
+            MASTER_WIDTH_G     => 96,
+            EN_EXT_CTRL_G      => false,
+            -- Async FIFO generics
+            FIFO_MEMORY_TYPE_G => "block",
+            FIFO_ADDR_WIDTH_G  => 8)
+         port map (
+            -- Slave Interface
+            slaveClk    => dspClock,
+            slaveRst    => dspReset,
+            slaveData   => dac(i),
+            slaveValid  => dspResetL,
+            slaveReady  => open,
+            -- Master Interface
+            masterClk   => dacClock,
+            masterRst   => dacReset,
+            masterData  => dacData(i),
+            masterValid => open,
+            masterReady => '1');
+   end generate GEN_DAC;
 
 end mapping;

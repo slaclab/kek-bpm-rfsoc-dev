@@ -38,13 +38,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--boardType",
-        type     = str,
-        required = True,
-        help     = "Board Type: only zcu111 and rfsoc4x2 are support",
-    )
-
-    parser.add_argument(
         "--guiType",
         type     = str,
         required = False,
@@ -60,10 +53,7 @@ if __name__ == "__main__":
 
     #################################################################
 
-    with kek_bpm_rfsoc_dev.Root(
-        ip        = args.ip,
-        boardType = args.boardType,
-    ) as root:
+    with kek_bpm_rfsoc_dev.Root(ip=args.ip) as root:
 
         ######################
         # Development PyDM GUI

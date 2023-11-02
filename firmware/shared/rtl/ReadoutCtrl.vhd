@@ -37,8 +37,8 @@ entity ReadoutCtrl is
       dacClk          : in  sl;
       dacRst          : in  sl;
       dacDbgEn        : out sl;
-      dacIDbg         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dacQDbg         : out Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dacIDbg         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dacQDbg         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -54,8 +54,8 @@ architecture rtl of ReadoutCtrl is
       sigGenTrig     : slv(1 downto 0);
       ncoConfig      : slv(31 downto 0);
       dacDbgEn       : sl;
-      dacIDbg        : Slv32Array(NUM_DAC_CH_C-1 downto 0);
-      dacQDbg        : Slv32Array(NUM_DAC_CH_C-1 downto 0);
+      dacIDbg        : Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dacQDbg        : Slv48Array(NUM_DAC_CH_C-1 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -98,9 +98,9 @@ begin
 
       axiSlaveRegister (axilEp, x"10", 0, v.dacDbgEn);
       axiSlaveRegister (axilEp, x"20", 0, v.dacIDbg(0));
-      axiSlaveRegister (axilEp, x"24", 0, v.dacQDbg(0));
-      axiSlaveRegister (axilEp, x"28", 0, v.dacIDbg(1));
-      axiSlaveRegister (axilEp, x"2C", 0, v.dacQDbg(1));
+      axiSlaveRegister (axilEp, x"28", 0, v.dacQDbg(0));
+      axiSlaveRegister (axilEp, x"30", 0, v.dacIDbg(1));
+      axiSlaveRegister (axilEp, x"38", 0, v.dacQDbg(1));
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -152,7 +152,7 @@ begin
       U_dacIDbg : entity surf.SynchronizerVector
          generic map(
             TPD_G   => TPD_G,
-            WIDTH_G => 32)
+            WIDTH_G => 48)
          port map(
             clk     => dacClk,
             dataIn  => r.dacIDbg(i),
@@ -161,7 +161,7 @@ begin
       U_dacQDbg : entity surf.SynchronizerVector
          generic map(
             TPD_G   => TPD_G,
-            WIDTH_G => 32)
+            WIDTH_G => 48)
          port map(
             clk     => dacClk,
             dataIn  => r.dacQDbg(i),

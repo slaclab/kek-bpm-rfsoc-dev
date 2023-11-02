@@ -17,8 +17,9 @@ class SigGenLoader(pr.Device):
     def __init__(self,DacSigGen=None,**kwargs):
         super().__init__(**kwargs)
 
-        self.DacSigGen = DacSigGen
-        self.length    = DacSigGen.smplPerCycle*(2**DacSigGen.ramWidth)
+        self.DacSigGen    = DacSigGen
+        self.length       = DacSigGen.smplPerCycle*(2**DacSigGen.ramWidth)
+        self.smplPerCycle = DacSigGen.smplPerCycle
 
         @self.command()
         def LoadPulseModFunction():
@@ -27,11 +28,12 @@ class SigGenLoader(pr.Device):
             Q = np.zeros(shape=self.length, dtype=np.int32, order='C')
 
             # Generate the waveform
-            for i in range(self.length//2):
+            for i in range(self.length//self.smplPerCycle):
                 # Check if not the gap on 16th pulse
                 if (i%16 != 15):
-                    I[2*i+0] = 10000
-                    I[2*i+1] = 0
+                    I[3*i+0] = 10000
+                    I[3*i+1] = 0
+                    I[3*i+2] = 0
             Q = I
 
             # Write the waveforms to hardware
@@ -40,7 +42,7 @@ class SigGenLoader(pr.Device):
                 self.DacSigGen.Waveform[2*x+1].set(Q)
 
             # Update the BufferLength register to be normalized to smplPerCycle (zero inclusive)
-            self.DacSigGen.BufferLength.set((self.length//self.DacSigGen.smplPerCycle)-1)
+            self.DacSigGen.BufferLength.set((self.length//self.smplPerCycle)-1)
 
             # Toggle flags (if flags already active)
             self.DacSigGen.RefreshDacFsm()

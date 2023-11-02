@@ -6,19 +6,20 @@ Root:
         enable: True
         Enabled: 0x1
         Continuous: 0x1 # Continuous mode
+        CsvFilePath: 'BpmPatternSpacing4nsGapAt16.csv'
       ########################################################
       ReadoutCtrl:
         NcoFreqMHz: 1054.0
-        ####################
-        DbgDacCh0I[0]: 10000
-        DbgDacCh0Q[0]: 10000
-        DbgDacCh0I[1]: 0
-        DbgDacCh0Q[1]: 0 
-        ####################
-        DbgDacCh1I[0]: 10000
-        DbgDacCh1Q[0]: 10000
-        DbgDacCh1I[1]: 0
-        DbgDacCh1Q[1]: 0         
+        # ####################
+        # DbgDacCh0I[0]: 10000
+        # DbgDacCh0Q[0]: 10000
+        # DbgDacCh0I[1]: 0
+        # DbgDacCh0Q[1]: 0 
+        # ####################
+        # DbgDacCh1I[0]: 10000
+        # DbgDacCh1Q[0]: 10000
+        # DbgDacCh1I[1]: 0
+        # DbgDacCh1Q[1]: 0         
         ####################
         DacDebugEnable: False # False: Using Application.DacSigGenLoader pattern
         # DacDebugEnable: True # True: Using ReadoutCtrl.DbgDacCh[1:0][I,Q]

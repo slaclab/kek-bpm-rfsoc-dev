@@ -97,46 +97,46 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
         ))
 
-        self.addRemoteVariables(
-            name         = 'DbgDacCh0I',
-            offset       = 0x20,
-            bitSize      = 16,
-            base         = pr.Int,
-            mode         = 'RW',
-            number       = 2,
-            stride       = 2,
-            hidden       = True,
-        )
+        # self.addRemoteVariables(
+            # name         = 'DbgDacCh0I',
+            # offset       = 0x20,
+            # bitSize      = 16,
+            # base         = pr.Int,
+            # mode         = 'RW',
+            # number       = 2,
+            # stride       = 2,
+            # hidden       = True,
+        # )
 
-        self.addRemoteVariables(
-            name         = 'DbgDacCh0Q',
-            offset       = 0x24,
-            bitSize      = 16,
-            base         = pr.Int,
-            mode         = 'RW',
-            number       = 2,
-            stride       = 2,
-            hidden       = True,
-        )
+        # self.addRemoteVariables(
+            # name         = 'DbgDacCh0Q',
+            # offset       = 0x24,
+            # bitSize      = 16,
+            # base         = pr.Int,
+            # mode         = 'RW',
+            # number       = 2,
+            # stride       = 2,
+            # hidden       = True,
+        # )
 
-        self.addRemoteVariables(
-            name         = 'DbgDacCh1I',
-            offset       = 0x28,
-            bitSize      = 16,
-            base         = pr.Int,
-            mode         = 'RW',
-            number       = 2,
-            stride       = 2,
-            hidden       = True,
-        )
+        # self.addRemoteVariables(
+            # name         = 'DbgDacCh1I',
+            # offset       = 0x28,
+            # bitSize      = 16,
+            # base         = pr.Int,
+            # mode         = 'RW',
+            # number       = 2,
+            # stride       = 2,
+            # hidden       = True,
+        # )
 
-        self.addRemoteVariables(
-            name         = 'DbgDacCh1Q',
-            offset       = 0x2C,
-            bitSize      = 16,
-            base         = pr.Int,
-            mode         = 'RW',
-            number       = 2,
-            stride       = 2,
-            hidden       = True,
-        )
+        # self.addRemoteVariables(
+            # name         = 'DbgDacCh1Q',
+            # offset       = 0x2C,
+            # bitSize      = 16,
+            # base         = pr.Int,
+            # mode         = 'RW',
+            # number       = 2,
+            # stride       = 2,
+            # hidden       = True,
+        # )

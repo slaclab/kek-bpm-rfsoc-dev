@@ -21,9 +21,9 @@ class Application(pr.Device):
         self.add(rfsoc_utility.SigGen(
             name         = 'DacSigGen',
             offset       = 0x01_000000,
-            numCh        = 4,  # Must match NUM_CH_G config
+            numCh        = 4, # Must match NUM_CH_G config
             ramWidth     = 9, # Must match RAM_ADDR_WIDTH_G config
-            smplPerCycle = 2, # Must match SAMPLE_PER_CYCLE_G config
+            smplPerCycle = 4, # Must match SAMPLE_PER_CYCLE_G config
             expand       = False,
         ))
 
