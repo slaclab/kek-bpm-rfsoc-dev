@@ -10,6 +10,6 @@ Root:
         enable: True
         Enabled: 0x1
         Continuous: 0x1 # Continuous mode
-        CsvFilePath: '4nsSpacingNoGap.csv'
-        # CsvFilePath: '4nsSpacingGapAt16.csv'
+        # CsvFilePath: '4nsSpacingNoGap.csv'
+        CsvFilePath: '4nsSpacingGapAt16.csv'
       ########################################################

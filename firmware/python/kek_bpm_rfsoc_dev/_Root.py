@@ -210,6 +210,7 @@ class Root(pr.Root):
             time.sleep(0.01)
 
         # MTS Sync the RF Data Converter
+        time.sleep(1.0)
         self.RFSoC.RfDataConverter.MtsAdcSync()
         self.RFSoC.RfDataConverter.MtsDacSync()
 

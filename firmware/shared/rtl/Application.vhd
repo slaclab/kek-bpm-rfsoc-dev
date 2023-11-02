@@ -40,6 +40,7 @@ entity Application is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
+      dspRunCntrl     : out  sl;
       dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
       dspDacI         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
@@ -76,10 +77,6 @@ architecture mapping of Application is
 
    signal dacI : Slv64Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
    signal dacQ : Slv64Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-
-   signal dacDbgEn : sl;
-   signal dacIDbg  : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacQDbg  : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal sigGenTrig : slv(1 downto 0);
    signal ncoConfig  : slv(31 downto 0);
@@ -137,6 +134,7 @@ begin
          dspDacOut1      => dacQ(0),
          dspDacOut2      => dacI(1),
          dspDacOut3      => dacQ(1),
+         sigGenActive    => dspRunCntrl,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -164,12 +162,6 @@ begin
          dspRst          => dspRst,
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
-         -- DAC Interface (dspClk domain)
-         dacClk          => dspClk,
-         dacRst          => dspRst,
-         dacDbgEn        => dacDbgEn,
-         dacIDbg         => dacIDbg,
-         dacQDbg         => dacQDbg,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

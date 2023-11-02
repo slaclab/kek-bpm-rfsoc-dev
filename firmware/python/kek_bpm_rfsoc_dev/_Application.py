@@ -27,12 +27,6 @@ class Application(pr.Device):
             expand       = False,
         ))
 
-        self.add(rfsoc.SigGenLoader(
-            name         = 'DacSigGenLoader',
-            DacSigGen    = self.DacSigGen,
-            expand       = False,
-        ))
-
         self.add(rfsoc.ReadoutCtrl(
             offset     = 0x00_000000,
             sampleRate = sampleRate,

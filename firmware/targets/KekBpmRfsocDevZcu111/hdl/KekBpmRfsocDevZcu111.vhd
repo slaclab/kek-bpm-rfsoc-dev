@@ -84,11 +84,12 @@ architecture top_level of KekBpmRfsocDevZcu111 is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal dspClk  : sl;
-   signal dspRst  : sl;
-   signal dspAdc  : Slv256Array(NUM_ADC_CH_C-1 downto 0);
-   signal dspDacI : Slv64Array(NUM_DAC_CH_C-1 downto 0);
-   signal dspDacQ : Slv64Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspClk      : sl;
+   signal dspRst      : sl;
+   signal dspRunCntrl : sl;
+   signal dspAdc      : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspDacI     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspDacQ     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
 
 begin
 
@@ -224,6 +225,7 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
+         dspRunCntrl     => dspRunCntrl,
          dspAdc          => dspAdc,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
@@ -251,6 +253,7 @@ begin
          -- ADC/DAC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
+         dspRunCntrl     => dspRunCntrl,
          dspAdc          => dspAdc,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,

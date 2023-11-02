@@ -53,6 +53,7 @@ entity RfDataConverter is
       -- ADC/DAC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
+      dspRunCntrl     : in  sl;
       dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
       dspDacI         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
@@ -201,8 +202,12 @@ architecture mapping of RfDataConverter is
    signal adcSysRef   : sl := '0';
    signal dacSysRef   : sl := '0';
 
-   signal dac     : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal dac      : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacData  : Slv96Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
+   signal dacValid : slv(NUM_ADC_CH_C-1 downto 0);
+   signal dspValid : slv(NUM_ADC_CH_C-1 downto 0);
+
+   signal dspRunCntrlL : sl := '0';
 
 begin
 
@@ -335,16 +340,16 @@ begin
          s1_axis_aresetn => dacResetL,
          s1_axis_aclk    => dacClock,
          s10_axis_tdata  => dacData(0),
-         s10_axis_tvalid => '1',
+         s10_axis_tvalid => dacValid(0),
          s10_axis_tready => open,
          s11_axis_tdata  => dacData(1),
-         s11_axis_tvalid => '1',
+         s11_axis_tvalid => dacValid(1),
          s11_axis_tready => open,
          s12_axis_tdata  => dacData(0),
-         s12_axis_tvalid => '1',
+         s12_axis_tvalid => dacValid(0),
          s12_axis_tready => open,
          s13_axis_tdata  => dacData(1),
-         s13_axis_tvalid => '1',
+         s13_axis_tvalid => dacValid(1),
          s13_axis_tready => open);
 
    U_IBUFDS : IBUFDS
@@ -436,7 +441,7 @@ begin
             slaveReady  => open,
             -- Master Interface
             masterClk   => dspClock,
-            masterRst   => dspReset,
+            masterRst   => dspRunCntrlL,
             masterData  => dspAdc(i),
             masterValid => open,
             masterReady => '1');
@@ -446,6 +451,8 @@ begin
    begin
       if rising_edge(dspClock) then
          for ch in NUM_DAC_CH_C-1 downto 0 loop
+            dspValid(ch) <= dspRunCntrl      after TPD_G;
+            dspRunCntrlL <= not(dspRunCntrl) after TPD_G;
             for i in 3 downto 0 loop
                -- I/Q pairs being mapped into the RFDC's input vector
                dac(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;
@@ -471,13 +478,13 @@ begin
             slaveClk    => dspClock,
             slaveRst    => dspReset,
             slaveData   => dac(i),
-            slaveValid  => dspResetL,
+            slaveValid  => dspValid(i),
             slaveReady  => open,
             -- Master Interface
             masterClk   => dacClock,
             masterRst   => dacReset,
             masterData  => dacData(i),
-            masterValid => open,
+            masterValid => dacValid(i),
             masterReady => '1');
    end generate GEN_DAC;
 
