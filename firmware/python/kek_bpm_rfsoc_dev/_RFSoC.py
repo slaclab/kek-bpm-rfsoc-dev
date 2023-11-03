@@ -16,7 +16,7 @@ import surf.xilinx                                   as xil
 import kek_bpm_rfsoc_dev                             as rfsoc
 
 class RFSoC(pr.Device):
-    def __init__(self,boardType='',sampleRate=0.0,**kwargs):
+    def __init__(self,sampleRate=0.0,**kwargs):
         super().__init__(**kwargs)
 
         self.add(socCore.AxiSocCore(
@@ -25,39 +25,23 @@ class RFSoC(pr.Device):
             # expand       = True,
         ))
 
-        # Check for ZCU111
-        if (boardType == 'zcu111'):
+        self.add(xilinxZcu111.Hardware(
+            offset       = 0x8000_0000,
+            # expand       = True,
+        ))
 
-            self.add(xilinxZcu111.Hardware(
-                offset       = 0x8000_0000,
-                # expand       = True,
-            ))
+        self.add(xil.RfDataConverter(
+            offset    = 0x9000_0000,
+            gen3      = False, # True if using RFSoC GEN3 Hardware
+            enAdcTile = [True,True,False,False], # adcTile[0,1]
+            enDacTile = [True,True,False,False], # dacTile[0,1]
+            # expand       = True,
+        ))
 
-            self.add(xil.RfDataConverter(
-                offset    = 0x9000_0000,
-                gen3      = False, # True if using RFSoC GEN3 Hardware
-                enAdcTile = [True,True,False,False],   # adcTile[0,1]
-                enDacTile = [False,True,False,False],  # dacTile[1]
-                # expand       = True,
-            ))
-
-            # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
-            self.RfDataConverter.dacTile[1].dacBlock[1].samplingRate._default = 4072.0 # In units of MHz,
-
-        # Else rfsoc4x2 board
-        else:
-
-            self.add(xil.RfDataConverter(
-                offset    = 0x9000_0000,
-                gen3      = True, # True if using RFSoC GEN3 Hardware
-                enAdcTile = [True,False,True,False], # adcTile[0,2]
-                enDacTile = [True,False,True,False], # dacTile[0,2]
-                # expand    = True,
-            ))
-
-            # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
-            for i in [0,2]:
-                self.RfDataConverter.dacTile[i].dacBlock[0].samplingRate._default = 4072.0 # In units of MHz,
+        # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
+        for i in range(2):
+            for j in range(4):
+                self.RfDataConverter.dacTile[i].dacBlock[j].samplingRate._default = 6108.0 # In units of MHz,
 
         self.add(rfsoc.Application(
             offset     = 0xA000_0000,

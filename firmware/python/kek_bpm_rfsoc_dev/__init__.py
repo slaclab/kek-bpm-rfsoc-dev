@@ -1,4 +1,3 @@
-from kek_bpm_rfsoc_dev._SigGenLoader    import *
 from kek_bpm_rfsoc_dev._StreamProcessor import *
 from kek_bpm_rfsoc_dev._ReadoutCtrl     import *
 from kek_bpm_rfsoc_dev._Application     import *
