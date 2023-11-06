@@ -3,7 +3,6 @@ Root:
     Application:
       ########################################################
       ReadoutCtrl:
-        NcoFreqMHz: 1054.0
         EnableSoftTrig: True
       ########################################################
       DacSigGen:

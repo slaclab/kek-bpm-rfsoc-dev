@@ -45,6 +45,13 @@ if __name__ == "__main__":
         help     = "Sets the GUI type (PyDM or None)",
     )
 
+    parser.add_argument(
+        "--bpmFreqMHz",
+        type     = int,
+        required = True,
+        help     = "BPM ringing frequency (in units of MHz)",
+    )
+
     # Get the arguments
     args = parser.parse_args()
 
@@ -53,7 +60,10 @@ if __name__ == "__main__":
 
     #################################################################
 
-    with kek_bpm_rfsoc_dev.Root(ip=args.ip) as root:
+    with kek_bpm_rfsoc_dev.Root(
+        ip         = args.ip,
+        bpmFreqMHz = args.bpmFreqMHz,
+    ) as root:
 
         ######################
         # Development PyDM GUI
