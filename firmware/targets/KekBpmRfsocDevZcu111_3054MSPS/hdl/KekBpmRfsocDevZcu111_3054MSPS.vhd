@@ -26,7 +26,7 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfsocDevZcu111 is
+entity KekBpmRfsocDevZcu111_3054MSPS is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
@@ -52,9 +52,9 @@ entity KekBpmRfsocDevZcu111 is
       -- SYSMON Ports
       vPIn      : in    sl;
       vNIn      : in    sl);
-end KekBpmRfsocDevZcu111;
+end KekBpmRfsocDevZcu111_3054MSPS;
 
-architecture top_level of KekBpmRfsocDevZcu111 is
+architecture top_level of KekBpmRfsocDevZcu111_3054MSPS is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
