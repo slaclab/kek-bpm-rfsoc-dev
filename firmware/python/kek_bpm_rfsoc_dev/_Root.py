@@ -46,11 +46,13 @@ class Root(pr.Root):
         # Check for ZONE1 operation
         if bpmFreqMHz < (3054//2):
             self.NcoFreqMHz = self.bpmFreqMHz
-            self.sampleRate = 3.054E+9 # Units of Hz
+            self.sampleRate = 4.072E+9 # Units of Hz
+            lmxAdcFile = 'LmxConfig4072MSPS.txt'
         # Else ZONE2 operation
         else:
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
+            lmxAdcFile = 'LmxConfig3054MSPS.txt'
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
         #################################################################
@@ -67,7 +69,7 @@ class Root(pr.Root):
             self.configPath = 'config'
         self.defaultFile = f'{self.configPath}/defaults.yml'
         self.lmkConfig   = f'{self.configPath}/LmkConfig.txt'
-        self.lmxConfig   = [f'{self.configPath}/LmxConfig6108MSPS.txt',f'{self.configPath}/LmxConfig3054MSPS.txt',f'{self.configPath}/LmxConfig3054MSPS.txt']
+        self.lmxConfig   = [f'{self.configPath}/LmxConfig6108MSPS.txt',f'{self.configPath}/{lmxAdcFile}',f'{self.configPath}/{lmxAdcFile}']
 
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
