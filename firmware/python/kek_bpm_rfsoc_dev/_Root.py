@@ -32,15 +32,26 @@ rogue.Version.minVersion('6.1.1')
 
 class Root(pr.Root):
     def __init__(self,
-            ip          = '', # ETH Host Name (or IP address)
-            top_level   = '',
-            zmqSrvEn    = True,  # Flag to include the ZMQ server
+            ip         = '',   # ETH Host Name (or IP address)
+            top_level  = '',
+            bpmFreqMHz = 2000, # 2000 MHz, 1000 MHz or 500MHz
+            zmqSrvEn   = True, # Flag to include the ZMQ server
             **kwargs):
 
         # Pass custom value to parent via super function
         super().__init__(**kwargs)
 
-        self.sampleRate=3.054E+9
+        self.bpmFreqMHz = float(bpmFreqMHz)
+
+        # Check for ZONE1 operation
+        if bpmFreqMHz < (3054//2):
+            self.NcoFreqMHz = self.bpmFreqMHz
+            self.sampleRate = 3.054E+9 # Units of Hz
+        # Else ZONE2 operation
+        else:
+            self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
+            self.sampleRate = 3.054E+9 # Units of Hz
+        print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
         #################################################################
         if zmqSrvEn:
@@ -92,10 +103,10 @@ class Root(pr.Root):
         self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8)) for i in range(4)]
 
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
-        self.ampDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
+        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
 
         # self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
-        self.ampFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
+        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
 
         # Connect the rogue stream arrays
         for i in range(4):
@@ -185,10 +196,11 @@ class Root(pr.Root):
 
         # Useful pointers
         axiVersion = self.RFSoC.AxiSocCore.AxiVersion
-        dacSigGen = self.RFSoC.Application.DacSigGen
+        dacSigGen  = self.RFSoC.Application.DacSigGen
+        rfdc       = self.RFSoC.RfDataConverter
 
         # Issue a reset to the user logic
-        # axiVersion.UserRst()
+        axiVersion.UserRst()
         while(axiVersion.AppReset.get() != 0):
             time.sleep(0.01)
 
@@ -197,30 +209,30 @@ class Root(pr.Root):
 
         # Initialize the LMK/LMX Clock chips
         self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
-
-        # Wait for DSP Clock to be stable after initializing LMK/LMX Clock chips
-        while(axiVersion.DspReset.get()):
-            time.sleep(0.01)
+        time.sleep(0.2)
 
         # Initialize the RF Data Converter
-        self.RFSoC.RfDataConverter.Init()
+        rfdc.Init(dynamicNco=True)
 
-        # Wait for DSP Clock to be stable after changing NCO value
-        while(axiVersion.DspReset.get()):
-            time.sleep(0.01)
+        # Set the DAC's NCO frequency
+        for i in range(2):
+            for j in range(4):
+                rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
 
         # MTS Sync the RF Data Converter
         time.sleep(1.0)
-        self.RFSoC.RfDataConverter.MtsAdcSync()
-        self.RFSoC.RfDataConverter.MtsDacSync()
+        rfdc.MtsAdcSync()
+        rfdc.MtsDacSync()
 
         # Load the Default YAML file
         print(f'Loading path={self.defaultFile} Default Configuration File...')
         self.LoadConfig(self.defaultFile)
         self.ReadAll()
 
+        # Set the firmware DDC's NCO value
+        self.RFSoC.Application.ReadoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
+
         # Load the waveform data into DacSigGen
-        dacSigGen = self.RFSoC.Application.DacSigGen
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
 

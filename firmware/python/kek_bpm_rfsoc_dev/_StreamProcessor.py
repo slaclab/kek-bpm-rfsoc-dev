@@ -255,10 +255,14 @@ class StreamProcessor(pr.Device,ris.Master):
         with self.waveformRx[0].WaveformData.lock, self.waveformRx[1].WaveformData.lock, self.waveformRx[2].WaveformData.lock, self.waveformRx[3].WaveformData.lock:
 
             # Find the peaks per waveforms
-            a_peak = self.peak_search(waveform=self.waveformRx[0].WaveformData.value(),start_index=np.argmin(self.waveformRx[0].WaveformData.value()[:12]))
-            b_peak = self.peak_search(waveform=self.waveformRx[1].WaveformData.value(),start_index=np.argmin(self.waveformRx[1].WaveformData.value()[:12]))
-            c_peak = self.peak_search(waveform=self.waveformRx[2].WaveformData.value(),start_index=np.argmin(self.waveformRx[2].WaveformData.value()[:12]))
-            d_peak = self.peak_search(waveform=self.waveformRx[3].WaveformData.value(),start_index=np.argmin(self.waveformRx[3].WaveformData.value()[:12]))
+            index=np.argmin(self.waveformRx[0]._waveformData[:12])
+            a_peak = self.peak_search(waveform=self.waveformRx[0]._waveformData,start_index=index)
+            b_peak = self.peak_search(waveform=self.waveformRx[1]._waveformData,start_index=index)
+            c_peak = self.peak_search(waveform=self.waveformRx[2]._waveformData,start_index=index)
+            d_peak = self.peak_search(waveform=self.waveformRx[3]._waveformData,start_index=index)
+
+            # Update the waveform PVs
+            [self.waveformRx[i].UpdateWaveform() for i in range(4)]
 
             # Clear the flag from each receiver
             [self.waveformRx[i].NewDataReady.set(False) for i in range(4)]
