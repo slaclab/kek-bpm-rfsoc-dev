@@ -26,7 +26,7 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfsocDevZcu111 is
+entity KekBpmRfsocDevZcu111_4072MSPS is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
@@ -52,9 +52,9 @@ entity KekBpmRfsocDevZcu111 is
       -- SYSMON Ports
       vPIn      : in    sl;
       vNIn      : in    sl);
-end KekBpmRfsocDevZcu111;
+end KekBpmRfsocDevZcu111_4072MSPS;
 
-architecture top_level of KekBpmRfsocDevZcu111 is
+architecture top_level of KekBpmRfsocDevZcu111_4072MSPS is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
@@ -86,8 +86,11 @@ architecture top_level of KekBpmRfsocDevZcu111 is
 
    signal dspClk      : sl;
    signal dspRst      : sl;
-   signal dspRunCntrl : sl;
    signal dspAdc      : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+
+   signal dacClk      : sl;
+   signal dacRst      : sl;
+   signal dspRunCntrl : sl;
    signal dspDacI     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
    signal dspDacQ     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
 
@@ -222,11 +225,14 @@ begin
          plClkN          => plClkN,
          plSysRefP       => plSysRefP,
          plSysRefN       => plSysRefN,
-         -- ADC/DAC Interface (dspClk domain)
+         -- ADC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspRunCntrl     => dspRunCntrl,
          dspAdc          => dspAdc,
+         -- DAC Interface (dacClk domain)
+         dacClk          => dacClk,
+         dacRst          => dacRst,
+         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -250,11 +256,14 @@ begin
          dmaRst          => dmaRst,
          dmaIbMaster     => dmaIbMasters(0),
          dmaIbSlave      => dmaIbSlaves(0),
-         -- ADC/DAC Interface (dspClk domain)
+         -- ADC Interface (dspClk domain)
          dspClk          => dspClk,
          dspRst          => dspRst,
-         dspRunCntrl     => dspRunCntrl,
          dspAdc          => dspAdc,
+         -- DAC Interface (dacClk domain)
+         dacClk          => dacClk,
+         dacRst          => dacRst,
+         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)

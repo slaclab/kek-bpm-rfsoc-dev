@@ -37,11 +37,14 @@ entity Application is
       dmaRst          : in  sl;
       dmaIbMaster     : out AxiStreamMasterType;
       dmaIbSlave      : in  AxiStreamSlaveType;
-      -- ADC/DAC Interface (dspClk domain)
+      -- ADC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspRunCntrl     : out  sl;
       dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      -- DAC Interface (dacClk domain)
+      dacClk          : in  sl;
+      dacRst          : in  sl;
+      dspRunCntrl     : out sl;
       dspDacI         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
@@ -95,9 +98,16 @@ begin
    begin
       -- Help with making timing
       if rising_edge(dspClk) then
-         adc     <= dspAdc after TPD_G;
-         dspDacI <= dacI   after TPD_G;
-         dspDacQ <= dacQ   after TPD_G;
+         adc <= dspAdc after TPD_G;
+      end if;
+   end process;
+
+   process(dacClk)
+   begin
+      -- Help with making timing
+      if rising_edge(dacClk) then
+         dspDacI <= dacI after TPD_G;
+         dspDacQ <= dacQ after TPD_G;
       end if;
    end process;
 
@@ -128,8 +138,8 @@ begin
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
+         dspClk          => dacClk,
+         dspRst          => dacRst,
          dspDacOut0      => dacI(0),
          dspDacOut1      => dacQ(0),
          dspDacOut2      => dacI(1),

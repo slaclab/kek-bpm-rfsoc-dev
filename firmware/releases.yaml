@@ -10,22 +10,14 @@
 
 GitBase: ..
 
-TopRoguePackage: kek_bpm_rfsoc_dev
-
-RoguePackages:
-  - submodules/surf/python
-  - submodules/axi-soc-ultra-plus-core/python
-  - python     
-
-# RogueConfig:
-  # - ../software/config
-
-# RogueScripts:
-  # - ../software/scripts/devGui
-
 Targets:
-  KekBpmRfsocDevZcu111:
-    ImageDir: targets/KekBpmRfsocDevZcu111/images
+  KekBpmRfsocDevZcu111_3054MSPS:
+    ImageDir: targets/KekBpmRfsocDevZcu111_3054MSPS/images
+    Extensions:
+      - petalinux.tar.gz
+      - ltx
+  KekBpmRfsocDevZcu111_4072MSPS:
+    ImageDir: targets/KekBpmRfsocDevZcu111_4072MSPS/images
     Extensions:
       - petalinux.tar.gz
       - ltx
@@ -34,6 +26,7 @@ Releases:
   all:
     Primary: True
     Targets:
-      - KekBpmRfsocDevZcu111
+      - KekBpmRfsocDevZcu111_3054MSPS
+      - KekBpmRfsocDevZcu111_4072MSPS
     Types:
       - petalinux
