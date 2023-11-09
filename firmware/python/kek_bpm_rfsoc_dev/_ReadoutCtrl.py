@@ -88,3 +88,12 @@ class ReadoutCtrl(pr.Device):
             linkedSet    = lambda value, write: self.NcoConfig.set( int(value*self._ncoConstant) ),
             dependencies = [self.NcoConfig],
         ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'DspRunCntrl',
+            description  = 'used to put the Gearbox FIFOs in reset until after configuration is completed',
+            offset       = 0x10,
+            bitSize      = 1,
+            mode         = 'RW',
+            hidden       = True,
+        ))

@@ -41,10 +41,10 @@ entity Application is
       dspClk          : in  sl;
       dspRst          : in  sl;
       dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspRunCntrl     : out sl;
       -- DAC Interface (dacClk domain)
       dacClk          : in  sl;
       dacRst          : in  sl;
-      dspRunCntrl     : out sl;
       dspDacI         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
@@ -144,7 +144,6 @@ begin
          dspDacOut1      => dacQ(0),
          dspDacOut2      => dacI(1),
          dspDacOut3      => dacQ(1),
-         sigGenActive    => dspRunCntrl,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -172,6 +171,7 @@ begin
          dspRst          => dspRst,
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
+         dspRunCntrl     => dspRunCntrl,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,

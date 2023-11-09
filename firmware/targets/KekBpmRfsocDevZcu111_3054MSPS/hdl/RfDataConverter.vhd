@@ -54,10 +54,10 @@ entity RfDataConverter is
       dspClk          : out sl;
       dspRst          : out sl;
       dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspRunCntrl     : in  sl;
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
       dacRst          : out sl;
-      dspRunCntrl     : in  sl;
       dspDacI         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)

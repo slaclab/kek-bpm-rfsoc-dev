@@ -33,6 +33,7 @@ entity ReadoutCtrl is
       dspRst          : in  sl;
       sigGenTrig      : out slv(1 downto 0);
       ncoConfig       : out slv(31 downto 0);
+      dspRunCntrl     : out sl;
       -- AXI-Lite Interface
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -45,12 +46,14 @@ end ReadoutCtrl;
 architecture rtl of ReadoutCtrl is
 
    type RegType is record
+      dspRunCntrl    : sl;
       sigGenTrig     : slv(1 downto 0);
       ncoConfig      : slv(31 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
    constant REG_INIT_C : RegType := (
+      dspRunCntrl    => '0',
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
@@ -83,6 +86,7 @@ begin
       axiSlaveRegister (axilEp, x"04", 0, v.sigGenTrig(1));  -- Fault Buffering
       axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 32-bits, address: [0x8:0xB]
       -- Reserved: address: [0xC:0xF]
+      axiSlaveRegister (axilEp, x"10", 0, v.dspRunCntrl);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -127,5 +131,13 @@ begin
          clk     => dspClk,
          dataIn  => r.ncoConfig,
          dataOut => ncoConfig);
+
+   U_dspRunCntrl : entity surf.Synchronizer
+      generic map(
+         TPD_G => TPD_G)
+      port map(
+         clk     => dspClk,
+         dataIn  => r.dspRunCntrl,
+         dataOut => dspRunCntrl);
 
 end rtl;

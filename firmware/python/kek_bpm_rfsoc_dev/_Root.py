@@ -197,9 +197,10 @@ class Root(pr.Root):
         super(Root, self).start(**kwargs)
 
         # Useful pointers
-        axiVersion = self.RFSoC.AxiSocCore.AxiVersion
-        dacSigGen  = self.RFSoC.Application.DacSigGen
-        rfdc       = self.RFSoC.RfDataConverter
+        axiVersion  = self.RFSoC.AxiSocCore.AxiVersion
+        dacSigGen   = self.RFSoC.Application.DacSigGen
+        rfdc        = self.RFSoC.RfDataConverter
+        readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Issue a reset to the user logic
         axiVersion.UserRst()
@@ -231,12 +232,13 @@ class Root(pr.Root):
         self.LoadConfig(self.defaultFile)
         self.ReadAll()
 
-        # Set the firmware DDC's NCO value
-        self.RFSoC.Application.ReadoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
-
         # Load the waveform data into DacSigGen
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
+
+        # Set the firmware DDC's NCO value and enable run control
+        readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
+        readoutCtrl.DspRunCntrl.set(1)
 
         # Update all SW remote registers
         self.CountReset()

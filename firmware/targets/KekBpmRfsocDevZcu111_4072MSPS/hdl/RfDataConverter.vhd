@@ -54,10 +54,10 @@ entity RfDataConverter is
       dspClk          : out sl;
       dspRst          : out sl;
       dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspRunCntrl     : in  sl;
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
       dacRst          : out sl;
-      dspRunCntrl     : in  sl;
       dspDacI         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       dspDacQ         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
@@ -214,8 +214,8 @@ architecture mapping of RfDataConverter is
    signal dacValid : slv(NUM_ADC_CH_C-1 downto 0);
    signal dspValid : slv(NUM_ADC_CH_C-1 downto 0);
 
-   signal adcRunCntrl  : sl := '1';
-   signal adcRunCntrlL : sl := '0';
+   signal dacRunCntrl  : sl := '1';
+   signal dspRunCntrlL : sl := '0';
 
 begin
 
@@ -473,24 +473,24 @@ begin
             slaveReady  => open,
             -- Master Interface
             masterClk   => dspClock,
-            masterRst   => adcRunCntrlL,
+            masterRst   => dspRunCntrlL,
             masterData  => dspAdc(i),
             masterValid => open,
             masterReady => '1');
    end generate GEN_ADC;
 
-   U_adcRunCntrl : entity surf.Synchronizer
+   U_dacRunCntrl : entity surf.Synchronizer
       generic map (
          TPD_G => TPD_G)
       port map (
-         clk     => dspClock,
+         clk     => dacClockSlow,
          dataIn  => dspRunCntrl,
-         dataOut => adcRunCntrl);
+         dataOut => dacRunCntrl);
 
    process(dspClock)
    begin
       if rising_edge(dspClock) then
-         adcRunCntrlL <= not(adcRunCntrl) after TPD_G;
+         dspRunCntrlL <= not(dspRunCntrl) after TPD_G;
       end if;
    end process;
 
@@ -498,7 +498,7 @@ begin
    begin
       if rising_edge(dacClockSlow) then
          for ch in NUM_DAC_CH_C-1 downto 0 loop
-            dspValid(ch) <= dspRunCntrl after TPD_G;
+            dspValid(ch) <= dacRunCntrl after TPD_G;
             for i in 3 downto 0 loop
                -- I/Q pairs being mapped into the RFDC's input vector
                dac(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;

@@ -87,10 +87,10 @@ architecture top_level of KekBpmRfsocDevZcu111_3054MSPS is
    signal dspClk      : sl;
    signal dspRst      : sl;
    signal dspAdc      : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspRunCntrl : sl;
 
    signal dacClk      : sl;
    signal dacRst      : sl;
-   signal dspRunCntrl : sl;
    signal dspDacI     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
    signal dspDacQ     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
 
@@ -229,10 +229,10 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         dspRunCntrl     => dspRunCntrl,
          -- DAC Interface (dacClk domain)
          dacClk          => dacClk,
          dacRst          => dacRst,
-         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -260,10 +260,10 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         dspRunCntrl     => dspRunCntrl,
          -- DAC Interface (dacClk domain)
          dacClk          => dacClk,
          dacRst          => dacRst,
-         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
