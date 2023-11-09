@@ -48,11 +48,13 @@ class Root(pr.Root):
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
             lmxAdcFile = 'LmxConfig4072MSPS.txt'
+            self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS'
         # Else ZONE2 operation
         else:
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
             lmxAdcFile = 'LmxConfig3054MSPS.txt'
+            self.ImageName = 'KekBpmRfsocDevZcu111_3054MSPS'
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
         #################################################################
@@ -74,24 +76,6 @@ class Root(pr.Root):
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
         self.add(self.dataWriter)
-
-        ##################################################################################
-        ##                              Register Access
-        ##################################################################################
-
-        # Check if we can ping the device and TCP socket not open
-        soc_core.connectionTest(ip)
-
-        # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
-        self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
-
-        # Added the RFSoC HW device
-        self.add(rfsoc.RFSoC(
-            memBase    = self.memMap,
-            sampleRate = self.sampleRate,
-            offset     = 0x04_0000_0000, # Full 40-bit address space
-            expand     = True,
-        ))
 
         ##################################################################################
         ##                              Data Path
@@ -142,6 +126,7 @@ class Root(pr.Root):
             value        = False,
             linkedGet    = lambda: self.AmpDispProcessor[0].NewDataReady.value() and self.AmpDispProcessor[1].NewDataReady.value() and self.AmpDispProcessor[2].NewDataReady.value() and self.AmpDispProcessor[3].NewDataReady.value(),
             dependencies = [self.AmpDispProcessor[i].NewDataReady for x in range(4)],
+            pollInterval = 1,
             hidden       = True,
         ))
 
@@ -181,6 +166,25 @@ class Root(pr.Root):
         self.BpmFaultProc >> self.dataWriter.getChannel(17)
 
         ##################################################################################
+        ##                              Register Access
+        ##################################################################################
+
+        # Check if we can ping the device and TCP socket not open
+        soc_core.connectionTest(ip)
+
+        # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
+        self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
+
+        # Added the RFSoC HW device
+        self.add(rfsoc.RFSoC(
+            memBase     = self.memMap,
+            sampleRate  = self.sampleRate,
+            NewDataDisp = self.NewDataDisp,
+            offset      = 0x04_0000_0000, # Full 40-bit address space
+            expand      = True,
+        ))
+
+        ##################################################################################
 
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
             base      = 'kek_bpm_rfsoc_demo_ioc',
@@ -197,9 +201,10 @@ class Root(pr.Root):
         super(Root, self).start(**kwargs)
 
         # Useful pointers
-        axiVersion = self.RFSoC.AxiSocCore.AxiVersion
-        dacSigGen  = self.RFSoC.Application.DacSigGen
-        rfdc       = self.RFSoC.RfDataConverter
+        axiVersion  = self.RFSoC.AxiSocCore.AxiVersion
+        dacSigGen   = self.RFSoC.Application.DacSigGen
+        rfdc        = self.RFSoC.RfDataConverter
+        readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Issue a reset to the user logic
         axiVersion.UserRst()
@@ -208,6 +213,12 @@ class Root(pr.Root):
 
         # Update all SW remote registers
         self.ReadAll()
+
+        # Check for Expected FW loaded
+        if axiVersion.ImageName.value() != self.ImageName:
+                errMsg = f'Actual.Firmware={axiVersion.ImageName.value()} != Expected.Firmware={self.ImageName}'
+                click.secho(errMsg, bg='red')
+                raise ValueError(errMsg)
 
         # Initialize the LMK/LMX Clock chips
         self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
@@ -231,12 +242,13 @@ class Root(pr.Root):
         self.LoadConfig(self.defaultFile)
         self.ReadAll()
 
-        # Set the firmware DDC's NCO value
-        self.RFSoC.Application.ReadoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
-
         # Load the waveform data into DacSigGen
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
+
+        # Set the firmware DDC's NCO value and enable run control
+        readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
+        readoutCtrl.DspRunCntrl.set(1)
 
         # Update all SW remote registers
         self.CountReset()

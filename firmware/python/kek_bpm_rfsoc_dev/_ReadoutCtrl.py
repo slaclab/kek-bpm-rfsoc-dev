@@ -11,10 +11,11 @@
 import pyrogue as pr
 
 class ReadoutCtrl(pr.Device):
-    def __init__(self,sampleRate=0.0,**kwargs):
+    def __init__(self,sampleRate=0.0,NewDataDisp=None,**kwargs):
         super().__init__(**kwargs)
 
         self.smplTime = 1/sampleRate
+        self.NewDataDisp = NewDataDisp
 
         self.add(pr.RemoteVariable(
             name         = 'LiveDispTrigRaw',
@@ -51,7 +52,7 @@ class ReadoutCtrl(pr.Device):
 
         @self.command(description  = 'Force a DAC signal generator trigger from software',hidden=True)
         def getWaveformBurst():
-            if self.EnableSoftTrig.get():
+            if self.EnableSoftTrig.get() and not(self.NewDataDisp.get()):
                 self.LiveDispTrig()
 
         self.add(pr.LocalVariable(
@@ -87,4 +88,13 @@ class ReadoutCtrl(pr.Device):
             linkedGet    = lambda: float(self.NcoConfig.value())/(self._ncoConstant),
             linkedSet    = lambda value, write: self.NcoConfig.set( int(value*self._ncoConstant) ),
             dependencies = [self.NcoConfig],
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'DspRunCntrl',
+            description  = 'used to put the Gearbox FIFOs in reset until after configuration is completed',
+            offset       = 0x10,
+            bitSize      = 1,
+            mode         = 'RW',
+            hidden       = True,
         ))

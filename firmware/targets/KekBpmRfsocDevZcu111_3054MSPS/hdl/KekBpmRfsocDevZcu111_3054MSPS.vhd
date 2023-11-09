@@ -87,38 +87,14 @@ architecture top_level of KekBpmRfsocDevZcu111_3054MSPS is
    signal dspClk      : sl;
    signal dspRst      : sl;
    signal dspAdc      : Slv256Array(NUM_ADC_CH_C-1 downto 0);
-
-   signal dacClk      : sl;
-   signal dacRst      : sl;
    signal dspRunCntrl : sl;
-   signal dspDacI     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
-   signal dspDacQ     : Slv64Array(NUM_DAC_CH_C-1 downto 0);
+
+   signal dacClk  : sl;
+   signal dacRst  : sl;
+   signal dspDacI : Slv48Array(NUM_DAC_CH_C-1 downto 0);
+   signal dspDacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0);
 
 begin
-
-   ------------------------------
-   -- User's AXI-Lite Clock/Reset
-   ------------------------------
-   U_axilClk : entity surf.ClockManagerUltraScale
-      generic map(
-         TPD_G             => TPD_G,
-         TYPE_G            => "PLL",
-         INPUT_BUFG_G      => false,
-         FB_BUFG_G         => true,
-         RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 1,
-         -- MMCM attributes
-         CLKIN_PERIOD_G    => 4.0,      -- 250 MHz
-         CLKFBOUT_MULT_G   => 4,        -- 1.0GHz = 4 x 250 MHz
-         CLKOUT0_DIVIDE_G  => 10)       -- 100MHz = 1.0GHz/10
-      port map(
-         -- Clock Input
-         clkIn     => dmaClk,
-         rstIn     => dmaRst,
-         -- Clock Outputs
-         clkOut(0) => axilClk,
-         -- Reset Outputs
-         rstOut(0) => axilRst);
 
    -----------------------
    -- Common Platform Core
@@ -136,6 +112,9 @@ begin
          -- DSP Clock and Reset Monitoring
          dspClk          => dspClk,
          dspRst          => dspRst,
+         -- AUX Clock and Reset
+         auxClk          => axilClk,
+         auxRst          => axilRst,
          -- DMA Interfaces  (dmaClk domain)
          dmaClk          => dmaClk,
          dmaRst          => dmaRst,
@@ -229,10 +208,10 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         dspRunCntrl     => dspRunCntrl,
          -- DAC Interface (dacClk domain)
          dacClk          => dacClk,
          dacRst          => dacRst,
-         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
@@ -260,10 +239,10 @@ begin
          dspClk          => dspClk,
          dspRst          => dspRst,
          dspAdc          => dspAdc,
+         dspRunCntrl     => dspRunCntrl,
          -- DAC Interface (dacClk domain)
          dacClk          => dacClk,
          dacRst          => dacRst,
-         dspRunCntrl     => dspRunCntrl,
          dspDacI         => dspDacI,
          dspDacQ         => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)

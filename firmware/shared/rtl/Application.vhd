@@ -41,12 +41,12 @@ entity Application is
       dspClk          : in  sl;
       dspRst          : in  sl;
       dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspRunCntrl     : out sl;
       -- DAC Interface (dacClk domain)
       dacClk          : in  sl;
       dacRst          : in  sl;
-      dspRunCntrl     : out sl;
-      dspDacI         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv64Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -78,8 +78,10 @@ architecture mapping of Application is
    signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
    signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
 
-   signal dacI : Slv64Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacQ : Slv64Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacI : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal dacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
+
+   signal dummmyVec : Slv16Array(3 downto 0) := (others => (others => '0'));
 
    signal sigGenTrig : slv(1 downto 0);
    signal ncoConfig  : slv(31 downto 0);
@@ -134,17 +136,25 @@ begin
          TPD_G              => TPD_G,
          NUM_CH_G           => (2*NUM_DAC_CH_C),  -- I/Q pairs
          RAM_ADDR_WIDTH_G   => 9,
-         SAMPLE_PER_CYCLE_G => 4,
+         SAMPLE_PER_CYCLE_G => 4,  -- SAMPLE_PER_CYCLE_G must be power of 2 for memMap(), only using lower 3 samples
          AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(DAC_SIG_INDEX_C).baseAddr)
       port map (
          -- DAC Interface (dspClk domain)
-         dspClk          => dacClk,
-         dspRst          => dacRst,
-         dspDacOut0      => dacI(0),
-         dspDacOut1      => dacQ(0),
-         dspDacOut2      => dacI(1),
-         dspDacOut3      => dacQ(1),
-         sigGenActive    => dspRunCntrl,
+         dspClk => dacClk,
+         dspRst => dacRst,
+
+         dspDacOut0(47 downto 0)  => dacI(0),
+         dspDacOut0(63 downto 48) => dummmyVec(0),
+
+         dspDacOut1(47 downto 0)  => dacQ(0),
+         dspDacOut1(63 downto 48) => dummmyVec(1),
+
+         dspDacOut2(47 downto 0)  => dacI(1),
+         dspDacOut2(63 downto 48) => dummmyVec(2),
+
+         dspDacOut3(47 downto 0)  => dacQ(1),
+         dspDacOut3(63 downto 48) => dummmyVec(3),
+
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
@@ -172,6 +182,7 @@ begin
          dspRst          => dspRst,
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
+         dspRunCntrl     => dspRunCntrl,
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => axilClk,
          axilRst         => axilRst,
