@@ -58,8 +58,8 @@ entity RfDataConverter is
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
       dacRst          : out sl;
-      dspDacI         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : in  Slv64Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacI         : in  Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : in  Slv48Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -192,13 +192,9 @@ architecture mapping of RfDataConverter is
    signal adcReset  : sl := '1';
    signal adcResetL : sl := '0';
 
-   signal dacClockFast  : sl := '0';
-   signal dacResetFast  : sl := '1';
-   signal dacResetFastL : sl := '0';
-
-   signal dacClockSlow  : sl := '0';
-   signal dacResetSlow  : sl := '1';
-   signal dacResetSlowL : sl := '0';
+   signal dacClock  : sl := '0';
+   signal dacReset  : sl := '1';
+   signal dacResetL : sl := '0';
 
    signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
    signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
@@ -209,12 +205,8 @@ architecture mapping of RfDataConverter is
    signal adcSysRef   : sl := '0';
    signal dacSysRef   : sl := '0';
 
-   signal dac      : Slv128Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal dacData  : Slv96Array(NUM_DAC_CH_C-1 downto 0)  := (others => (others => '0'));
-   signal dacValid : slv(NUM_ADC_CH_C-1 downto 0);
-   signal dspValid : slv(NUM_ADC_CH_C-1 downto 0);
+   signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
-   signal dacRunCntrl  : sl := '1';
    signal dspRunCntrlL : sl := '0';
 
 begin
@@ -237,7 +229,7 @@ begin
       generic map (
          TPD_G => TPD_G)
       port map (
-         clk     => dacClockFast,
+         clk     => dacClock,
          dataIn  => plSysRefRaw,
          dataOut => dacSysRef);
 
@@ -329,8 +321,8 @@ begin
          m12_axis_tready => adcReadyVec(3),
 
          -- DAC[3:0] AXI Stream Interface
-         s0_axis_aresetn => dacResetFastL,
-         s0_axis_aclk    => dacClockFast,
+         s0_axis_aresetn => dacResetL,
+         s0_axis_aclk    => dacClock,
          s00_axis_tdata  => (others => '0'),  -- Unused
          s00_axis_tvalid => '1',
          s00_axis_tready => open,
@@ -345,19 +337,19 @@ begin
          s03_axis_tready => open,
 
          -- DAC[7:4] AXI Stream Interface
-         s1_axis_aresetn => dacResetFastL,
-         s1_axis_aclk    => dacClockFast,
+         s1_axis_aresetn => dacResetL,
+         s1_axis_aclk    => dacClock,
          s10_axis_tdata  => dacData(0),
-         s10_axis_tvalid => dacValid(0),
+         s10_axis_tvalid => '1',
          s10_axis_tready => open,
          s11_axis_tdata  => dacData(1),
-         s11_axis_tvalid => dacValid(1),
+         s11_axis_tvalid => '1',
          s11_axis_tready => open,
          s12_axis_tdata  => dacData(0),
-         s12_axis_tvalid => dacValid(0),
+         s12_axis_tvalid => '1',
          s12_axis_tready => open,
          s13_axis_tdata  => dacData(1),
-         s13_axis_tvalid => dacValid(1),
+         s13_axis_tvalid => '1',
          s13_axis_tready => open);
 
    U_IBUFDS : IBUFDS
@@ -370,23 +362,6 @@ begin
       port map(
          I => plClk,
          O => refClk);
-
-   U_BUFGCE_DIV : BUFGCE_DIV
-      generic map (
-         BUFGCE_DIVIDE => 2)
-      port map (
-         I   => refClk,
-         CE  => '1',
-         CLR => '0',
-         O   => dacClockFast);
-
-   U_RstSync : entity surf.RstSync
-      generic map(
-         TPD_G => TPD_G)
-      port map (
-         clk      => dacClockFast,
-         asyncRst => axilRst,
-         syncRst  => dacResetFast);
 
    U_AdcPll : entity surf.ClockManagerUltraScale
       generic map(
@@ -424,23 +399,25 @@ begin
          -- MMCM attributes
          CLKIN_PERIOD_G    => 1.964,
          DIVCLK_DIVIDE_G   => 2,
-         CLKFBOUT_MULT_G   => 3,
+         CLKFBOUT_MULT_G   => 4,
          CLKOUT0_DIVIDE_G  => 4)
       port map(
          -- Clock Input
          clkIn     => refClk,
          rstIn     => axilRst,
          -- Clock Outputs
-         clkOut(0) => dacClockSlow,     -- 190.875 MHz
+         clkOut(0) => dacClock,         -- 254.5 MHz
          -- Reset Outputs
-         rstOut(0) => dacResetSlow);
+         rstOut(0) => dacReset);
+
 
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
    dspResetL <= not(dspReset);
+   dacResetL <= not(dacReset);
 
-   dacResetFastL <= not(dacResetFast);
-   dacResetSlowL <= not(dacResetSlow);
+   dacClk <= dacClock;
+   dacRst <= dacReset;
 
    dspClk <= dspClock;
    dspRst <= dspReset;
@@ -479,14 +456,6 @@ begin
             masterReady => '1');
    end generate GEN_ADC;
 
-   U_dacRunCntrl : entity surf.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => dacClockSlow,
-         dataIn  => dspRunCntrl,
-         dataOut => dacRunCntrl);
-
    process(dspClock)
    begin
       if rising_edge(dspClock) then
@@ -494,47 +463,17 @@ begin
       end if;
    end process;
 
-   process(dacClockSlow)
+   process(dacClock)
    begin
-      if rising_edge(dacClockSlow) then
+      if rising_edge(dacClock) then
          for ch in NUM_DAC_CH_C-1 downto 0 loop
-            dspValid(ch) <= dacRunCntrl after TPD_G;
-            for i in 3 downto 0 loop
+            for i in 2 downto 0 loop
                -- I/Q pairs being mapped into the RFDC's input vector
-               dac(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;
-               dac(ch)(31+32*i downto 16+32*i) <= dspDacQ(ch)(15+16*i downto 16*i) after TPD_G;
+               dacData(ch)(15+32*i downto 0+32*i)  <= dspDacI(ch)(15+16*i downto 16*i) after TPD_G;
+               dacData(ch)(31+32*i downto 16+32*i) <= dspDacQ(ch)(15+16*i downto 16*i) after TPD_G;
             end loop;
          end loop;
       end if;
    end process;
-
-   GEN_DAC :
-   for i in NUM_DAC_CH_C-1 downto 0 generate
-      U_Gearbox : entity surf.AsyncGearbox
-         generic map (
-            TPD_G              => TPD_G,
-            SLAVE_WIDTH_G      => 128,
-            MASTER_WIDTH_G     => 96,
-            EN_EXT_CTRL_G      => false,
-            -- Async FIFO generics
-            FIFO_MEMORY_TYPE_G => "block",
-            FIFO_ADDR_WIDTH_G  => 8)
-         port map (
-            -- Slave Interface
-            slaveClk    => dacClockSlow,
-            slaveRst    => dacResetSlow,
-            slaveData   => dac(i),
-            slaveValid  => dspValid(i),
-            slaveReady  => open,
-            -- Master Interface
-            masterClk   => dacClockFast,
-            masterRst   => dacResetFast,
-            masterData  => dacData(i),
-            masterValid => dacValid(i),
-            masterReady => '1');
-   end generate GEN_DAC;
-
-   dacClk <= dacClockSlow;
-   dacRst <= dacResetSlow;
 
 end mapping;
