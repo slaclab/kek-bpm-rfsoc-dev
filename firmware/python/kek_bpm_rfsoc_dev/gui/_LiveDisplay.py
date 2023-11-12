@@ -29,6 +29,10 @@ class LiveDisplay(PyDMFrame):
         self.RxEnable  = [nodeFromAddress(self.path[i]+'.RxEnable') for i in range(4)]
 
     def resetScales(self):
+        # self.xPosPlot.setAutoRangeX(False)
+        # self.xPosPlot.setMinXRange(0.0)
+        # self.xPosPlot.setMaxXRange(20.0)
+
         # Reset the auto-ranging
         self.xPosPlot.resetAutoRangeX()
         self.xPosPlot.resetAutoRangeY()
@@ -80,6 +84,22 @@ class LiveDisplay(PyDMFrame):
             symbol     = 'o',
             symbolSize = 3,
         )
+        # self.xPosPlot.addChannel(
+            # name       = 'Counts',
+            # x_channel  = f'{self.path[2]}.Time',
+            # y_channel  = f'{self.path[2]}.WaveformData',
+            # color      =  "yellow",
+            # symbol     = 'o',
+            # symbolSize = 3,
+        # )
+        # self.xPosPlot.addChannel(
+            # name       = 'Counts',
+            # x_channel  = f'{self.path[3]}.Time',
+            # y_channel  = f'{self.path[3]}.WaveformData',
+            # color      = "turquoise",
+            # symbol     = 'o',
+            # symbolSize = 3,
+        # )
         fl.addWidget(self.xPosPlot)
 
         #-----------------------------------------------------------------------------
@@ -127,5 +147,6 @@ class LiveDisplay(PyDMFrame):
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)
         fl.addWidget(rstButton)
+        self.resetScales()
 
         #-----------------------------------------------------------------------------

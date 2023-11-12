@@ -222,9 +222,13 @@ class Root(pr.Root):
 
         # Initialize the LMK/LMX Clock chips
         self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
-        time.sleep(0.2)
+
+        # Wait for DSP Clock to be stable
+        while(axiVersion.DspReset.get()):
+            time.sleep(0.01)
 
         # Initialize the RF Data Converter
+        time.sleep(2.0)
         rfdc.Init(dynamicNco=True)
 
         # Set the DAC's NCO frequency
@@ -232,8 +236,14 @@ class Root(pr.Root):
             for j in range(4):
                 rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
 
+        # Wait for ADC/DAC Tile to be stable
+        for i in range(2):
+            while rfdc.adcTile[i].RestartStateEnd.get() != 15:
+                time.sleep(0.01)
+            while rfdc.dacTile[i].RestartStateEnd.get() != 15:
+                time.sleep(0.01)
+
         # MTS Sync the RF Data Converter
-        time.sleep(1.0)
         rfdc.MtsAdcSync()
         rfdc.MtsDacSync()
 
