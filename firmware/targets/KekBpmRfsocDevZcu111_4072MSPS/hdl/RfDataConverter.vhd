@@ -196,10 +196,9 @@ architecture mapping of RfDataConverter is
    signal dacReset  : sl := '1';
    signal dacResetL : sl := '0';
 
-   signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
-   signal adcValidVec : slv(NUM_ADC_CH_C-1 downto 0);
-   signal adcValid    : sl;
-   signal adcReadyVec : slv(NUM_ADC_CH_C-1 downto 0);
+   signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adc     : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+
 
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
@@ -208,6 +207,7 @@ architecture mapping of RfDataConverter is
    signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal dspRunCntrlL : sl := '0';
+
 
 begin
 
@@ -303,22 +303,22 @@ begin
          m0_axis_aclk    => adcClock,
 
          m00_axis_tdata  => adcData(0),
-         m00_axis_tvalid => adcValidVec(0),
-         m00_axis_tready => adcReadyVec(0),
+         m00_axis_tvalid => open,
+         m00_axis_tready => '1',
 
          m02_axis_tdata  => adcData(1),
-         m02_axis_tvalid => adcValidVec(1),
-         m02_axis_tready => adcReadyVec(1),
+         m02_axis_tvalid => open,
+         m02_axis_tready => '1',
 
          m1_axis_aresetn => adcResetL,
          m1_axis_aclk    => adcClock,
          m10_axis_tdata  => adcData(2),
-         m10_axis_tvalid => adcValidVec(2),
-         m10_axis_tready => adcReadyVec(2),
+         m10_axis_tvalid => open,
+         m10_axis_tready => '1',
 
          m12_axis_tdata  => adcData(3),
-         m12_axis_tvalid => adcValidVec(3),
-         m12_axis_tready => adcReadyVec(3),
+         m12_axis_tvalid => open,
+         m12_axis_tready => '1',
 
          -- DAC[3:0] AXI Stream Interface
          s0_axis_aresetn => dacResetL,
@@ -422,13 +422,15 @@ begin
    dspClk <= dspClock;
    dspRst <= dspReset;
 
-   process(adcClock)
-   begin
-      if rising_edge(adcClock) then
-         adcReadyVec <= (others => adcValid) after TPD_G;
-         adcValid    <= uAnd(adcValidVec)    after TPD_G;
-      end if;
-   end process;
+   U_dspRunCntrl : entity surf.RstSync
+      generic map(
+         TPD_G          => TPD_G,
+         IN_POLARITY_G  => '0',
+         OUT_POLARITY_G => '1')
+      port map(
+         clk      => adcClock,
+         asyncRst => dspRunCntrl,
+         syncRst  => dspRunCntrlL);
 
    GEN_ADC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
@@ -444,24 +446,31 @@ begin
          port map (
             -- Slave Interface
             slaveClk    => adcClock,
-            slaveRst    => adcReset,
+            slaveRst    => dspRunCntrlL,
             slaveData   => adcData(i),
-            slaveValid  => adcValid,
+            slaveValid  => '1',
             slaveReady  => open,
             -- Master Interface
             masterClk   => dspClock,
-            masterRst   => dspRunCntrlL,
-            masterData  => dspAdc(i),
+            masterRst   => dspReset,
+            masterData  => adc(i),
             masterValid => open,
             masterReady => '1');
-   end generate GEN_ADC;
 
-   process(dspClock)
-   begin
-      if rising_edge(dspClock) then
-         dspRunCntrlL <= not(dspRunCntrl) after TPD_G;
-      end if;
-   end process;
+      BYP_DLY : if (i < 2) generate
+         dspAdc(i) <= adc(i);
+      end generate BYP_DLY;
+
+      GEN_DLY : if (i >= 2) generate
+         process(dspClock)
+         begin
+            if rising_edge(dspClock) then
+               dspAdc(i) <= adc(i) after TPD_G;
+            end if;
+         end process;
+      end generate GEN_DLY;
+
+   end generate GEN_ADC;
 
    process(dacClock)
    begin
