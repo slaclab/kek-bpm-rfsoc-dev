@@ -199,15 +199,12 @@ architecture mapping of RfDataConverter is
    signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
    signal adc     : Slv256Array(NUM_ADC_CH_C-1 downto 0);
 
-
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
    signal dacSysRef   : sl := '0';
+   signal dummySig    : sl := '0';
 
    signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
-
-   signal dspRunCntrlL : sl := '0';
-
 
 begin
 
@@ -385,7 +382,7 @@ begin
          clkOut(0) => adcClock,         -- 509.0 MHz
          clkOut(1) => dspClock,         -- 254.5 MHz
          -- Reset Outputs
-         rstOut(0) => adcReset,
+         rstOut(0) => dummySig,
          rstOut(1) => dspReset);
 
    U_DacPll : entity surf.ClockManagerUltraScale
@@ -410,7 +407,6 @@ begin
          -- Reset Outputs
          rstOut(0) => dacReset);
 
-
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
    dspResetL <= not(dspReset);
@@ -422,7 +418,7 @@ begin
    dspClk <= dspClock;
    dspRst <= dspReset;
 
-   U_dspRunCntrl : entity surf.RstSync
+   U_adcReset : entity surf.RstSync
       generic map(
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',
@@ -430,7 +426,7 @@ begin
       port map(
          clk      => adcClock,
          asyncRst => dspRunCntrl,
-         syncRst  => dspRunCntrlL);
+         syncRst  => adcReset);
 
    GEN_ADC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
@@ -446,7 +442,7 @@ begin
          port map (
             -- Slave Interface
             slaveClk    => adcClock,
-            slaveRst    => dspRunCntrlL,
+            slaveRst    => adcReset,
             slaveData   => adcData(i),
             slaveValid  => '1',
             slaveReady  => open,
