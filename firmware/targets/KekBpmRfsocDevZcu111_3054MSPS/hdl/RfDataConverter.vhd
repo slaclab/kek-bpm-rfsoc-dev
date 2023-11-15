@@ -201,7 +201,7 @@ architecture mapping of RfDataConverter is
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
    signal dacSysRef   : sl := '0';
-   signal dummySig    : sl := '0';
+   signal dummySig    : slv(1 downto 0);
 
    signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
@@ -381,7 +381,7 @@ begin
          clkOut(0) => adcClock,         -- 381.750 MHz
          clkOut(1) => dspClock,         -- 190.875 MHz
          -- Reset Outputs
-         rstOut(0) => dummySig,
+         rstOut(0) => dummySig(0),
          rstOut(1) => dspReset);
 
    U_DacPll : entity surf.ClockManagerUltraScale
@@ -404,7 +404,7 @@ begin
          -- Clock Outputs
          clkOut(0) => dacClock,         -- 254.5 MHz
          -- Reset Outputs
-         rstOut(0) => dacReset);
+         rstOut(0) => dummySig(1));
 
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
@@ -426,6 +426,16 @@ begin
          clk      => adcClock,
          asyncRst => dspRunCntrl,
          syncRst  => adcReset);
+
+   U_dacReset : entity surf.RstSync
+      generic map(
+         TPD_G          => TPD_G,
+         IN_POLARITY_G  => '0',
+         OUT_POLARITY_G => '1')
+      port map(
+         clk      => dacClock,
+         asyncRst => dspRunCntrl,
+         syncRst  => dacReset);
 
    GEN_ADC :
    for i in NUM_ADC_CH_C-1 downto 0 generate
