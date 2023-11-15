@@ -34,9 +34,8 @@ entity ReadoutCtrl is
       sigGenTrig      : out slv(1 downto 0);
       ncoConfig       : out slv(31 downto 0);
       dspRunCntrl     : out sl;
+      ampDelay        : out Slv4Array(3 downto 0);
       -- AXI-Lite Interface
-      axilClk         : in  sl;
-      axilRst         : in  sl;
       axilReadMaster  : in  AxiLiteReadMasterType;
       axilReadSlave   : out AxiLiteReadSlaveType;
       axilWriteMaster : in  AxiLiteWriteMasterType;
@@ -49,6 +48,7 @@ architecture rtl of ReadoutCtrl is
       dspRunCntrl    : sl;
       sigGenTrig     : slv(1 downto 0);
       ncoConfig      : slv(31 downto 0);
+      ampDelay       : Slv4Array(3 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -56,6 +56,7 @@ architecture rtl of ReadoutCtrl is
       dspRunCntrl    => '0',
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
+      ampDelay       => (others => x"0"),
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -64,7 +65,7 @@ architecture rtl of ReadoutCtrl is
 
 begin
 
-   comb : process (axilReadMaster, axilRst, axilWriteMaster, r) is
+   comb : process (axilReadMaster, axilWriteMaster, dspRst, r) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
    begin
@@ -87,6 +88,9 @@ begin
       axiSlaveRegister (axilEp, x"08", 0, v.ncoConfig);  -- 32-bits, address: [0x8:0xB]
       -- Reserved: address: [0xC:0xF]
       axiSlaveRegister (axilEp, x"10", 0, v.dspRunCntrl);
+      for i in 0 to 3 loop
+         axiSlaveRegister (axilEp, x"14", (8*i), v.ampDelay(i));
+      end loop;
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -96,9 +100,13 @@ begin
       -- Outputs
       axilWriteSlave <= r.axilWriteSlave;
       axilReadSlave  <= r.axilReadSlave;
+      sigGenTrig     <= r.sigGenTrig;
+      ncoConfig      <= r.ncoConfig;
+      dspRunCntrl    <= r.dspRunCntrl;
+      ampDelay       <= r.ampDelay;
 
       -- Reset
-      if (axilRst = '1') then
+      if (dspRst = '1') then
          v := REG_INIT_C;
       end if;
 
@@ -107,37 +115,11 @@ begin
 
    end process comb;
 
-   seq : process (axilClk) is
+   seq : process (dspClk) is
    begin
-      if rising_edge(axilClk) then
+      if rising_edge(dspClk) then
          r <= rin after TPD_G;
       end if;
    end process seq;
-
-   U_sigGenTrig : entity surf.SynchronizerOneShotVector
-      generic map(
-         TPD_G   => TPD_G,
-         WIDTH_G => 2)
-      port map(
-         clk     => dspClk,
-         dataIn  => r.sigGenTrig,
-         dataOut => sigGenTrig);
-
-   U_ncoConfig : entity surf.SynchronizerVector
-      generic map(
-         TPD_G   => TPD_G,
-         WIDTH_G => 32)
-      port map(
-         clk     => dspClk,
-         dataIn  => r.ncoConfig,
-         dataOut => ncoConfig);
-
-   U_dspRunCntrl : entity surf.Synchronizer
-      generic map(
-         TPD_G => TPD_G)
-      port map(
-         clk     => dspClk,
-         dataIn  => r.dspRunCntrl,
-         dataOut => dspRunCntrl);
 
 end rtl;

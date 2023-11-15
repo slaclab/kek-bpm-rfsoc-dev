@@ -47,13 +47,11 @@ class Root(pr.Root):
         if bpmFreqMHz < (3054//2):
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
-            lmxAdcFile = 'LmxConfig4072MSPS.txt'
             self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS'
         # Else ZONE2 operation
         else:
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
-            lmxAdcFile = 'LmxConfig3054MSPS.txt'
             self.ImageName = 'KekBpmRfsocDevZcu111_3054MSPS'
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
@@ -63,7 +61,7 @@ class Root(pr.Root):
             self.addInterface(self.zmqServer)
         #################################################################
 
-        # Local Variables
+        # Configuration File Paths
         self.top_level = top_level
         if self.top_level != '':
             self.configPath = f'{top_level}/config'
@@ -71,15 +69,15 @@ class Root(pr.Root):
             self.configPath = 'config'
         self.defaultFile = f'{self.configPath}/defaults.yml'
         self.lmkConfig   = f'{self.configPath}/LmkConfig.txt'
-        self.lmxConfig   = [f'{self.configPath}/LmxConfig6108MSPS.txt',f'{self.configPath}/{lmxAdcFile}',f'{self.configPath}/{lmxAdcFile}']
-
-        # File writer
-        self.dataWriter = pr.utilities.fileio.StreamWriter()
-        self.add(self.dataWriter)
+        self.lmxConfig   = [f'{self.configPath}/LmxConfig.txt']
 
         ##################################################################################
         ##                              Data Path
         ##################################################################################
+
+        # File writer
+        self.dataWriter = pr.utilities.fileio.StreamWriter()
+        self.add(self.dataWriter)
 
         # Create rogue stream objects
         self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
@@ -222,9 +220,13 @@ class Root(pr.Root):
 
         # Initialize the LMK/LMX Clock chips
         self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
-        time.sleep(0.2)
+
+        # Wait for DSP Clock to be stable
+        while(axiVersion.DspReset.get()):
+            time.sleep(0.01)
 
         # Initialize the RF Data Converter
+        time.sleep(2.0)
         rfdc.Init(dynamicNco=True)
 
         # Set the DAC's NCO frequency
@@ -232,8 +234,14 @@ class Root(pr.Root):
             for j in range(4):
                 rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
 
+        # Wait for ADC/DAC Tile to be stable
+        for i in range(2):
+            while rfdc.adcTile[i].RestartStateEnd.get() != 15:
+                time.sleep(0.01)
+            while rfdc.dacTile[i].RestartStateEnd.get() != 15:
+                time.sleep(0.01)
+
         # MTS Sync the RF Data Converter
-        time.sleep(1.0)
         rfdc.MtsAdcSync()
         rfdc.MtsDacSync()
 
@@ -249,6 +257,7 @@ class Root(pr.Root):
         # Set the firmware DDC's NCO value and enable run control
         readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
         readoutCtrl.DspRunCntrl.set(1)
+        readoutCtrl.SwFaultTrig()
 
         # Update all SW remote registers
         self.CountReset()

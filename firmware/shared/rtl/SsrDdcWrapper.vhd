@@ -25,6 +25,7 @@ entity SsrDdcWrapper is
       dspClk    : in  sl;
       dspRst    : in  sl;
       ncoConfig : in  slv(31 downto 0);
+      ampDelay  : in  Slv4Array(3 downto 0);
       adcIn     : in  Slv256Array(3 downto 0);
       ampOut    : out Slv256Array(3 downto 0));
 end SsrDdcWrapper;
@@ -196,6 +197,7 @@ architecture mapping of SsrDdcWrapper is
    signal amp1      : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal amp2      : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal amp3      : Slv16Array(15 downto 0) := (others => (others => '0'));
+   signal ampSig    : Slv256Array(3 downto 0) := (others => (others => '0'));
 
 begin
 
@@ -214,10 +216,10 @@ begin
             adc2(i) <= adcIn(2)(i*16+15 downto i*16) after TPD_G;
             adc3(i) <= adcIn(3)(i*16+15 downto i*16) after TPD_G;
 
-            ampOut(0)(i*16+15 downto i*16) <= amp0(i) after TPD_G;
-            ampOut(1)(i*16+15 downto i*16) <= amp1(i) after TPD_G;
-            ampOut(2)(i*16+15 downto i*16) <= amp2(i) after TPD_G;
-            ampOut(3)(i*16+15 downto i*16) <= amp3(i) after TPD_G;
+            ampSig(0)(i*16+15 downto i*16) <= amp0(i) after TPD_G;
+            ampSig(1)(i*16+15 downto i*16) <= amp1(i) after TPD_G;
+            ampSig(2)(i*16+15 downto i*16) <= amp2(i) after TPD_G;
+            ampSig(3)(i*16+15 downto i*16) <= amp3(i) after TPD_G;
 
          end loop;
       end if;
@@ -381,5 +383,23 @@ begin
          ampout3_13   => amp3(13),
          ampout3_14   => amp3(14),
          ampout3_15   => amp3(15));
+
+   GEN_VEC :
+   for i in 3 downto 0 generate
+
+      U_SlvDelay : entity surf.SlvDelay
+         generic map (
+            TPD_G        => TPD_G,
+            SRL_EN_G     => true,
+            REG_OUTPUT_G => true,
+            DELAY_G      => 16,
+            WIDTH_G      => 256)
+         port map (
+            clk   => dspClk,
+            delay => ampDelay(i),
+            din   => ampSig(i),
+            dout  => ampOut(i));
+
+   end generate GEN_VEC;
 
 end mapping;
