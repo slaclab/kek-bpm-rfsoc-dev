@@ -57,3 +57,5 @@ bin*
 *.dcp
 
 oldDDC.slx
+slprj*
+netlist*
