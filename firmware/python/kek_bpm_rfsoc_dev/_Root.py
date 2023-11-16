@@ -95,7 +95,7 @@ class Root(pr.Root):
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
         self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
 
-        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**12) for i in range(4)]
+        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**12,faultDisp=True) for i in range(4)]
 
         self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
         self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=2**12)
@@ -130,47 +130,6 @@ class Root(pr.Root):
         self.bpmFaultBuff >> self.bpmFaultProc
         self.add(self.bpmFaultProc)
 
-        ##################################################################################
-
-        self.add(pr.LinkVariable(
-            name         = 'NewDataDisp',
-            mode         = 'RO',
-            typeStr      = 'bool',
-            value        = False,
-            linkedGet    = lambda: self.AmpDispProcessor[0].NewDataReady.value() and self.AmpDispProcessor[1].NewDataReady.value() and self.AmpDispProcessor[2].NewDataReady.value() and self.AmpDispProcessor[3].NewDataReady.value(),
-            dependencies = [self.AmpDispProcessor[i].NewDataReady for x in range(4)],
-            pollInterval = 1,
-            hidden       = True,
-        ))
-
-        self.add(pr.LinkVariable(
-            name         = 'NewDataFault',
-            mode         = 'RO',
-            typeStr      = 'bool',
-            value        = False,
-            linkedGet    = lambda: self.AmpFaultProcessor[0].NewDataReady.value() and self.AmpFaultProcessor[1].NewDataReady.value() and self.AmpFaultProcessor[2].NewDataReady.value() and self.AmpFaultProcessor[3].NewDataReady.value(),
-            dependencies = [self.AmpFaultProcessor[i].NewDataReady for x in range(4)],
-            pollInterval = 1,
-            hidden       = True,
-        ))
-
-        ##################################################################################
-
-        self.add(pr.LinkVariable(
-            name         = 'MonNewDataDisp',
-            mode         = 'RO',
-            linkedGet    = lambda: [self.AmpDispProcessor[i].UpdateWaveform() for i in range(4)] ,
-            dependencies = [self.NewDataDisp],
-            hidden       = True,
-        ))
-
-        self.add(pr.LinkVariable(
-            name         = 'MonNewDataFault',
-            mode         = 'RO',
-            linkedGet    = lambda: [self.AmpFaultProcessor[i].UpdateWaveform() for i in range(4)] ,
-            dependencies = [self.NewDataFault],
-            hidden       = True,
-        ))
 
         ##################################################################################
         ##                              Register Access
@@ -186,7 +145,7 @@ class Root(pr.Root):
         self.add(rfsoc.RFSoC(
             memBase     = self.memMap,
             sampleRate  = self.sampleRate,
-            NewDataDisp = self.NewDataDisp,
+            ampDispProc = [self.AmpDispProcessor[x] for x in range(4)],
             SSR         = self.SSR,
             offset      = 0x04_0000_0000, # Full 40-bit address space
             expand      = True,
@@ -223,24 +182,18 @@ class Root(pr.Root):
                 click.secho(errMsg, bg='red')
                 raise ValueError(errMsg)
 
-        # Turn off turn control
-        readoutCtrl.DspRunCntrl.set(0)
+        print('Issuing a reset to the user logic')
+        axiVersion.UserRst()
+        while(axiVersion.AppReset.get() != 0):
+            time.sleep(0.1)
 
-        # Check if DSP clock not stable
-        if axiVersion.DspReset.get():
+        print('Initialize the LMK/LMX Clock chips')
+        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
-            print('Issuing a reset to the user logic')
-            axiVersion.UserRst()
-            while(axiVersion.AppReset.get() != 0):
-                time.sleep(0.1)
-
-            print('Initialize the LMK/LMX Clock chips')
-            self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
-
-            print('Wait for DSP Clock to be stable')
-            while(axiVersion.DspReset.get()):
-                time.sleep(0.1)
-            self.ReadAll()
+        print('Wait for DSP Clock to be stable')
+        while(axiVersion.DspReset.get()):
+            time.sleep(0.1)
+        self.ReadAll()
 
         # Initialize the RF Data Converter
         time.sleep(2.0)

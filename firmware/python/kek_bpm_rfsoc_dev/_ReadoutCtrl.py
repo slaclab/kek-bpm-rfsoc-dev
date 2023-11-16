@@ -11,11 +11,11 @@
 import pyrogue as pr
 
 class ReadoutCtrl(pr.Device):
-    def __init__(self,sampleRate=0.0,NewDataDisp=None,SSR=16,**kwargs):
+    def __init__(self,sampleRate=0.0,ampDispProc=None,SSR=16,**kwargs):
         super().__init__(**kwargs)
 
         self.smplTime = 1/sampleRate
-        self.NewDataDisp = NewDataDisp
+        self.ampDispProc = ampDispProc
 
         self.add(pr.RemoteVariable(
             name         = 'LiveDispTrigRaw',
@@ -52,7 +52,19 @@ class ReadoutCtrl(pr.Device):
 
         @self.command(description  = 'Force a DAC signal generator trigger from software',hidden=True)
         def getWaveformBurst():
-            if self.EnableSoftTrig.get() and not(self.NewDataDisp.get()):
+            # Check if data received from all sockets
+            if self.ampDispProc[0].NewDataReady.get() and self.ampDispProc[1].NewDataReady.get() and self.ampDispProc[2].NewDataReady.get() and self.ampDispProc[3].NewDataReady.get():
+                for i in range(4):
+                    self.ampDispProc[i].UpdateWaveform()
+
+            # Check if we are armed for next trigger
+            armTrig = True
+            for i in range(4):
+                if self.ampDispProc[i].NewDataReady.get():
+                    armTrig = False
+
+            # Check if we execute software trigger
+            if self.EnableSoftTrig.get() and armTrig:
                 self.LiveDispTrig()
 
         self.add(pr.LocalVariable(

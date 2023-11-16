@@ -15,9 +15,10 @@ import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 # Class for streaming RX
 class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
     # Init method must call the parent class init
-    def __init__( self,**kwargs):
+    def __init__( self,faultDisp=False,**kwargs):
         super().__init__(**kwargs)
         self._waveformData = np.zeros(shape=self._maxSize, dtype=np.int16, order='C')
+        self._faultDisp = faultDisp
 
     def _start(self):
         super()._start()
@@ -34,6 +35,10 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
 
             # Set the flag
             self.NewDataReady.set(True)
+
+            # Check display type
+            if self._faultDisp:
+                self.WaveformData.set(self._waveformData,write=True)
 
     # Method which updates the waveform PV from external function
     def UpdateWaveform(self):

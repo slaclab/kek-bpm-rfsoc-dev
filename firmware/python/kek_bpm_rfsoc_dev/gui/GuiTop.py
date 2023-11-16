@@ -66,7 +66,7 @@ class GuiTop(Display):
         ######################################################################################################
 
         # ADC Live Display (Tab Index=2)
-        self.tab.addTab(guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp'),'ADC Live')
+        self.tab.addTab(guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4),'ADC Live')
 
         # AMP Live Display (Tab Index=3)
         self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp'),'AMP Live')
@@ -76,13 +76,10 @@ class GuiTop(Display):
 
         ######################################################################################################
 
-        # # ADC Fault Display (Tab Index=5)
-        # self.tab.addTab(guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcFault'),'ADC Fault')
-
-        # AMP Fault Display (Tab Index=6)
+        # AMP Fault Display (Tab Index=5)
         self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpFault'),'AMP Fault')
 
-        # BPM Fault Display (Tab Index=7)
+        # BPM Fault Display (Tab Index=6)
         self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmFaultProc'),'BPM Fault')
 
         ######################################################################################################

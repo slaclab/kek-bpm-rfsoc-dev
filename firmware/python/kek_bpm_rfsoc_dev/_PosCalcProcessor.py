@@ -79,9 +79,9 @@ class PosCalcProcessor(pr.DataReceiver):
             with self.Xposition.lock, self.Yposition.lock, self.BunchCharge.lock:
 
                 # NumPy Array Slicing - [start:end:step]
-                self.Xposition.value()[:]   = data[x*0:(self._maxSize*3)+x+0:3]
-                self.Yposition.value()[:]   = data[x*1:(self._maxSize*3)+x+1:3]
-                self.BunchCharge.value()[:] = data[x*2:(self._maxSize*3)+x+2:3]
+                self.Xposition.value()[:]   = data[0:(self._maxSize*3)+0:3]
+                self.Yposition.value()[:]   = data[1:(self._maxSize*3)+1:3]
+                self.BunchCharge.value()[:] = data[2:(self._maxSize*3)+2:3]
 
                 self.writeAndVerifyBlocks(force=True, variable=self.Xposition)
                 self.writeAndVerifyBlocks(force=True, variable=self.Yposition)
