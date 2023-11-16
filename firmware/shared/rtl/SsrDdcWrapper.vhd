@@ -14,6 +14,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -198,6 +200,8 @@ architecture mapping of SsrDdcWrapper is
    signal amp2      : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal amp3      : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal ampSig    : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal ampDly    : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal ampVec    : Slv512Array(3 downto 0) := (others => (others => '0'));
 
 begin
 
@@ -205,22 +209,13 @@ begin
    process(dspClk)
    begin
       if rising_edge(dspClk) then
-
          enableNco <= not(dspRst) after TPD_G;
          nco       <= ncoConfig   after TPD_G;
-
          for i in 0 to 15 loop
-
             adc0(i) <= adcIn(0)(i*16+15 downto i*16) after TPD_G;
             adc1(i) <= adcIn(1)(i*16+15 downto i*16) after TPD_G;
             adc2(i) <= adcIn(2)(i*16+15 downto i*16) after TPD_G;
             adc3(i) <= adcIn(3)(i*16+15 downto i*16) after TPD_G;
-
-            ampSig(0)(i*16+15 downto i*16) <= amp0(i) after TPD_G;
-            ampSig(1)(i*16+15 downto i*16) <= amp1(i) after TPD_G;
-            ampSig(2)(i*16+15 downto i*16) <= amp2(i) after TPD_G;
-            ampSig(3)(i*16+15 downto i*16) <= amp3(i) after TPD_G;
-
          end loop;
       end if;
    end process;
@@ -384,22 +379,32 @@ begin
          ampout3_14   => amp3(14),
          ampout3_15   => amp3(15));
 
-   GEN_VEC :
+   GEN_VEC_A :
+   for i in 15 downto 0 generate
+      ampSig(0)(i*16+15 downto i*16) <= amp0(i);
+      ampSig(1)(i*16+15 downto i*16) <= amp1(i);
+      ampSig(2)(i*16+15 downto i*16) <= amp2(i);
+      ampSig(3)(i*16+15 downto i*16) <= amp3(i);
+   end generate GEN_VEC_A;
+
+   GEN_VEC_B :
    for i in 3 downto 0 generate
+      ampVec(i) <= ampSig(i) & ampDly(i);
+   end generate GEN_VEC_B;
 
-      U_SlvDelay : entity surf.SlvDelay
-         generic map (
-            TPD_G        => TPD_G,
-            SRL_EN_G     => true,
-            REG_OUTPUT_G => true,
-            DELAY_G      => 16,
-            WIDTH_G      => 256)
-         port map (
-            clk   => dspClk,
-            delay => ampDelay(i),
-            din   => ampSig(i),
-            dout  => ampOut(i));
+   process(dspClk)
+   begin
+      if rising_edge(dspClk) then
+         for i in 0 to 3 loop
 
-   end generate GEN_VEC;
+            -- Pick off the delay from the vector
+            ampOut(i) <= ampVec(i)(conv_integer(ampDelay(i))*16+255 downto conv_integer(ampDelay(i))*16) after TPD_G;
+
+            -- Create a delayed copy for next cycle
+            ampDly(i) <= ampSig(i) after TPD_G;
+
+         end loop;
+      end if;
+   end process;
 
 end mapping;

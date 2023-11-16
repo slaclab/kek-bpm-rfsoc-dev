@@ -11,7 +11,7 @@
 import pyrogue as pr
 
 class ReadoutCtrl(pr.Device):
-    def __init__(self,sampleRate=0.0,NewDataDisp=None,**kwargs):
+    def __init__(self,sampleRate=0.0,NewDataDisp=None,SSR=16,**kwargs):
         super().__init__(**kwargs)
 
         self.smplTime = 1/sampleRate
@@ -98,3 +98,13 @@ class ReadoutCtrl(pr.Device):
             mode         = 'RW',
             hidden       = True,
         ))
+
+        for i in range(4):
+            self.add(pr.RemoteVariable(
+                name         = f'AmpDelay[{i}]',
+                description  = 'Used to delay the AMP waveform after the SSR_DDC and before ring buffer',
+                offset       = 0x14,
+                bitSize      = 4,
+                bitOffset    = 8*i,
+                mode         = 'RW',
+            ))

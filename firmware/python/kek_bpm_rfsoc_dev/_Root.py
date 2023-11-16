@@ -41,25 +41,28 @@ class Root(pr.Root):
         # Pass custom value to parent via super function
         super().__init__(**kwargs)
 
+        if zmqSrvEn:
+            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
+            self.addInterface(self.zmqServer)
+
+        ##################################################################################
+
         self.bpmFreqMHz = float(bpmFreqMHz)
+        self.SSR = 16
 
         # Check for ZONE1 operation
         if bpmFreqMHz < (3054//2):
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
             self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS'
+
         # Else ZONE2 operation
         else:
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
             self.ImageName = 'KekBpmRfsocDevZcu111_3054MSPS'
-        print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
-        #################################################################
-        if zmqSrvEn:
-            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
-            self.addInterface(self.zmqServer)
-        #################################################################
+        print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
         # Configuration File Paths
         self.top_level = top_level
@@ -71,26 +74,33 @@ class Root(pr.Root):
         self.lmkConfig   = f'{self.configPath}/LmkConfig.txt'
         self.lmxConfig   = [f'{self.configPath}/LmxConfig.txt']
 
-        ##################################################################################
-        ##                              Data Path
-        ##################################################################################
-
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
         self.add(self.dataWriter)
+
+        ##################################################################################
 
         # Create rogue stream objects
         self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
         self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
 
-        # self.adcFaultBuff = [stream.TcpClient(ip,10000+2*(i+12))  for i in range(4)]
         self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8)) for i in range(4)]
 
-        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
-        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**9) for i in range(4)]
+        self.bpmDispBuff  = stream.TcpClient(ip,10000+2*16)
+        self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
 
-        # self.adcFaultProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
-        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=16*2**12) for i in range(4)]
+        ##################################################################################
+
+        # Create rogue stream receivers
+        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
+        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
+
+        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**12) for i in range(4)]
+
+        self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
+        self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=2**12)
+
+        ##################################################################################
 
         # Connect the rogue stream arrays
         for i in range(4):
@@ -105,15 +115,20 @@ class Root(pr.Root):
             self.ampDispBuff[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
-            # # ADC Fault Display Path
-            # self.adcFaultBuff[i] >> self.dataWriter.getChannel(i+8)
-            # self.adcFaultBuff[i] >> self.adcFaultProc[i]
-            # self.add(self.adcFaultProc[i])
-
             # AMP Fault Display Path
             self.ampFaultBuff[i] >> self.dataWriter.getChannel(i+12)
             self.ampFaultBuff[i] >> self.ampFaultProc[i]
             self.add(self.ampFaultProc[i])
+
+        # PosCalc Live Display Path
+        self.bpmDispBuff  >> self.dataWriter.getChannel(16)
+        self.bpmDispBuff >> self.bpmDispProc
+        self.add(self.bpmDispProc)
+
+        # PosCalc Fault Display Path
+        self.bpmFaultBuff  >> self.dataWriter.getChannel(24)
+        self.bpmFaultBuff >> self.bpmFaultProc
+        self.add(self.bpmFaultProc)
 
         ##################################################################################
 
@@ -135,18 +150,16 @@ class Root(pr.Root):
             value        = False,
             linkedGet    = lambda: self.AmpFaultProcessor[0].NewDataReady.value() and self.AmpFaultProcessor[1].NewDataReady.value() and self.AmpFaultProcessor[2].NewDataReady.value() and self.AmpFaultProcessor[3].NewDataReady.value(),
             dependencies = [self.AmpFaultProcessor[i].NewDataReady for x in range(4)],
+            pollInterval = 1,
             hidden       = True,
         ))
 
         ##################################################################################
 
-        self.add(rfsoc.StreamProcessor(name='BpmDispProc', waveformRx = [self.AmpDispProcessor[i]  for i in range(4)]))
-        self.add(rfsoc.StreamProcessor(name='BpmFaultProc',waveformRx = [self.AmpFaultProcessor[i] for i in range(4)]))
-
         self.add(pr.LinkVariable(
             name         = 'MonNewDataDisp',
             mode         = 'RO',
-            linkedGet    = lambda: self.BpmDispProc.gpSubProcess() if self.NewDataDisp.value() else False ,
+            linkedGet    = lambda: [self.AmpDispProcessor[i].UpdateWaveform() for i in range(4)] ,
             dependencies = [self.NewDataDisp],
             hidden       = True,
         ))
@@ -154,14 +167,10 @@ class Root(pr.Root):
         self.add(pr.LinkVariable(
             name         = 'MonNewDataFault',
             mode         = 'RO',
-            linkedGet    = lambda: self.BpmFaultProc.gpSubProcess() if self.NewDataFault.value() else False ,
+            linkedGet    = lambda: [self.AmpFaultProcessor[i].UpdateWaveform() for i in range(4)] ,
             dependencies = [self.NewDataFault],
             hidden       = True,
         ))
-
-        # Connect StreamProcessor to the file writer
-        self.BpmDispProc  >> self.dataWriter.getChannel(16)
-        self.BpmFaultProc >> self.dataWriter.getChannel(17)
 
         ##################################################################################
         ##                              Register Access
@@ -178,10 +187,13 @@ class Root(pr.Root):
             memBase     = self.memMap,
             sampleRate  = self.sampleRate,
             NewDataDisp = self.NewDataDisp,
+            SSR         = self.SSR,
             offset      = 0x04_0000_0000, # Full 40-bit address space
             expand      = True,
         ))
 
+        ##################################################################################
+        ##                              EPICS Access
         ##################################################################################
 
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
@@ -204,26 +216,31 @@ class Root(pr.Root):
         rfdc        = self.RFSoC.RfDataConverter
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
-        # Issue a reset to the user logic
-        axiVersion.UserRst()
-        while(axiVersion.AppReset.get() != 0):
-            time.sleep(0.01)
-
-        # Update all SW remote registers
-        self.ReadAll()
-
         # Check for Expected FW loaded
+        self.ReadAll()
         if axiVersion.ImageName.value() != self.ImageName:
                 errMsg = f'Actual.Firmware={axiVersion.ImageName.value()} != Expected.Firmware={self.ImageName}'
                 click.secho(errMsg, bg='red')
                 raise ValueError(errMsg)
 
-        # Initialize the LMK/LMX Clock chips
-        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
+        # Turn off turn control
+        readoutCtrl.DspRunCntrl.set(0)
 
-        # Wait for DSP Clock to be stable
-        while(axiVersion.DspReset.get()):
-            time.sleep(0.01)
+        # Check if DSP clock not stable
+        if axiVersion.DspReset.get():
+
+            print('Issuing a reset to the user logic')
+            axiVersion.UserRst()
+            while(axiVersion.AppReset.get() != 0):
+                time.sleep(0.1)
+
+            print('Initialize the LMK/LMX Clock chips')
+            self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
+
+            print('Wait for DSP Clock to be stable')
+            while(axiVersion.DspReset.get()):
+                time.sleep(0.1)
+            self.ReadAll()
 
         # Initialize the RF Data Converter
         time.sleep(2.0)
@@ -236,16 +253,20 @@ class Root(pr.Root):
 
         # Wait for ADC/DAC Tile to be stable
         for i in range(2):
-            while rfdc.adcTile[i].RestartStateEnd.get() != 15:
+            while rfdc.adcTile[i].CurrentState.get() < 14:
                 time.sleep(0.01)
-            while rfdc.dacTile[i].RestartStateEnd.get() != 15:
+            while rfdc.dacTile[i].CurrentState.get() < 14:
                 time.sleep(0.01)
+
+        # Set the firmware DDC's NCO value and enable run control
+        readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
+        readoutCtrl.DspRunCntrl.set(1)
 
         # MTS Sync the RF Data Converter
         rfdc.MtsAdcSync()
         rfdc.MtsDacSync()
 
-        # Load the Default YAML file
+        # Load the Default YAML file and refresh all remote variables
         print(f'Loading path={self.defaultFile} Default Configuration File...')
         self.LoadConfig(self.defaultFile)
         self.ReadAll()
@@ -253,14 +274,5 @@ class Root(pr.Root):
         # Load the waveform data into DacSigGen
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
-
-        # Set the firmware DDC's NCO value and enable run control
-        readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
-        readoutCtrl.DspRunCntrl.set(1)
-        readoutCtrl.SwFaultTrig()
-
-        # Update all SW remote registers
-        self.CountReset()
-        self.ReadAll()
 
     ##################################################################################

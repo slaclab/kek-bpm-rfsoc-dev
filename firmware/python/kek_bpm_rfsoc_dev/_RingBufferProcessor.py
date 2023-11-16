@@ -38,3 +38,4 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
     # Method which updates the waveform PV from external function
     def UpdateWaveform(self):
         self.WaveformData.set(self._waveformData,write=True)
+        self.NewDataReady.set(False)

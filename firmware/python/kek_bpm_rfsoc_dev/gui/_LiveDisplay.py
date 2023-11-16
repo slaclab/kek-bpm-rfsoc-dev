@@ -29,15 +29,12 @@ class LiveDisplay(PyDMFrame):
         self.RxEnable  = [nodeFromAddress(self.path[i]+'.RxEnable') for i in range(4)]
 
     def resetScales(self):
-        # self.xPosPlot.setAutoRangeX(False)
-        # self.xPosPlot.setMinXRange(0.0)
-        # self.xPosPlot.setMaxXRange(20.0)
-
         # Reset the auto-ranging
+        self.xPosPlot.setAutoRangeX(True)
         self.xPosPlot.resetAutoRangeX()
         self.xPosPlot.resetAutoRangeY()
-        self.yPosPlot.resetAutoRangeX()
-        self.yPosPlot.resetAutoRangeY()
+        # self.yPosPlot.resetAutoRangeX()
+        # self.yPosPlot.resetAutoRangeY()
 
     def connection_changed(self, connected):
         build = (self._node is None) and (self._connected != connected and connected is True)
@@ -57,7 +54,7 @@ class LiveDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('X Position (white = + polarity, red = - polarity)')
+        gb = QGroupBox('X Position (white = + polarity, red = - polarity), X Position (yellow = + polarity, turquoise = - polarity)')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -84,54 +81,58 @@ class LiveDisplay(PyDMFrame):
             symbol     = 'o',
             symbolSize = 3,
         )
-        # self.xPosPlot.addChannel(
-            # name       = 'Counts',
-            # x_channel  = f'{self.path[2]}.Time',
-            # y_channel  = f'{self.path[2]}.WaveformData',
-            # color      =  "yellow",
-            # symbol     = 'o',
-            # symbolSize = 3,
-        # )
-        # self.xPosPlot.addChannel(
-            # name       = 'Counts',
-            # x_channel  = f'{self.path[3]}.Time',
-            # y_channel  = f'{self.path[3]}.WaveformData',
-            # color      = "turquoise",
-            # symbol     = 'o',
-            # symbolSize = 3,
-        # )
-        fl.addWidget(self.xPosPlot)
-
-        #-----------------------------------------------------------------------------
-
-        gb = QGroupBox('Y Position (white = + polarity, red = - polarity)')
-        vb.addWidget(gb)
-
-        fl = QFormLayout()
-        fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-        fl.setLabelAlignment(Qt.AlignRight)
-        gb.setLayout(fl)
-
-        self.yPosPlot = PyDMWaveformPlot()
-        self.yPosPlot.setLabel("bottom", text='Time (ns)')
-        self.yPosPlot.addChannel(
+        self.xPosPlot.addChannel(
             name       = 'Counts',
             x_channel  = f'{self.path[2]}.Time',
             y_channel  = f'{self.path[2]}.WaveformData',
-            color      =  "white",
+            color      =  "yellow",
             symbol     = 'o',
             symbolSize = 3,
         )
-        self.yPosPlot.addChannel(
+        self.xPosPlot.addChannel(
             name       = 'Counts',
             x_channel  = f'{self.path[3]}.Time',
             y_channel  = f'{self.path[3]}.WaveformData',
-            color      = "red",
+            color      = "turquoise",
             symbol     = 'o',
             symbolSize = 3,
         )
-        fl.addWidget(self.yPosPlot)
+        fl.addWidget(self.xPosPlot)
+
+        self.xPosPlot.setAutoRangeX(True)
+        self.xPosPlot.setMinXRange(0.0)
+        self.xPosPlot.setMaxXRange(20.0)
+
+        #-----------------------------------------------------------------------------
+
+        # gb = QGroupBox('Y Position (white = + polarity, red = - polarity)')
+        # vb.addWidget(gb)
+
+        # fl = QFormLayout()
+        # fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        # fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        # fl.setLabelAlignment(Qt.AlignRight)
+        # gb.setLayout(fl)
+
+        # self.yPosPlot = PyDMWaveformPlot()
+        # self.yPosPlot.setLabel("bottom", text='Time (ns)')
+        # self.yPosPlot.addChannel(
+            # name       = 'Counts',
+            # x_channel  = f'{self.path[2]}.Time',
+            # y_channel  = f'{self.path[2]}.WaveformData',
+            # color      =  "white",
+            # symbol     = 'o',
+            # symbolSize = 3,
+        # )
+        # self.yPosPlot.addChannel(
+            # name       = 'Counts',
+            # x_channel  = f'{self.path[3]}.Time',
+            # y_channel  = f'{self.path[3]}.WaveformData',
+            # color      = "red",
+            # symbol     = 'o',
+            # symbolSize = 3,
+        # )
+        # fl.addWidget(self.yPosPlot)
 
         #-----------------------------------------------------------------------------
 

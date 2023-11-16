@@ -16,7 +16,7 @@ import surf.xilinx                                   as xil
 import kek_bpm_rfsoc_dev                             as rfsoc
 
 class RFSoC(pr.Device):
-    def __init__(self,sampleRate=0.0,NewDataDisp=None,**kwargs):
+    def __init__(self,sampleRate=0.0,NewDataDisp=None,SSR=16,**kwargs):
         super().__init__(**kwargs)
 
         self.add(socCore.AxiSocCore(
@@ -47,5 +47,6 @@ class RFSoC(pr.Device):
             offset      = 0xA000_0000,
             sampleRate  = sampleRate,
             NewDataDisp = NewDataDisp,
+            SSR         = SSR,
             expand      = True,
         ))

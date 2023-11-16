@@ -29,10 +29,10 @@ class BpmDisplay(PyDMFrame):
 
     # Reset the auto-ranging
     def resetScales(self):
-        self.xPosPlot.resetAutoRangeX()
-        self.xPosPlot.resetAutoRangeY()
-        self.yPosPlot.resetAutoRangeX()
-        self.yPosPlot.resetAutoRangeY()
+        self.posPlot.resetAutoRangeX()
+        self.posPlot.resetAutoRangeY()
+        self.chargePlot.resetAutoRangeX()
+        self.chargePlot.resetAutoRangeY()
 
     def connection_changed(self, connected):
         build = (self._node is None) and (self._connected != connected and connected is True)
@@ -48,7 +48,7 @@ class BpmDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('X Position')
+        gb = QGroupBox('X Position - white, Y Position - red')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -57,21 +57,29 @@ class BpmDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.xPosPlot = PyDMWaveformPlot()
-        self.xPosPlot.setLabel("bottom", text='Bunch Number')
-        self.xPosPlot.addChannel(
-            name       = 'X Position (TBD Units)',
-            x_channel  = f'{self.path}.StepsX',
-            y_channel  = f'{self.path}.Xpos',
+        self.posPlot = PyDMWaveformPlot()
+        self.posPlot.setLabel("bottom", text='Time (ns)')
+        self.posPlot.addChannel(
+            name       = 'Position (TBD Units)',
+            x_channel  = f'{self.path}.Time',
+            y_channel  = f'{self.path}.Xposition',
             color      = 'white',
             symbol     = 'o',
             symbolSize = 3,
         )
-        fl.addWidget(self.xPosPlot)
+        self.posPlot.addChannel(
+            name       = 'Position (TBD Units)',
+            x_channel  = f'{self.path}.Time',
+            y_channel  = f'{self.path}.Yposition',
+            color      = 'red',
+            symbol     = 'o',
+            symbolSize = 3,
+        )
+        fl.addWidget(self.posPlot)
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('Y Position')
+        gb = QGroupBox('Bunch Charge')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -80,68 +88,32 @@ class BpmDisplay(PyDMFrame):
         fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
 
-        self.yPosPlot = PyDMWaveformPlot()
-        self.yPosPlot.setLabel("bottom", text='Bunch Number')
-        self.yPosPlot.addChannel(
-            name       = 'Y Position (TBD Units)',
-            x_channel  = f'{self.path}.StepsY',
-            y_channel  = f'{self.path}.Ypos',
-            color      = 'white',
+        self.chargePlot = PyDMWaveformPlot()
+        self.chargePlot.setLabel("bottom", text='Time (ns)')
+        self.chargePlot.addChannel(
+            name       = 'Bunch Charge (TBD Units)',
+            x_channel  = f'{self.path}.Time',
+            y_channel  = f'{self.path}.BunchCharge',
+            color      = 'turquoise',
             symbol     = 'o',
             symbolSize = 3,
         )
-        fl.addWidget(self.yPosPlot)
+        fl.addWidget(self.chargePlot)
 
         #-----------------------------------------------------------------------------
 
         gb = QGroupBox( f'{self._dispType} Display Controls')
         vb.addWidget(gb)
 
-        fl = QHBoxLayout()
+        fl = QFormLayout()
+        fl.setRowWrapPolicy(QFormLayout.DontWrapRows)
+        fl.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        fl.setLabelAlignment(Qt.AlignRight)
         gb.setLayout(fl)
-
-        w = QLabel('EventCnt:')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = PyDMLabel(parent=None, init_channel=f'{self.path}.EventCnt')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = QLabel('XposSTD:')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = PyDMLabel(parent=None, init_channel=f'{self.path}.XposSTD')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = QLabel('XposRMS:')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = PyDMLabel(parent=None, init_channel=f'{self.path}.XposRMS')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = QLabel('YposSTD:')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = PyDMLabel(parent=None, init_channel=f'{self.path}.YposSTD')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = QLabel('YposRMS:')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
-
-        w = PyDMLabel(parent=None, init_channel=f'{self.path}.YposRMS')
-        w.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        fl.addWidget(w)
 
         rstButton = PyDMPushButton(label="Full Scale")
         rstButton.clicked.connect(self.resetScales)
         fl.addWidget(rstButton)
+        self.resetScales()
 
         #-----------------------------------------------------------------------------
