@@ -46,9 +46,7 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
         self.NewDataReady.set(False)
 
     # Method which finds peak index
-    def peaksearch(self,threshold,SSR):
-        waveform=self._waveformData
-        for i in range(1, len(waveform) - 1):
-            if waveform[i] > waveform[i - 1] and waveform[i] > waveform[i + 1]:
-                if waveform[i] > threshold:
-                    return i % SSR
+    def peaksearch(self,ssr=16):
+        waveform = self._waveformData
+        max_index = np.argmax(waveform[:ssr*10])
+        return max_index % ssr

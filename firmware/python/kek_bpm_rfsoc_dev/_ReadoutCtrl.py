@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
+import time
 
 class ReadoutCtrl(pr.Device):
     def __init__(self,sampleRate=0.0,ampDispProc=None,SSR=16,**kwargs):
@@ -120,3 +121,11 @@ class ReadoutCtrl(pr.Device):
                 bitOffset    = 8*i,
                 mode         = 'RW',
             ))
+
+
+        @self.command(description  = 'Tuning the amplitude delays before the Position calculating')
+        def tuneAmpDelays():
+            for i in range(4):
+                dly = self.ampDispProc[i].peaksearch()
+                print(f'ampDispProc[{i}].peaksearch() = {dly}')
+                self.AmpDelay[i].set(int(dly))
