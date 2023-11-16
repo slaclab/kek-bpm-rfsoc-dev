@@ -412,7 +412,7 @@ begin
    dacRst <= dacReset;
 
    dspClock <= dacClock;
-   dspReset <= dacReset;
+   dspReset <= dummySig(1);  -- Use the stable reset back to application
 
    dspClk <= dspClock;
    dspRst <= dspReset;
