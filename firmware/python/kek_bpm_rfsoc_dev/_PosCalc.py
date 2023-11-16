@@ -49,28 +49,6 @@ class PosCalc(pr.Device):
             stride       = 4,
         )
 
-        #define POSCALC_COEFFICIENT_Y9 0x224/**< coefficient_y9 */
-        #define POSCALC_COEFFICIENT_Y8 0x220/**< coefficient_y8 */
-        #define POSCALC_COEFFICIENT_Y7 0x21c/**< coefficient_y7 */
-        #define POSCALC_COEFFICIENT_Y6 0x218/**< coefficient_y6 */
-        #define POSCALC_COEFFICIENT_Y5 0x214/**< coefficient_y5 */
-        #define POSCALC_COEFFICIENT_Y4 0x210/**< coefficient_y4 */
-        #define POSCALC_COEFFICIENT_Y3 0x20c/**< coefficient_y3 */
-        #define POSCALC_COEFFICIENT_Y2 0x208/**< coefficient_y2 */
-        #define POSCALC_COEFFICIENT_Y1 0x204/**< coefficient_y1 */
-        #define POSCALC_COEFFICIENT_Y 0x200/**< coefficient_y */
-        self.addRemoteVariables(
-            name         = 'yCoeff',
-            description  = 'Coefficients for Y',
-            offset       = 0x200,
-            bitSize      = 32,
-            bitOffset    = 0,
-            base         = pr.Float,
-            mode         = 'RW',
-            number       = 10,
-            stride       = 4,
-        )
-
         #define POSCALC_COEFFICIENT_X9 0x124/**< coefficient_x9 */
         #define POSCALC_COEFFICIENT_X8 0x120/**< coefficient_x8 */
         #define POSCALC_COEFFICIENT_X7 0x11c/**< coefficient_x7 */
@@ -88,6 +66,30 @@ class PosCalc(pr.Device):
             bitSize      = 32,
             bitOffset    = 0,
             base         = pr.Float,
+            disp         = '{:0.2e}', # Display 2 digits after the decimal, and e for scientific notation
+            mode         = 'RW',
+            number       = 10,
+            stride       = 4,
+        )
+
+        #define POSCALC_COEFFICIENT_Y9 0x224/**< coefficient_y9 */
+        #define POSCALC_COEFFICIENT_Y8 0x220/**< coefficient_y8 */
+        #define POSCALC_COEFFICIENT_Y7 0x21c/**< coefficient_y7 */
+        #define POSCALC_COEFFICIENT_Y6 0x218/**< coefficient_y6 */
+        #define POSCALC_COEFFICIENT_Y5 0x214/**< coefficient_y5 */
+        #define POSCALC_COEFFICIENT_Y4 0x210/**< coefficient_y4 */
+        #define POSCALC_COEFFICIENT_Y3 0x20c/**< coefficient_y3 */
+        #define POSCALC_COEFFICIENT_Y2 0x208/**< coefficient_y2 */
+        #define POSCALC_COEFFICIENT_Y1 0x204/**< coefficient_y1 */
+        #define POSCALC_COEFFICIENT_Y 0x200/**< coefficient_y */
+        self.addRemoteVariables(
+            name         = 'yCoeff',
+            description  = 'Coefficients for Y',
+            offset       = 0x200,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            disp         = '{:0.2e}', # Display 2 digits after the decimal, and e for scientific notation
             mode         = 'RW',
             number       = 10,
             stride       = 4,
