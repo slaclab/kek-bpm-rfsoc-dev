@@ -44,3 +44,9 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
     def UpdateWaveform(self):
         self.WaveformData.set(self._waveformData,write=True)
         self.NewDataReady.set(False)
+
+    # Method which finds peak index
+    def peaksearch(self,ssr=16):
+        waveform = self._waveformData
+        max_index = np.argmax(waveform[:ssr*10])
+        return max_index % ssr

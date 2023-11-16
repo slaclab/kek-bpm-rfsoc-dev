@@ -228,4 +228,7 @@ class Root(pr.Root):
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
 
+        # Tune the amplitude delays for the firmware position calculation
+        readoutCtrl.tuneAmpDelays()
+
     ##################################################################################
