@@ -48,16 +48,17 @@ class Root(pr.Root):
         ##################################################################################
 
         self.bpmFreqMHz = float(bpmFreqMHz)
-        self.SSR = 16
 
         # Check for ZONE1 operation
         if bpmFreqMHz < (3054//2):
+            self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
             self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS'
 
         # Else ZONE2 operation
         else:
+            self.SSR = 12
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
             self.ImageName = 'KekBpmRfsocDevZcu111_3054MSPS'
@@ -93,9 +94,9 @@ class Root(pr.Root):
 
         # Create rogue stream receivers
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
-        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
+        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9,SSR=self.SSR,faultDisp=False) for i in range(4)]
 
-        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**12,faultDisp=True) for i in range(4)]
+        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**12,SSR=self.SSR,faultDisp=True) for i in range(4)]
 
         self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
         self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=2**12)

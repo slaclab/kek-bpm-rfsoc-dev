@@ -53,7 +53,7 @@ entity RfDataConverter is
       -- ADC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
-      dspAdc          : out Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspAdc          : out Slv192Array(NUM_ADC_CH_C-1 downto 0);
       dspRunCntrl     : in  sl;
       -- DAC Interface (dacClk domain)
       dacClk          : out sl;
@@ -196,7 +196,7 @@ architecture mapping of RfDataConverter is
    signal dacReset  : sl := '1';
    signal dacResetL : sl := '0';
 
-   signal adcData     : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
 
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
@@ -366,23 +366,20 @@ begin
          INPUT_BUFG_G      => false,
          FB_BUFG_G         => true,
          RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 2,
+         NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 1.964,
          DIVCLK_DIVIDE_G   => 2,
          CLKFBOUT_MULT_G   => 3,
-         CLKOUT0_DIVIDE_G  => 2,
-         CLKOUT1_DIVIDE_G  => 4)
+         CLKOUT0_DIVIDE_G  => 2)
       port map(
          -- Clock Input
          clkIn     => refClk,
          rstIn     => axilRst,
          -- Clock Outputs
          clkOut(0) => adcClock,         -- 381.750 MHz
-         clkOut(1) => dspClock,         -- 190.875 MHz
          -- Reset Outputs
-         rstOut(0) => dummySig(0),
-         rstOut(1) => dspReset);
+         rstOut(0) => dummySig(0));
 
    U_DacPll : entity surf.ClockManagerUltraScale
       generic map(
@@ -414,6 +411,9 @@ begin
    dacClk <= dacClock;
    dacRst <= dacReset;
 
+   dspClock <= dacClock;
+   dspReset <= dacReset;
+
    dspClk <= dspClock;
    dspRst <= dspReset;
 
@@ -443,7 +443,7 @@ begin
          generic map (
             TPD_G              => TPD_G,
             SLAVE_WIDTH_G      => 128,
-            MASTER_WIDTH_G     => 256,
+            MASTER_WIDTH_G     => 192,
             EN_EXT_CTRL_G      => false,
             -- Async FIFO generics
             FIFO_MEMORY_TYPE_G => "block",
