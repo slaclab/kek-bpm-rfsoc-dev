@@ -123,7 +123,7 @@ class ReadoutCtrl(pr.Device):
             ))
 
 
-        @self.command(description  = 'Tuning the amplitude delays before the Position calculating')
+        @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=True)
         def tuneAmpDelays():
             for i in range(4):
                 dly = self.ampDispProc[i].peaksearch()
