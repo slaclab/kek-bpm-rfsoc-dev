@@ -17,6 +17,7 @@ class ReadoutCtrl(pr.Device):
 
         self.smplTime = 1/sampleRate
         self.ampDispProc = ampDispProc
+        self._LiveDispTrigCnt = 0
 
         self.add(pr.RemoteVariable(
             name         = 'LiveDispTrigRaw',
@@ -67,6 +68,7 @@ class ReadoutCtrl(pr.Device):
             # Check if we execute software trigger
             if self.EnableSoftTrig.get() and armTrig:
                 self.LiveDispTrig()
+                self._LiveDispTrigCnt = self._LiveDispTrigCnt + 1
 
         self.add(pr.LocalVariable(
             name         = 'GetWaveformBurst',
@@ -114,18 +116,53 @@ class ReadoutCtrl(pr.Device):
 
         for i in range(4):
             self.add(pr.RemoteVariable(
-                name         = f'AmpDelay[{i}]',
+                name         = f'FineDelay[{i}]',
                 description  = 'Used to delay the AMP waveform after the SSR_DDC and before ring buffer',
                 offset       = 0x14,
                 bitSize      = 4,
                 bitOffset    = 8*i,
                 mode         = 'RW',
+                units        = 'sample',
+                # hidden       = True,
+            ))
+
+        for i in range(4):
+            self.add(pr.RemoteVariable(
+                name         = f'CourseDelay[{i}]',
+                description  = 'Used to delay the AMP waveform after the SSR_DDC and before ring buffer',
+                offset       = 0x18,
+                bitSize      = 4,
+                bitOffset    = 8*i,
+                mode         = 'RW',
+                units        = f'{SSR} x sample',
+                # hidden       = True,
             ))
 
 
-        @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=True)
+        @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
         def tuneAmpDelays():
-            for i in range(4):
-                dly = self.ampDispProc[i].peaksearch()
-                print(f'ampDispProc[{i}].peaksearch() = {dly}')
-                self.AmpDelay[i].set(int(dly))
+            print('ReadoutCtrl.tuneAmpDelays()')
+            # Create the lock pattern (all zeros) and delay that will force locking sequence
+            locked = [0 for i in range(4)]
+            delay  = [1 for i in range(4)]
+
+            # retry until locked
+            while delay != locked:
+
+                # Reset the delays
+                [self.FineDelay[i].set(0) for i in range(4)]
+
+                # Trigger 1st event and check the pattern
+                cnt = self._LiveDispTrigCnt
+                while cnt == self._LiveDispTrigCnt:
+                    time.sleep(0.01)
+                delay = [self.ampDispProc[i].peaksearch() for i in range(4)]
+                print( f'setting delays = {delay}' )
+                [self.FineDelay[i].set(delay[i]) for i in range(4)]
+
+                # Trigger 2nd event and check the lock pattern (all zeros)
+                cnt = self._LiveDispTrigCnt
+                while cnt == self._LiveDispTrigCnt:
+                    time.sleep(0.01)
+                delay = [self.ampDispProc[i].peaksearch() for i in range(4)]
+                print( f'Checking delay alignment = {delay}' )

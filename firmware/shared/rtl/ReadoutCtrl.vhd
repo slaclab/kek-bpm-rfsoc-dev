@@ -26,7 +26,8 @@ use work.AppPkg.all;
 
 entity ReadoutCtrl is
    generic (
-      TPD_G : time := 1 ns);
+      TPD_G             : time := 1 ns;
+      COURSE_DLY_INIT_G : Slv4Array(3 downto 0));
    port (
       -- DSP Interface
       dspClk          : in  sl;
@@ -34,7 +35,8 @@ entity ReadoutCtrl is
       sigGenTrig      : out slv(1 downto 0);
       ncoConfig       : out slv(31 downto 0);
       dspRunCntrl     : out sl;
-      ampDelay        : out Slv4Array(3 downto 0);
+      fineDelay       : out Slv4Array(3 downto 0);
+      courseDelay     : out Slv4Array(3 downto 0);
       -- AXI-Lite Interface
       axilReadMaster  : in  AxiLiteReadMasterType;
       axilReadSlave   : out AxiLiteReadSlaveType;
@@ -48,7 +50,8 @@ architecture rtl of ReadoutCtrl is
       dspRunCntrl    : sl;
       sigGenTrig     : slv(1 downto 0);
       ncoConfig      : slv(31 downto 0);
-      ampDelay       : Slv4Array(3 downto 0);
+      fineDelay      : Slv4Array(3 downto 0);
+      courseDelay    : Slv4Array(3 downto 0);
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -56,7 +59,8 @@ architecture rtl of ReadoutCtrl is
       dspRunCntrl    => '0',
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
-      ampDelay       => (others => x"0"),
+      fineDelay      => (others => x"0"),
+      courseDelay    => COURSE_DLY_INIT_G,
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -89,7 +93,8 @@ begin
       -- Reserved: address: [0xC:0xF]
       axiSlaveRegister (axilEp, x"10", 0, v.dspRunCntrl);
       for i in 0 to 3 loop
-         axiSlaveRegister (axilEp, x"14", (8*i), v.ampDelay(i));
+         axiSlaveRegister (axilEp, x"14", (8*i), v.fineDelay(i));
+         axiSlaveRegister (axilEp, x"18", (8*i), v.courseDelay(i));
       end loop;
 
       -- Closeout the transaction
@@ -103,7 +108,8 @@ begin
       sigGenTrig     <= r.sigGenTrig;
       ncoConfig      <= r.ncoConfig;
       dspRunCntrl    <= r.dspRunCntrl;
-      ampDelay       <= r.ampDelay;
+      fineDelay      <= r.fineDelay;
+      courseDelay    <= r.courseDelay;
 
       -- Reset
       if (dspRst = '1') then

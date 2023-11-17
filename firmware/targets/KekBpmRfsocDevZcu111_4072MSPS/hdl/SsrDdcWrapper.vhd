@@ -27,7 +27,7 @@ entity SsrDdcWrapper is
       dspClk    : in  sl;
       dspRst    : in  sl;
       ncoConfig : in  slv(31 downto 0);
-      ampDelay  : in  Slv4Array(3 downto 0);
+      fineDelay : in  Slv4Array(3 downto 0);
       adcIn     : in  Slv256Array(3 downto 0);
       ampOut    : out Slv256Array(3 downto 0));
 end SsrDdcWrapper;
@@ -398,7 +398,7 @@ begin
          for i in 0 to 3 loop
 
             -- Pick off the delay from the vector
-            ampOut(i) <= ampVec(i)(conv_integer(ampDelay(i))*16+255 downto conv_integer(ampDelay(i))*16) after TPD_G;
+            ampOut(i) <= ampVec(i)(conv_integer(fineDelay(i))*16+255 downto conv_integer(fineDelay(i))*16) after TPD_G;
 
             -- Create a delayed copy for next cycle
             ampDly(i) <= ampSig(i) after TPD_G;

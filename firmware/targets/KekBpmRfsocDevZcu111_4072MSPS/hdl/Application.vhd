@@ -84,9 +84,10 @@ architecture mapping of Application is
 
    signal dummmyVec : Slv16Array(3 downto 0) := (others => (others => '0'));
 
-   signal sigGenTrig : slv(1 downto 0);
-   signal ncoConfig  : slv(31 downto 0);
-   signal ampDelay   : Slv4Array(3 downto 0);
+   signal sigGenTrig  : slv(1 downto 0);
+   signal ncoConfig   : slv(31 downto 0);
+   signal fineDelay   : Slv4Array(3 downto 0);
+   signal courseDelay : Slv4Array(3 downto 0);
 
    signal xPos       : slv(31 downto 0);
    signal yPos       : slv(31 downto 0);
@@ -109,13 +110,21 @@ begin
          rstIn  => dspRst,
          rstOut => dspReset);
 
-   process(dspClk)
-   begin
-      -- Help with making timing
-      if rising_edge(dspClk) then
-         adc <= dspAdc after TPD_G;
-      end if;
-   end process;
+   GEN_VEC :
+   for i in 3 downto 0 generate
+      U_adc : entity surf.SlvDelay
+         generic map(
+            TPD_G        => TPD_G,
+            SRL_EN_G     => true,
+            DELAY_G      => 16,
+            REG_OUTPUT_G => true,
+            WIDTH_G      => 256)
+         port map (
+            clk   => dspClk,
+            delay => courseDelay(i),
+            din   => dspAdc(i),
+            dout  => adc(i));
+   end generate GEN_VEC;
 
    process(dacClk)
    begin
@@ -205,7 +214,7 @@ begin
          dspRst    => dspReset,
          ncoConfig => ncoConfig,
          adcIn     => adc,
-         ampDelay  => ampDelay,
+         fineDelay => fineDelay,
          ampOut    => amp);
 
    U_PosCalc : entity work.PosCalcWrapper
@@ -232,7 +241,8 @@ begin
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
-         TPD_G => TPD_G)
+         TPD_G             => TPD_G,
+         COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"1", 3 => x"1"))
       port map (
          -- DSP Interface
          dspClk          => dspClk,
@@ -240,7 +250,8 @@ begin
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
          dspRunCntrl     => dspRunCntrl,
-         ampDelay        => ampDelay,
+         fineDelay       => fineDelay,
+         courseDelay     => courseDelay,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(SW_TRIG_INDEX_C),
          axilReadSlave   => dspReadSlaves(SW_TRIG_INDEX_C),

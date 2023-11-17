@@ -85,7 +85,7 @@ class GuiTop(Display):
         ######################################################################################################
 
         # Set the default Tab view
-        self.tab.setCurrentIndex(1)
+        self.tab.setCurrentIndex(3)
 
         # Resize the window
         self.resize(self.sizeX, self.sizeY)

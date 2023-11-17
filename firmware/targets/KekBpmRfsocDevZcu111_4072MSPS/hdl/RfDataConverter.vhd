@@ -197,7 +197,6 @@ architecture mapping of RfDataConverter is
    signal dacResetL : sl := '0';
 
    signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
-   signal adc     : Slv256Array(NUM_ADC_CH_C-1 downto 0);
 
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
@@ -459,23 +458,9 @@ begin
             -- Master Interface
             masterClk   => dspClock,
             masterRst   => dspReset,
-            masterData  => adc(i),
+            masterData  => dspAdc(i),
             masterValid => open,
             masterReady => '1');
-
-      BYP_DLY : if (i < 2) generate
-         dspAdc(i) <= adc(i);
-      end generate BYP_DLY;
-
-      GEN_DLY : if (i >= 2) generate
-         process(dspClock)
-         begin
-            if rising_edge(dspClock) then
-               dspAdc(i) <= adc(i) after TPD_G;
-            end if;
-         end process;
-      end generate GEN_DLY;
-
    end generate GEN_ADC;
 
    process(dacClock)
