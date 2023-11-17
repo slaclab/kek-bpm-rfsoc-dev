@@ -2,17 +2,13 @@
 
 <!--- ######################################################## -->
 
-# Before you clone the GIT repository
-
-https://confluence.slac.stanford.edu/x/vJmDFg
-
-<!--- ######################################################## -->
-
 # Clone the GIT repository
 
 ```bash
-$ git clone --recursive git@github.com:slaclab/kek-bpm-rfsoc-dev
+$ git clone --recursive https://github.com/slaclab/kek-bpm-rfsoc-dev.git
 ```
+
+Note: `recursive flag` used to initialize all submodules within the clone
 
 <!--- ######################################################## -->
 
