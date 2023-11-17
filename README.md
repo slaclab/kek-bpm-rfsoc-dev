@@ -36,7 +36,10 @@ Connect J1 and J6, J2 and J5, J3 and J8, J4 and J7 using loopback SMA cables.
 1) Setup Model Composer Environment and Licensing (if on SLAC AFS network) else requires Xilinx & Matlab install on your local machine
 
 ```bash
+# in SLAC
 $ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
+# in KEK
+$ source kek-bpm-rfsoc-dev/firmware/KEK_setup.sh
 ```
 
 2) Go to the simulink directory and launch model composer
@@ -82,7 +85,7 @@ Create zip files for SSR12_Digital_Down_Conversion and Position_calculation in t
 1) Setup Xilinx PATH and licensing (if on SLAC AFS network) else requires Vivado install and licensing on your local machine
 
 ```bash
-#i n SLAC
+# in SLAC
 $ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
 # in KEK
 $ source kek-bpm-rfsoc-dev/firmware/KEK_setup.sh
