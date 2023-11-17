@@ -4,10 +4,6 @@ Root:
       ########################################################
       ReadoutCtrl:
         EnableSoftTrig: True
-        AmpDelay[0]: 0
-        AmpDelay[1]: 0
-        AmpDelay[2]: 0
-        AmpDelay[3]: 0
       ########################################################
       DacSigGen:
         enable: True

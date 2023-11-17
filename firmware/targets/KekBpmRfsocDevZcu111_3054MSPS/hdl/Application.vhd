@@ -40,7 +40,7 @@ entity Application is
       -- ADC Interface (dspClk domain)
       dspClk          : in  sl;
       dspRst          : in  sl;
-      dspAdc          : in  Slv256Array(NUM_ADC_CH_C-1 downto 0);
+      dspAdc          : in  Slv192Array(NUM_ADC_CH_C-1 downto 0);
       dspRunCntrl     : out sl;
       -- DAC Interface (dacClk domain)
       dacClk          : in  sl;
@@ -76,17 +76,18 @@ architecture mapping of Application is
    signal dspWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal dspWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal adc : Slv192Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal amp : Slv192Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal dacI : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
    signal dacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal dummmyVec : Slv16Array(3 downto 0) := (others => (others => '0'));
 
-   signal sigGenTrig : slv(1 downto 0);
-   signal ncoConfig  : slv(31 downto 0);
-   signal ampDelay   : Slv4Array(3 downto 0);
+   signal sigGenTrig  : slv(1 downto 0);
+   signal ncoConfig   : slv(31 downto 0);
+   signal fineDelay   : Slv4Array(3 downto 0);
+   signal courseDelay : Slv4Array(3 downto 0);
 
    signal xPos       : slv(31 downto 0);
    signal yPos       : slv(31 downto 0);
@@ -109,13 +110,21 @@ begin
          rstIn  => dspRst,
          rstOut => dspReset);
 
-   process(dspClk)
-   begin
-      -- Help with making timing
-      if rising_edge(dspClk) then
-         adc <= dspAdc after TPD_G;
-      end if;
-   end process;
+   GEN_VEC :
+   for i in 3 downto 0 generate
+      U_adc : entity surf.SlvDelay
+         generic map(
+            TPD_G        => TPD_G,
+            SRL_EN_G     => true,
+            DELAY_G      => 16,
+            REG_OUTPUT_G => true,
+            WIDTH_G      => 192)
+         port map (
+            clk   => dspClk,
+            delay => courseDelay(i),
+            din   => dspAdc(i),
+            dout  => adc(i));
+   end generate GEN_VEC;
 
    process(dacClk)
    begin
@@ -205,7 +214,7 @@ begin
          dspRst    => dspReset,
          ncoConfig => ncoConfig,
          adcIn     => adc,
-         ampDelay  => ampDelay,
+         fineDelay => fineDelay,
          ampOut    => amp);
 
    U_PosCalc : entity work.PosCalcWrapper
@@ -232,7 +241,8 @@ begin
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
-         TPD_G => TPD_G)
+         TPD_G             => TPD_G,
+         COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"0", 3 => x"0"))
       port map (
          -- DSP Interface
          dspClk          => dspClk,
@@ -240,7 +250,8 @@ begin
          sigGenTrig      => sigGenTrig,
          ncoConfig       => ncoConfig,
          dspRunCntrl     => dspRunCntrl,
-         ampDelay        => ampDelay,
+         fineDelay       => fineDelay,
+         courseDelay     => courseDelay,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(SW_TRIG_INDEX_C),
          axilReadSlave   => dspReadSlaves(SW_TRIG_INDEX_C),
@@ -275,7 +286,7 @@ begin
                14              => x"FF",
                15              => x"FF"),
             NUM_CH_G           => ite(i = 0, 8, 4),
-            SAMPLE_PER_CYCLE_G => 16,
+            SAMPLE_PER_CYCLE_G => 12,
             RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 12),
             MEMORY_TYPE_G      => ite(i = 0, "block", "ultra"),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk

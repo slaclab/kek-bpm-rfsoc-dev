@@ -15,10 +15,11 @@ import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 # Class for streaming RX
 class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
     # Init method must call the parent class init
-    def __init__( self,faultDisp=False,**kwargs):
+    def __init__( self,faultDisp=False,SSR=16,**kwargs):
         super().__init__(**kwargs)
         self._waveformData = np.zeros(shape=self._maxSize, dtype=np.int16, order='C')
         self._faultDisp = faultDisp
+        self._SSR = SSR
 
     def _start(self):
         super()._start()
@@ -46,7 +47,6 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
         self.NewDataReady.set(False)
 
     # Method which finds peak index
-    def peaksearch(self,ssr=16):
-        waveform = self._waveformData
-        max_index = np.argmax(waveform[:ssr*10])
-        return max_index % ssr
+    def peaksearch(self):
+        max_index = np.argmax(self._waveformData[:self._SSR*10])
+        return int(max_index % self._SSR)

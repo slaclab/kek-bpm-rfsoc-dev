@@ -27,9 +27,9 @@ entity SsrDdcWrapper is
       dspClk    : in  sl;
       dspRst    : in  sl;
       ncoConfig : in  slv(31 downto 0);
-      ampDelay  : in  Slv4Array(3 downto 0);
-      adcIn     : in  Slv256Array(3 downto 0);
-      ampOut    : out Slv256Array(3 downto 0));
+      fineDelay : in  Slv4Array(3 downto 0);
+      adcIn     : in  Slv192Array(3 downto 0);
+      ampOut    : out Slv192Array(3 downto 0));
 end SsrDdcWrapper;
 
 architecture mapping of SsrDdcWrapper is
@@ -49,10 +49,6 @@ architecture mapping of SsrDdcWrapper is
          adcin0_9     : in  std_logic_vector (11 downto 0);
          adcin0_10    : in  std_logic_vector (11 downto 0);
          adcin0_11    : in  std_logic_vector (11 downto 0);
-         adcin0_12    : in  std_logic_vector (11 downto 0);
-         adcin0_13    : in  std_logic_vector (11 downto 0);
-         adcin0_14    : in  std_logic_vector (11 downto 0);
-         adcin0_15    : in  std_logic_vector (11 downto 0);
          adcin1_0     : in  std_logic_vector (11 downto 0);
          adcin1_1     : in  std_logic_vector (11 downto 0);
          adcin1_2     : in  std_logic_vector (11 downto 0);
@@ -65,10 +61,6 @@ architecture mapping of SsrDdcWrapper is
          adcin1_9     : in  std_logic_vector (11 downto 0);
          adcin1_10    : in  std_logic_vector (11 downto 0);
          adcin1_11    : in  std_logic_vector (11 downto 0);
-         adcin1_12    : in  std_logic_vector (11 downto 0);
-         adcin1_13    : in  std_logic_vector (11 downto 0);
-         adcin1_14    : in  std_logic_vector (11 downto 0);
-         adcin1_15    : in  std_logic_vector (11 downto 0);
          adcin2_0     : in  std_logic_vector (11 downto 0);
          adcin2_1     : in  std_logic_vector (11 downto 0);
          adcin2_2     : in  std_logic_vector (11 downto 0);
@@ -81,10 +73,6 @@ architecture mapping of SsrDdcWrapper is
          adcin2_9     : in  std_logic_vector (11 downto 0);
          adcin2_10    : in  std_logic_vector (11 downto 0);
          adcin2_11    : in  std_logic_vector (11 downto 0);
-         adcin2_12    : in  std_logic_vector (11 downto 0);
-         adcin2_13    : in  std_logic_vector (11 downto 0);
-         adcin2_14    : in  std_logic_vector (11 downto 0);
-         adcin2_15    : in  std_logic_vector (11 downto 0);
          adcin3_0     : in  std_logic_vector (11 downto 0);
          adcin3_1     : in  std_logic_vector (11 downto 0);
          adcin3_2     : in  std_logic_vector (11 downto 0);
@@ -97,10 +85,6 @@ architecture mapping of SsrDdcWrapper is
          adcin3_9     : in  std_logic_vector (11 downto 0);
          adcin3_10    : in  std_logic_vector (11 downto 0);
          adcin3_11    : in  std_logic_vector (11 downto 0);
-         adcin3_12    : in  std_logic_vector (11 downto 0);
-         adcin3_13    : in  std_logic_vector (11 downto 0);
-         adcin3_14    : in  std_logic_vector (11 downto 0);
-         adcin3_15    : in  std_logic_vector (11 downto 0);
          ncoconfig_0  : in  std_logic_vector (31 downto 0);
          ncoconfig_1  : in  std_logic_vector (31 downto 0);
          ncoconfig_2  : in  std_logic_vector (31 downto 0);
@@ -113,10 +97,6 @@ architecture mapping of SsrDdcWrapper is
          ncoconfig_9  : in  std_logic_vector (31 downto 0);
          ncoconfig_10 : in  std_logic_vector (31 downto 0);
          ncoconfig_11 : in  std_logic_vector (31 downto 0);
-         ncoconfig_12 : in  std_logic_vector (31 downto 0);
-         ncoconfig_13 : in  std_logic_vector (31 downto 0);
-         ncoconfig_14 : in  std_logic_vector (31 downto 0);
-         ncoconfig_15 : in  std_logic_vector (31 downto 0);
          clk          : in  std_logic;
          ampout0_0    : out std_logic_vector (15 downto 0);
          ampout0_1    : out std_logic_vector (15 downto 0);
@@ -130,77 +110,57 @@ architecture mapping of SsrDdcWrapper is
          ampout0_9    : out std_logic_vector (15 downto 0);
          ampout0_10   : out std_logic_vector (15 downto 0);
          ampout0_11   : out std_logic_vector (15 downto 0);
-         ampout0_12   : out std_logic_vector (15 downto 0);
-         ampout0_13   : out std_logic_vector (15 downto 0);
-         ampout0_14   : out std_logic_vector (15 downto 0);
-         ampout0_15   : out std_logic_vector (15 downto 0);
-
-
-         ampout1_0  : out std_logic_vector (15 downto 0);
-         ampout1_1  : out std_logic_vector (15 downto 0);
-         ampout1_2  : out std_logic_vector (15 downto 0);
-         ampout1_3  : out std_logic_vector (15 downto 0);
-         ampout1_4  : out std_logic_vector (15 downto 0);
-         ampout1_5  : out std_logic_vector (15 downto 0);
-         ampout1_6  : out std_logic_vector (15 downto 0);
-         ampout1_7  : out std_logic_vector (15 downto 0);
-         ampout1_8  : out std_logic_vector (15 downto 0);
-         ampout1_9  : out std_logic_vector (15 downto 0);
-         ampout1_10 : out std_logic_vector (15 downto 0);
-         ampout1_11 : out std_logic_vector (15 downto 0);
-         ampout1_12 : out std_logic_vector (15 downto 0);
-         ampout1_13 : out std_logic_vector (15 downto 0);
-         ampout1_14 : out std_logic_vector (15 downto 0);
-         ampout1_15 : out std_logic_vector (15 downto 0);
-
-         ampout2_0  : out std_logic_vector (15 downto 0);
-         ampout2_1  : out std_logic_vector (15 downto 0);
-         ampout2_2  : out std_logic_vector (15 downto 0);
-         ampout2_3  : out std_logic_vector (15 downto 0);
-         ampout2_4  : out std_logic_vector (15 downto 0);
-         ampout2_5  : out std_logic_vector (15 downto 0);
-         ampout2_6  : out std_logic_vector (15 downto 0);
-         ampout2_7  : out std_logic_vector (15 downto 0);
-         ampout2_8  : out std_logic_vector (15 downto 0);
-         ampout2_9  : out std_logic_vector (15 downto 0);
-         ampout2_10 : out std_logic_vector (15 downto 0);
-         ampout2_11 : out std_logic_vector (15 downto 0);
-         ampout2_12 : out std_logic_vector (15 downto 0);
-         ampout2_13 : out std_logic_vector (15 downto 0);
-         ampout2_14 : out std_logic_vector (15 downto 0);
-         ampout2_15 : out std_logic_vector (15 downto 0);
-
-         ampout3_0  : out std_logic_vector (15 downto 0);
-         ampout3_1  : out std_logic_vector (15 downto 0);
-         ampout3_2  : out std_logic_vector (15 downto 0);
-         ampout3_3  : out std_logic_vector (15 downto 0);
-         ampout3_4  : out std_logic_vector (15 downto 0);
-         ampout3_5  : out std_logic_vector (15 downto 0);
-         ampout3_6  : out std_logic_vector (15 downto 0);
-         ampout3_7  : out std_logic_vector (15 downto 0);
-         ampout3_8  : out std_logic_vector (15 downto 0);
-         ampout3_9  : out std_logic_vector (15 downto 0);
-         ampout3_10 : out std_logic_vector (15 downto 0);
-         ampout3_11 : out std_logic_vector (15 downto 0);
-         ampout3_12 : out std_logic_vector (15 downto 0);
-         ampout3_13 : out std_logic_vector (15 downto 0);
-         ampout3_14 : out std_logic_vector (15 downto 0);
-         ampout3_15 : out std_logic_vector (15 downto 0)
+         ampout1_0    : out std_logic_vector (15 downto 0);
+         ampout1_1    : out std_logic_vector (15 downto 0);
+         ampout1_2    : out std_logic_vector (15 downto 0);
+         ampout1_3    : out std_logic_vector (15 downto 0);
+         ampout1_4    : out std_logic_vector (15 downto 0);
+         ampout1_5    : out std_logic_vector (15 downto 0);
+         ampout1_6    : out std_logic_vector (15 downto 0);
+         ampout1_7    : out std_logic_vector (15 downto 0);
+         ampout1_8    : out std_logic_vector (15 downto 0);
+         ampout1_9    : out std_logic_vector (15 downto 0);
+         ampout1_10   : out std_logic_vector (15 downto 0);
+         ampout1_11   : out std_logic_vector (15 downto 0);
+         ampout2_0    : out std_logic_vector (15 downto 0);
+         ampout2_1    : out std_logic_vector (15 downto 0);
+         ampout2_2    : out std_logic_vector (15 downto 0);
+         ampout2_3    : out std_logic_vector (15 downto 0);
+         ampout2_4    : out std_logic_vector (15 downto 0);
+         ampout2_5    : out std_logic_vector (15 downto 0);
+         ampout2_6    : out std_logic_vector (15 downto 0);
+         ampout2_7    : out std_logic_vector (15 downto 0);
+         ampout2_8    : out std_logic_vector (15 downto 0);
+         ampout2_9    : out std_logic_vector (15 downto 0);
+         ampout2_10   : out std_logic_vector (15 downto 0);
+         ampout2_11   : out std_logic_vector (15 downto 0);
+         ampout3_0    : out std_logic_vector (15 downto 0);
+         ampout3_1    : out std_logic_vector (15 downto 0);
+         ampout3_2    : out std_logic_vector (15 downto 0);
+         ampout3_3    : out std_logic_vector (15 downto 0);
+         ampout3_4    : out std_logic_vector (15 downto 0);
+         ampout3_5    : out std_logic_vector (15 downto 0);
+         ampout3_6    : out std_logic_vector (15 downto 0);
+         ampout3_7    : out std_logic_vector (15 downto 0);
+         ampout3_8    : out std_logic_vector (15 downto 0);
+         ampout3_9    : out std_logic_vector (15 downto 0);
+         ampout3_10   : out std_logic_vector (15 downto 0);
+         ampout3_11   : out std_logic_vector (15 downto 0)
          );
    end component;
 
    signal enableNco : sl                      := '0';
    signal nco       : slv(31 downto 0)        := (others => '0');
-   signal adc0      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal adc1      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal adc2      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal adc3      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal amp0      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal amp1      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal amp2      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal amp3      : Slv16Array(15 downto 0) := (others => (others => '0'));
-   signal ampSig    : Slv256Array(3 downto 0) := (others => (others => '0'));
-   signal ampDly    : Slv256Array(3 downto 0) := (others => (others => '0'));
+   signal adc0      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal adc1      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal adc2      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal adc3      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal amp0      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal amp1      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal amp2      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal amp3      : Slv16Array(11 downto 0) := (others => (others => '0'));
+   signal ampSig    : Slv192Array(3 downto 0) := (others => (others => '0'));
+   signal ampDly    : Slv192Array(3 downto 0) := (others => (others => '0'));
    signal ampVec    : Slv512Array(3 downto 0) := (others => (others => '0'));
 
 begin
@@ -211,7 +171,7 @@ begin
       if rising_edge(dspClk) then
          enableNco <= not(dspRst) after TPD_G;
          nco       <= ncoConfig   after TPD_G;
-         for i in 0 to 15 loop
+         for i in 0 to 11 loop
             adc0(i) <= adcIn(0)(i*16+15 downto i*16) after TPD_G;
             adc1(i) <= adcIn(1)(i*16+15 downto i*16) after TPD_G;
             adc2(i) <= adcIn(2)(i*16+15 downto i*16) after TPD_G;
@@ -238,10 +198,6 @@ begin
          ncoconfig_9  => nco,
          ncoconfig_10 => nco,
          ncoconfig_11 => nco,
-         ncoconfig_12 => nco,
-         ncoconfig_13 => nco,
-         ncoconfig_14 => nco,
-         ncoconfig_15 => nco,
          -- ADC[0]
          adcin0_0     => adc0(0)(15 downto 4),
          adcin0_1     => adc0(1)(15 downto 4),
@@ -255,10 +211,6 @@ begin
          adcin0_9     => adc0(9)(15 downto 4),
          adcin0_10    => adc0(10)(15 downto 4),
          adcin0_11    => adc0(11)(15 downto 4),
-         adcin0_12    => adc0(12)(15 downto 4),
-         adcin0_13    => adc0(13)(15 downto 4),
-         adcin0_14    => adc0(14)(15 downto 4),
-         adcin0_15    => adc0(15)(15 downto 4),
          -- ADC[1]
          adcin1_0     => adc1(0)(15 downto 4),
          adcin1_1     => adc1(1)(15 downto 4),
@@ -272,10 +224,6 @@ begin
          adcin1_9     => adc1(9)(15 downto 4),
          adcin1_10    => adc1(10)(15 downto 4),
          adcin1_11    => adc1(11)(15 downto 4),
-         adcin1_12    => adc1(12)(15 downto 4),
-         adcin1_13    => adc1(13)(15 downto 4),
-         adcin1_14    => adc1(14)(15 downto 4),
-         adcin1_15    => adc1(15)(15 downto 4),
          -- ADC[2]
          adcin2_0     => adc2(0)(15 downto 4),
          adcin2_1     => adc2(1)(15 downto 4),
@@ -289,10 +237,6 @@ begin
          adcin2_9     => adc2(9)(15 downto 4),
          adcin2_10    => adc2(10)(15 downto 4),
          adcin2_11    => adc2(11)(15 downto 4),
-         adcin2_12    => adc2(12)(15 downto 4),
-         adcin2_13    => adc2(13)(15 downto 4),
-         adcin2_14    => adc2(14)(15 downto 4),
-         adcin2_15    => adc2(15)(15 downto 4),
          -- ADC[3]
          adcin3_0     => adc3(0)(15 downto 4),
          adcin3_1     => adc3(1)(15 downto 4),
@@ -306,10 +250,6 @@ begin
          adcin3_9     => adc3(9)(15 downto 4),
          adcin3_10    => adc3(10)(15 downto 4),
          adcin3_11    => adc3(11)(15 downto 4),
-         adcin3_12    => adc3(12)(15 downto 4),
-         adcin3_13    => adc3(13)(15 downto 4),
-         adcin3_14    => adc3(14)(15 downto 4),
-         adcin3_15    => adc3(15)(15 downto 4),
          -- AMP[0]
          ampout0_0    => amp0(0),
          ampout0_1    => amp0(1),
@@ -323,10 +263,6 @@ begin
          ampout0_9    => amp0(9),
          ampout0_10   => amp0(10),
          ampout0_11   => amp0(11),
-         ampout0_12   => amp0(12),
-         ampout0_13   => amp0(13),
-         ampout0_14   => amp0(14),
-         ampout0_15   => amp0(15),
          -- AMP[1]
          ampout1_0    => amp1(0),
          ampout1_1    => amp1(1),
@@ -340,10 +276,6 @@ begin
          ampout1_9    => amp1(9),
          ampout1_10   => amp1(10),
          ampout1_11   => amp1(11),
-         ampout1_12   => amp1(12),
-         ampout1_13   => amp1(13),
-         ampout1_14   => amp1(14),
-         ampout1_15   => amp1(15),
          -- AMP[2]
          ampout2_0    => amp2(0),
          ampout2_1    => amp2(1),
@@ -357,10 +289,6 @@ begin
          ampout2_9    => amp2(9),
          ampout2_10   => amp2(10),
          ampout2_11   => amp2(11),
-         ampout2_12   => amp2(12),
-         ampout2_13   => amp2(13),
-         ampout2_14   => amp2(14),
-         ampout2_15   => amp2(15),
          -- AMP[3]
          ampout3_0    => amp3(0),
          ampout3_1    => amp3(1),
@@ -373,14 +301,10 @@ begin
          ampout3_8    => amp3(8),
          ampout3_9    => amp3(9),
          ampout3_10   => amp3(10),
-         ampout3_11   => amp3(11),
-         ampout3_12   => amp3(12),
-         ampout3_13   => amp3(13),
-         ampout3_14   => amp3(14),
-         ampout3_15   => amp3(15));
+         ampout3_11   => amp3(11));
 
    GEN_VEC_A :
-   for i in 15 downto 0 generate
+   for i in 11 downto 0 generate
       ampSig(0)(i*16+15 downto i*16) <= amp0(i);
       ampSig(1)(i*16+15 downto i*16) <= amp1(i);
       ampSig(2)(i*16+15 downto i*16) <= amp2(i);
@@ -389,7 +313,7 @@ begin
 
    GEN_VEC_B :
    for i in 3 downto 0 generate
-      ampVec(i) <= ampSig(i) & ampDly(i);
+      ampVec(i)(383 downto 0) <= ampSig(i) & ampDly(i);
    end generate GEN_VEC_B;
 
    process(dspClk)
@@ -398,7 +322,7 @@ begin
          for i in 0 to 3 loop
 
             -- Pick off the delay from the vector
-            ampOut(i) <= ampVec(i)(conv_integer(ampDelay(i))*16+255 downto conv_integer(ampDelay(i))*16) after TPD_G;
+            ampOut(i) <= ampVec(i)(conv_integer(fineDelay(i))*16+191 downto conv_integer(fineDelay(i))*16) after TPD_G;
 
             -- Create a delayed copy for next cycle
             ampDly(i) <= ampSig(i) after TPD_G;
