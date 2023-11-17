@@ -404,7 +404,7 @@ begin
          -- Clock Outputs
          clkOut(0) => dacClock,         -- 254.5 MHz
          -- Reset Outputs
-         rstOut(0) => dummySig(1)); -- Use the stable reset back to application
+         rstOut(0) => dummySig(1));
 
    axilRstL  <= not(axilRst);
    adcResetL <= not(adcReset);
@@ -415,7 +415,7 @@ begin
    dacRst <= dacReset;
 
    dspClk <= dspClock;
-   dspRst <= dummySig(1);  -- Use the stable reset back to application
+   dspRst <= dspReset;
 
    U_adcReset : entity surf.RstSync
       generic map(
