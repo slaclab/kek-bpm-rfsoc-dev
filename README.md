@@ -25,9 +25,7 @@ Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
 # RF Balun Daughter card
 
 Assumes you are using the Xilinx XM500 daughter card.
-Only RFMC_ADC_03_P/N and RFMC_DAC_05_P/N are implemented in firmware,
-which is a "1-4GHz Channels Anaren Balun [HF]" balun path.
-A loopback SMA cable between XM500.J1 and XM500.J8 is required.
+Connect J1 and J6, J2 and J5, J3 and J8, J4 and J7 using loopback SMA cables.
 
 <img src="docs/images/LOOPBACK.png" width="200">
 
@@ -38,7 +36,7 @@ A loopback SMA cable between XM500.J1 and XM500.J8 is required.
 1) Setup Model Composer Environment and Licensing (if on SLAC AFS network) else requires Xilinx & Matlab install on your local machine
 
 ```bash
-$ source kek-bpm-rfsoc-dev/firmware/model_composer_setup.sh
+$ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
 ```
 
 2) Go to the simulink directory and launch model composer
@@ -84,7 +82,10 @@ Create zip files for SSR12_Digital_Down_Conversion and Position_calculation in t
 1) Setup Xilinx PATH and licensing (if on SLAC AFS network) else requires Vivado install and licensing on your local machine
 
 ```bash
-$ source kek-bpm-rfsoc-dev/firmware/vivado_setup.sh
+#i n SLAC
+$ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
+# in KEK
+$ source kek-bpm-rfsoc-dev/firmware/KEK_setup.sh
 ```
 
 2) Go to the target directory and make the firmware:
@@ -123,7 +124,10 @@ You can create .BIT and .XSA files for KekBpmRfsocDevZcu111_3054MSPS in the same
 
 ```bash
 # These setup scripts assume that you are on SLAC network
-$ source kek-bpm-rfsoc-dev/firmware/vivado_setup.sh
+$ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
+$ source /path/to/petalinux/2022.2/settings.sh
+# in KEK
+$ source kek-bpm-rfsoc-dev/firmware/KEK_setup.sh
 $ source /path/to/petalinux/2022.2/settings.sh
 ```
 
@@ -202,7 +206,10 @@ ssh root@10.0.0.10 '/bin/sync; /sbin/reboot'
 1) Setup the rogue environment (if on SLAC AFS network) else install rogue (recommend Anaconda method) on your local machine
 
 ```bash
+# in SLAC
 $ source kek-bpm-rfsoc-dev/software/setup_env_slac.sh
+# in KEK
+$ conda activate rogue
 ```
 
 2) Go to software directory and lauch the GUI:
