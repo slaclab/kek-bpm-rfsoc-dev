@@ -49,4 +49,5 @@ class RFSoC(pr.Device):
             ampDispProc = ampDispProc,
             SSR         = SSR,
             expand      = True,
+            enabled     = False, # Do not configure until after LMK/LMX is up
         ))

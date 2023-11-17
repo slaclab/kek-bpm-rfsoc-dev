@@ -177,9 +177,8 @@ class Root(pr.Root):
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Check for Expected FW loaded
-        self.ReadAll()
-        if axiVersion.ImageName.value() != self.ImageName:
-                errMsg = f'Actual.Firmware={axiVersion.ImageName.value()} != Expected.Firmware={self.ImageName}'
+        if axiVersion.ImageName.get() != self.ImageName:
+                errMsg = f'Actual.Firmware={axiVersion.ImageName.get()} != Expected.Firmware={self.ImageName}'
                 click.secho(errMsg, bg='red')
                 raise ValueError(errMsg)
 
@@ -194,6 +193,9 @@ class Root(pr.Root):
         print('Wait for DSP Clock to be stable')
         while(axiVersion.DspReset.get()):
             time.sleep(0.1)
+
+        # Enable application after LMK/LMX has been configured
+        self.RFSoC.Application.enable.set(True)
         self.ReadAll()
 
         # Initialize the RF Data Converter
