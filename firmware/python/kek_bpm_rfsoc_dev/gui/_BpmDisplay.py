@@ -60,7 +60,7 @@ class BpmDisplay(PyDMFrame):
         self.posPlot = PyDMWaveformPlot()
         self.posPlot.setLabel("bottom", text='Time (ns)')
         self.posPlot.addChannel(
-            name       = 'Position (TBD Units)',
+            name       = 'Position (mm)',
             x_channel  = f'{self.path}.Time',
             y_channel  = f'{self.path}.Xposition',
             color      = 'white',
@@ -68,7 +68,7 @@ class BpmDisplay(PyDMFrame):
             symbolSize = 3,
         )
         self.posPlot.addChannel(
-            name       = 'Position (TBD Units)',
+            name       = 'Position (mm)',
             x_channel  = f'{self.path}.Time',
             y_channel  = f'{self.path}.Yposition',
             color      = 'red',

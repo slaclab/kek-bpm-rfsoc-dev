@@ -15,25 +15,25 @@ Root:
         ScratchPad: 0xBABECAFE
         AmpGainCorrect[:]: 1.0
         ####################
-        xCoeff[0]: -1.92E-07
-        xCoeff[1]: +9.17E-01
-        xCoeff[2]: -3.51E-16
-        xCoeff[3]: +9.73E-10
-        xCoeff[4]: -6.18E-12
-        xCoeff[5]: -2.74E-11
-        xCoeff[6]: +1.30E-04
-        xCoeff[7]: -7.72E-19
-        xCoeff[8]: -3.81E-04
-        xCoeff[9]: +2.18E-18
+        xCoeff[0]: 0.0
+        xCoeff[1]: +2.3567E+01
+        xCoeff[2]: +2.714E-03
+        xCoeff[3]: +1.081E-02
+        xCoeff[4]: -1.289E-01
+        xCoeff[5]: +6.191E-04
+        xCoeff[6]: 0.0
+        xCoeff[7]: -3.52E-01
+        xCoeff[8]: -3.068E+01
+        xCoeff[9]: 0.0
         ####################
-        yCoeff[0]: +9.41E-08
-        yCoeff[1]: +3.49E-16
-        yCoeff[2]: +9.45E-01
-        yCoeff[3]: +1.52E-09
-        yCoeff[4]: +1.22E-12
-        yCoeff[5]: -1.53E-09
-        yCoeff[6]: -3.34E-18
-        yCoeff[7]: -3.56E-04
-        yCoeff[8]: +2.41E-18
-        yCoeff[9]: +1.32E-04
+        yCoeff[0]: 0.0
+        yCoeff[1]: +2.714E-03
+        yCoeff[2]: +2.3567E+01
+        yCoeff[3]: +6.191E-04
+        yCoeff[4]: -1.289E-01
+        yCoeff[5]: +1.081E-02
+        yCoeff[6]: 0.0
+        yCoeff[7]: -3.068E+01
+        yCoeff[8]: -3.52E-01
+        yCoeff[9]: 0.0
       ########################################################
