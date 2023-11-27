@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-# Install system tools
+# Install system tools for model composer
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \
     apt-get install -y --no-install-recommends tzdata && \
@@ -15,6 +15,22 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libnss3-dev \
     libasound2 \
     libreadline6-dev
+
+# Install system tools for petalinux
+RUN DEBIAN_FRONTEND=noninteractive \
+    dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y \
+    bc \
+    gawk \
+    net-tools \
+    autoconf \
+    libtool \
+    less \
+    rsync \
+    texinfo \
+    gcc-multilib \
+    zlib1g:i386
 
 RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
