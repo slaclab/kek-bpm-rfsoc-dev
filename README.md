@@ -2,6 +2,16 @@
 
 <!--- ######################################################## -->
 
+# Required licenses
+
+- Vivado Licnese (v2023.1)
+  - Either floating (EF-VIVADO-ENTER-FL) or node locked (EF-VIVADO-ENTER-NL)
+- Model Composer Licnese (add on to Vivado)
+  - Either floating (EF-MATSIM-ADDON-FL) or node locked (EF-MATSIM-ADDON-NL)
+- Matlab License (R2021a)
+
+<!--- ######################################################## -->
+
 # Clone the GIT repository
 
 ```bash
