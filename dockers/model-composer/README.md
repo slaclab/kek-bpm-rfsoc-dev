@@ -21,7 +21,7 @@ sudo systemctl start docker
 You can then build and run the docker image with the commands:
 
 ```bash
-cd kek-bpm-rfsoc-dev/docker
+cd kek-bpm-rfsoc-dev/dockers/model-composer
 ./build_docker.sh
 ./run_docker.sh
 ```

@@ -8,5 +8,5 @@ docker run -ti \
    -v /etc/localtime:/etc/localtime:ro \
    -v /tools:/tools \
    -v /home:/home \
-   kek-bpm-rfsoc-dev-${USER}:latest /bin/bash
+   kek-bpm-rfsoc-model-composer-${USER}:latest /bin/bash
 
