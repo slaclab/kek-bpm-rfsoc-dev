@@ -40,6 +40,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libgdbm-dev \
     libglib2.0-dev \
     libgtk2.0-0 \
+    libidn11 \
+    libidn11-dev \
     libjpeg62-dev \
     libpython3.8-dev \
     libncurses5-dev \
@@ -50,6 +52,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libsqlite3-dev \
     libssl-dev \
     libswt-gtk-4-jni \
+    libtinfo5 \
+    libtinfo-dev \
     libtool \
     libtool-bin \
     locales \
@@ -104,8 +108,10 @@ ENV LANG en_US.UTF-8
 ENV SHELL /bin/bash
 
 ARG uid
+ARG gid
 ARG user
-RUN useradd -m -N --gid 0 --shell /bin/bash --uid ${uid} ${user}
+RUN groupadd -g ${gid} -o ${user}
+RUN useradd -m -N --gid ${gid} --shell /bin/bash --uid ${uid} ${user}
 
 RUN mkdir /afs
 RUN mkdir /tools
