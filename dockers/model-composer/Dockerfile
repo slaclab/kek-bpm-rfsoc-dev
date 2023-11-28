@@ -16,22 +16,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libasound2 \
     libreadline6-dev
 
-# Install system tools for petalinux
-RUN DEBIAN_FRONTEND=noninteractive \
-    dpkg --add-architecture i386 && \
-    apt-get update && \
-    apt-get install -y \
-    bc \
-    gawk \
-    net-tools \
-    autoconf \
-    libtool \
-    less \
-    rsync \
-    texinfo \
-    gcc-multilib \
-    zlib1g:i386
-
 # Install system tools for Vivado + ruckus
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get install -y \
@@ -50,4 +34,3 @@ RUN mkdir /tools
 
 USER ${user}
 WORKDIR /home/${user}
-
