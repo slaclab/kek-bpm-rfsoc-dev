@@ -16,12 +16,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libasound2 \
     libreadline6-dev
 
-# Install system tools for Vivado + ruckus
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y \
-    git-lfs \
-    git
-
 RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
 
