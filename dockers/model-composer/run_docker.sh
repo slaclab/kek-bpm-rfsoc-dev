@@ -9,6 +9,6 @@ docker run -ti \
    -v /afs/:/afs \
    -v /etc/localtime:/etc/localtime:ro \
    -v /tools:/tools \
-   -v /home:/home/${USER}/dockerHome \
+   -v /home:/home \
    kek-bpm-rfsoc-model-composer-${USER}:latest /bin/bash
 
