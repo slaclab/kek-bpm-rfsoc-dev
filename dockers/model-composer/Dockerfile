@@ -29,4 +29,4 @@ RUN mkdir /afs
 RUN mkdir /tools
 
 USER ${user}
-WORKDIR /home/${user}
+WORKDIR /home/${user}/dockerHome
