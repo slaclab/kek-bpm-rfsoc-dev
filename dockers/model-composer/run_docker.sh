@@ -1,7 +1,5 @@
 #!/bin/bash
 
-mkdir -p /home/${USER}/dockerHome
-
 docker run -ti \
    --net=host \
    -e DISPLAY=${DISPLAY} \
