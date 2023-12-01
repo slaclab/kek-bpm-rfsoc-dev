@@ -18,6 +18,7 @@ class ReadoutCtrl(pr.Device):
         self.smplTime = 1/sampleRate
         self.ampDispProc = ampDispProc
         self._LiveDispTrigCnt = 0
+        self._SSR = SSR
 
         self.add(pr.RemoteVariable(
             name         = 'LiveDispTrigRaw',
@@ -134,7 +135,7 @@ class ReadoutCtrl(pr.Device):
                 bitSize      = 4,
                 bitOffset    = 8*i,
                 mode         = 'RW',
-                units        = f'{SSR} x sample',
+                units        = f'{self._SSR} x sample',
                 # hidden       = True,
             ))
 
