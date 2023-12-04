@@ -143,27 +143,33 @@ class ReadoutCtrl(pr.Device):
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
         def tuneAmpDelays():
             print('ReadoutCtrl.tuneAmpDelays()')
-            # Create the lock pattern (all zeros) and delay that will force locking sequence
-            locked = [0 for i in range(4)]
-            delay  = [1 for i in range(4)]
-
+            peak  = [0,1,2,3]
+            
             # retry until locked
-            while delay != locked:
+            while max(peak) - min(peak) > 1:
 
                 # Reset the delays
                 [self.FineDelay[i].set(0) for i in range(4)]
+                [self.CourseDelay[i].set(0) for i in range(4)]
+                time.sleep(1)
 
                 # Trigger 1st event and check the pattern
                 cnt = self._LiveDispTrigCnt
                 while cnt == self._LiveDispTrigCnt:
                     time.sleep(0.01)
-                delay = [self.ampDispProc[i].peaksearch() for i in range(4)]
-                print( f'setting delays = {delay}' )
-                [self.FineDelay[i].set(delay[i]) for i in range(4)]
-
+                    
+                finedelay = [self.ampDispProc[i].peaksearch() % self._SSR for i in range(4)]
+                intdev = [self.ampDispProc[i].peaksearch() // self._SSR for i in range(4)]
+                coursedelay = [max(intdev) - intdev[i] for i in range(4)]
+                print( f'peak array = {[self.ampDispProc[i].peaksearch() for i in range(4)]}' )
+                print( f'setting finedelays = {finedelay}' )
+                print( f'setting coursedelays = {coursedelay}' )
+                [self.FineDelay[i].set(finedelay[i]) for i in range(4)]
+                [self.CourseDelay[i].set(coursedelay[i]) for i in range(4)]
+                time.sleep(1)
                 # Trigger 2nd event and check the lock pattern (all zeros)
                 cnt = self._LiveDispTrigCnt
                 while cnt == self._LiveDispTrigCnt:
                     time.sleep(0.01)
-                delay = [self.ampDispProc[i].peaksearch() for i in range(4)]
-                print( f'Checking delay alignment = {delay}' )
+                peak = [self.ampDispProc[i].peaksearch() for i in range(4)]
+                print( f'Checking peak alignment = {peak}' )
