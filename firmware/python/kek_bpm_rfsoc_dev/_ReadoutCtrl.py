@@ -139,12 +139,93 @@ class ReadoutCtrl(pr.Device):
                 # hidden       = True,
             ))
 
+        for i in range(2):
+            self.add(pr.RemoteVariable(
+                name         = f'PmodOut[{i}]',
+                description  = 'Software control of the PMOD lower 6 bits',
+                offset       = 0x20,
+                bitSize      = 6,
+                bitOffset    = 8*i,
+                mode         = 'RW',
+                hidden       = True,
+            ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'PmodInSel',
+            description  = 'Selects the input PMOD port to use as fault signal',
+            offset       = 0x20,
+            bitSize      = 2,
+            bitOffset    = 16,
+            enum        = {
+                0x0: 'Pmod0Bit6',
+                0x1: 'Pmod0Bit7',
+                0x2: 'Pmod1Bit6',
+                0x3: 'Pmod1Bit7',
+            },
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'PmodInPolarity',
+            description  = 'Sets the polarity of the fault signal',
+            offset       = 0x20,
+            bitSize      = 1,
+            bitOffset    = 24,
+            enum        = {
+                0x0: 'NonInverted',
+                0x1: 'Inverted',
+            },
+        ))
+
+        nameList = [
+            'Pmod0Bit6',
+            'Pmod0Bit7',
+            'Pmod1Bit6',
+            'Pmod1Bit7',
+        ]
+        for i in range(4):
+            self.add(pr.RemoteVariable(
+                name         = nameList[i],
+                description  = 'Current value of the PMOD input pin',
+                offset       = 0x24,
+                bitSize      = 1,
+                bitOffset    = i,
+                mode         = 'RO',
+                pollInterval = 1,
+            ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'PmodIn',
+            description  = 'PmodIn = PmodInSel xor PmodInPolarity',
+            offset       = 0x24,
+            bitSize      = 1,
+            bitOffset    = 4,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'FaultTrigReady',
+            description  = 'Status of the fault trigger being armed',
+            offset       = 0x24,
+            bitSize      = 1,
+            bitOffset    = 5,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'FaultTrigArm',
+            description  = 'Arms the fault trigger',
+            offset       = 0x28,
+            bitSize      = 1,
+            mode         = 'WO',
+        ))
 
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
         def tuneAmpDelays():
             print('ReadoutCtrl.tuneAmpDelays()')
             peak  = [0,1,2,3]
-            
+
             # retry until locked
             while max(peak) - min(peak) > 1:
 
@@ -157,7 +238,7 @@ class ReadoutCtrl(pr.Device):
                 cnt = self._LiveDispTrigCnt
                 while cnt == self._LiveDispTrigCnt:
                     time.sleep(0.01)
-                    
+
                 finedelay = [self.ampDispProc[i].peaksearch() % self._SSR for i in range(4)]
                 intdev = [self.ampDispProc[i].peaksearch() // self._SSR for i in range(4)]
                 coursedelay = [max(intdev) - intdev[i] for i in range(4)]

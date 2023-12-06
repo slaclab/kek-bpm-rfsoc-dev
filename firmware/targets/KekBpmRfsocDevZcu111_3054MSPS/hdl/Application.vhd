@@ -32,28 +32,30 @@ entity Application is
       TPD_G            : time := 1 ns;
       AXIL_BASE_ADDR_G : slv(31 downto 0));
    port (
+      -- PMOD Ports
+      pmod            : inout Slv8Array(1 downto 0);
       -- DMA Interface (dmaClk domain)
-      dmaClk          : in  sl;
-      dmaRst          : in  sl;
-      dmaIbMaster     : out AxiStreamMasterType;
-      dmaIbSlave      : in  AxiStreamSlaveType;
+      dmaClk          : in    sl;
+      dmaRst          : in    sl;
+      dmaIbMaster     : out   AxiStreamMasterType;
+      dmaIbSlave      : in    AxiStreamSlaveType;
       -- ADC Interface (dspClk domain)
-      dspClk          : in  sl;
-      dspRst          : in  sl;
-      dspAdc          : in  Slv192Array(NUM_ADC_CH_C-1 downto 0);
-      dspRunCntrl     : out sl;
+      dspClk          : in    sl;
+      dspRst          : in    sl;
+      dspAdc          : in    Slv192Array(NUM_ADC_CH_C-1 downto 0);
+      dspRunCntrl     : out   sl;
       -- DAC Interface (dacClk domain)
-      dacClk          : in  sl;
-      dacRst          : in  sl;
-      dspDacI         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
-      dspDacQ         : out Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dacClk          : in    sl;
+      dacRst          : in    sl;
+      dspDacI         : out   Slv48Array(NUM_DAC_CH_C-1 downto 0);
+      dspDacQ         : out   Slv48Array(NUM_DAC_CH_C-1 downto 0);
       -- AXI-Lite Interface (axilClk domain)
-      axilClk         : in  sl;
-      axilRst         : in  sl;
-      axilWriteMaster : in  AxiLiteWriteMasterType;
-      axilWriteSlave  : out AxiLiteWriteSlaveType;
-      axilReadMaster  : in  AxiLiteReadMasterType;
-      axilReadSlave   : out AxiLiteReadSlaveType);
+      axilClk         : in    sl;
+      axilRst         : in    sl;
+      axilWriteMaster : in    AxiLiteWriteMasterType;
+      axilWriteSlave  : out   AxiLiteWriteSlaveType;
+      axilReadMaster  : in    AxiLiteReadMasterType;
+      axilReadSlave   : out   AxiLiteReadSlaveType);
 end Application;
 
 architecture mapping of Application is
@@ -244,6 +246,8 @@ begin
          TPD_G             => TPD_G,
          COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"0", 3 => x"0"))
       port map (
+         -- PMOD Ports
+         pmod            => pmod,
          -- DSP Interface
          dspClk          => dspClk,
          dspRst          => dspReset,

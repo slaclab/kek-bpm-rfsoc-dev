@@ -31,6 +31,8 @@ entity KekBpmRfsocDevZcu111_4072MSPS is
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
    port (
+      -- PMOD Ports
+      pmod      : inout Slv8Array(1 downto 0);
       -- LMK/LMX Ports
       i2cScl    : inout slv(1 downto 0);
       i2cSda    : inout slv(1 downto 0);
@@ -230,6 +232,8 @@ begin
          TPD_G            => TPD_G,
          AXIL_BASE_ADDR_G => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
+         -- PMOD Ports
+         pmod            => pmod,
          -- DMA Interface (dmaClk domain)
          dmaClk          => dmaClk,
          dmaRst          => dmaRst,
