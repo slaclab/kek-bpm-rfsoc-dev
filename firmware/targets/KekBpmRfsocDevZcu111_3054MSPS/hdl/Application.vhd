@@ -291,7 +291,7 @@ begin
                15              => x"FF"),
             NUM_CH_G           => ite(i = 0, 8, 4),
             SAMPLE_PER_CYCLE_G => 12,
-            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 12),
+            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 13),
             MEMORY_TYPE_G      => ite(i = 0, "block", "ultra"),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -348,8 +348,9 @@ begin
                15              => x"FF"),
             NUM_CH_G           => 1,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, 12),
-            MEMORY_TYPE_G      => ite(i = 2, "block", "ultra"),
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, 13),
+            -- MEMORY_TYPE_G      => ite(i = 2, "block", "ultra"),
+            MEMORY_TYPE_G      => "block",
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
