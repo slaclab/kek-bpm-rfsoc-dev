@@ -50,7 +50,7 @@ class ReadoutCtrl(pr.Device):
             name   = 'EnableSoftTrig',
             mode   = 'RW',
             value  = False,
-            hidden = True,
+            hidden = False,
         ))
 
         @self.command(description  = 'Force a DAC signal generator trigger from software',hidden=True)
