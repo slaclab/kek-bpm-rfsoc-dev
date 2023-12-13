@@ -94,3 +94,16 @@ class PosCalc(pr.Device):
             number       = 10,
             stride       = 4,
         )
+
+        #define POSCALC_SELECT_CROSS 0x400/**< select_cross */
+        self.add(pr.RemoteVariable(
+            name         = 'SelectCross',
+            description  = 'Select whether a normal or cross BPM chamber configuration',
+            offset       = 0x400,
+            bitSize      = 1,
+            mode         = 'RW',
+            enum        = {
+                0x0: 'Normal',
+                0x1: 'Crossed',
+            },
+        ))
