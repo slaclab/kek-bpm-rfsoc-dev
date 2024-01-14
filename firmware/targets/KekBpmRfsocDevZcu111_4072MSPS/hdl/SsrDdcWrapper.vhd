@@ -24,12 +24,13 @@ entity SsrDdcWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
-      dspClk    : in  sl;
-      dspRst    : in  sl;
-      ncoConfig : in  slv(31 downto 0);
-      fineDelay : in  Slv4Array(3 downto 0);
-      adcIn     : in  Slv256Array(3 downto 0);
-      ampOut    : out Slv256Array(3 downto 0));
+      dspClk        : in  sl;
+      dspRst        : in  sl;
+      ncoConfig     : in  slv(31 downto 0);
+      fineDelay     : in  Slv4Array(3 downto 0);
+      adcIn         : in  Slv256Array(3 downto 0);
+      selectdirect  : in  sl;
+      ampOut        : out Slv256Array(3 downto 0));
 end SsrDdcWrapper;
 
 architecture mapping of SsrDdcWrapper is
@@ -37,6 +38,7 @@ architecture mapping of SsrDdcWrapper is
    component ssr_ddc_0
       port (
          enablenco    : in  std_logic_vector (0 to 0);
+         selectdirect : in  std_logic_vector (0 to 0);
          adcin0_0     : in  std_logic_vector (11 downto 0);
          adcin0_1     : in  std_logic_vector (11 downto 0);
          adcin0_2     : in  std_logic_vector (11 downto 0);
@@ -190,6 +192,7 @@ architecture mapping of SsrDdcWrapper is
    end component;
 
    signal enableNco : sl                      := '0';
+   signal direct    : sl                      := '0';
    signal nco       : slv(31 downto 0)        := (others => '0');
    signal adc0      : Slv16Array(15 downto 0) := (others => (others => '0'));
    signal adc1      : Slv16Array(15 downto 0) := (others => (others => '0'));
@@ -209,8 +212,9 @@ begin
    process(dspClk)
    begin
       if rising_edge(dspClk) then
-         enableNco <= not(dspRst) after TPD_G;
-         nco       <= ncoConfig   after TPD_G;
+         enableNco <= not(dspRst)  after TPD_G;
+         nco       <= ncoConfig    after TPD_G;
+         direct    <= selectdirect after TPD_G;
          for i in 0 to 15 loop
             adc0(i) <= adcIn(0)(i*16+15 downto i*16) after TPD_G;
             adc1(i) <= adcIn(1)(i*16+15 downto i*16) after TPD_G;
@@ -224,6 +228,8 @@ begin
       port map (
          -- Clock
          clk          => dspClk,
+         -- select DDC or direct
+         selectdirect(0) => direct,
          -- NCO Interface
          enableNco(0) => enableNco,
          ncoconfig_0  => nco,
