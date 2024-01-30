@@ -221,6 +221,19 @@ class ReadoutCtrl(pr.Device):
             mode         = 'WO',
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'SelectDirect',
+            description  = 'Select DDC or Direct sampling',
+            offset       = 0x28,
+            bitSize      = 1,
+            bitOffset    = 1,
+            mode         = 'RW',
+            enum        = {
+                0x0: 'DDC',
+                0x1: 'Direct sampling',
+            },
+        ))
+
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
         def tuneAmpDelays():
             print('ReadoutCtrl.tuneAmpDelays()')

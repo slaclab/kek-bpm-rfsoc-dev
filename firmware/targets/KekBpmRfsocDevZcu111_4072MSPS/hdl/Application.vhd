@@ -86,10 +86,11 @@ architecture mapping of Application is
 
    signal dummmyVec : Slv16Array(3 downto 0) := (others => (others => '0'));
 
-   signal sigGenTrig  : slv(1 downto 0);
-   signal ncoConfig   : slv(31 downto 0);
-   signal fineDelay   : Slv4Array(3 downto 0);
-   signal courseDelay : Slv4Array(3 downto 0);
+   signal sigGenTrig   : slv(1 downto 0);
+   signal ncoConfig    : slv(31 downto 0);
+   signal fineDelay    : Slv4Array(3 downto 0);
+   signal courseDelay  : Slv4Array(3 downto 0);
+   signal selectdirect : sl;
 
    signal xPos       : slv(31 downto 0);
    signal yPos       : slv(31 downto 0);
@@ -212,12 +213,13 @@ begin
       generic map (
          TPD_G => TPD_G)
       port map (
-         dspClk    => dspClk,
-         dspRst    => dspReset,
-         ncoConfig => ncoConfig,
-         adcIn     => adc,
-         fineDelay => fineDelay,
-         ampOut    => amp);
+         dspClk       => dspClk,
+         dspRst       => dspReset,
+         ncoConfig    => ncoConfig,
+         adcIn        => adc,
+         fineDelay    => fineDelay,
+         ampOut       => amp,
+         selectdirect => selectdirect);
 
    U_PosCalc : entity work.PosCalcWrapper
       generic map (
@@ -256,6 +258,7 @@ begin
          dspRunCntrl     => dspRunCntrl,
          fineDelay       => fineDelay,
          courseDelay     => courseDelay,
+         selectdirect    => selectdirect,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(SW_TRIG_INDEX_C),
          axilReadSlave   => dspReadSlaves(SW_TRIG_INDEX_C),

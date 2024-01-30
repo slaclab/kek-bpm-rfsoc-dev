@@ -107,3 +107,16 @@ class PosCalc(pr.Device):
                 0x1: 'Crossed',
             },
         ))
+
+         #define POSCALC_SELECT_HYBRID 0x404/**< select_hybrid */
+        self.add(pr.RemoteVariable(
+            name         = 'SelectHybrid',
+            description  = 'Select whether a hybrid or normal circuit',
+            offset       = 0x404,
+            bitSize      = 1,
+            mode         = 'RW',
+            enum        = {
+                0x0: 'Hybrid',
+                0x1: 'Normal',
+            },
+        ))
