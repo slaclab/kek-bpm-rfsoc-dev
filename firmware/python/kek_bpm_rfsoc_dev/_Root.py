@@ -231,6 +231,12 @@ class Root(pr.Root):
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
 
+        # Check if bypassing DDC (direct sampling)
+        if self.NcoFreqMHz==0:
+            readoutCtrl.SelectDirect.setDisp('Direct sampling')
+        else:
+            readoutCtrl.SelectDirect.setDisp('DDC')
+
         # Tune the amplitude delays for the firmware position calculation
         readoutCtrl.tuneAmpDelays()
 
