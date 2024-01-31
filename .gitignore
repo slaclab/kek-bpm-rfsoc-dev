@@ -3,6 +3,7 @@
 
 # EMACS temp files
 *~
+*#
 
 # Compiled source files
 *.com
