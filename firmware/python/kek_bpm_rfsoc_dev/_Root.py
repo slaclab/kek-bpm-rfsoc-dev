@@ -107,12 +107,12 @@ class Root(pr.Root):
         for i in range(4):
 
             # ADC Live Display Path
-            self.adcDispBuff[i] >> self.dataWriter.getChannel(i+0)
+#            self.adcDispBuff[i] >> self.dataWriter.getChannel(i+0)
             self.adcDispBuff[i] >> self.adcDispProc[i]
             self.add(self.adcDispProc[i])
 
             # AMP Live Display Path
-            self.ampDispBuff[i] >> self.dataWriter.getChannel(i+4)
+#            self.ampDispBuff[i] >> self.dataWriter.getChannel(i+4)
             self.ampDispBuff[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
@@ -122,7 +122,7 @@ class Root(pr.Root):
             self.add(self.ampFaultProc[i])
 
         # PosCalc Live Display Path
-        self.bpmDispBuff  >> self.dataWriter.getChannel(16)
+#        self.bpmDispBuff  >> self.dataWriter.getChannel(16)
         self.bpmDispBuff >> self.bpmDispProc
         self.add(self.bpmDispProc)
 
