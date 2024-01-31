@@ -52,6 +52,14 @@ if __name__ == "__main__":
         help     = "BPM ringing frequency (in units of MHz)",
     )
 
+    parser.add_argument(
+        "--chMask",
+        type     = lambda x: int(x,0), # "auto_int" function for hex arguments
+        required = False,
+        default  = 0xF,
+        help     = "4-bit bitmask for seleting BPM channels",
+    )
+    
     # Get the arguments
     args = parser.parse_args()
 
@@ -63,6 +71,7 @@ if __name__ == "__main__":
     with kek_bpm_rfsoc_dev.Root(
         ip         = args.ip,
         bpmFreqMHz = args.bpmFreqMHz,
+        chMask     = args.chMask,
     ) as root:
 
         ######################
