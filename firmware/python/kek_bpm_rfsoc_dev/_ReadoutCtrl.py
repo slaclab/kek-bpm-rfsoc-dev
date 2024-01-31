@@ -235,7 +235,7 @@ class ReadoutCtrl(pr.Device):
         ))
 
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
-        def tuneAmpDelays():
+        def tuneAmpDelays(chMask):
             print('ReadoutCtrl.tuneAmpDelays()')
             peak  = [0,1,2,3]
 
@@ -266,4 +266,7 @@ class ReadoutCtrl(pr.Device):
                 while cnt == self._LiveDispTrigCnt:
                     time.sleep(0.01)
                 peak = [self.ampDispProc[i].peaksearch() for i in range(4)]
+                for i in range(4):
+                    if i != 0x1:
+                        peak[i] = peak[0] if i!=0 else peak[1]
                 print( f'Checking peak alignment = {peak}' )
