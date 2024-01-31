@@ -36,6 +36,7 @@ class Root(pr.Root):
             top_level  = '',
             bpmFreqMHz = 2000, # 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
+            chMask     = 0xF,
             **kwargs):
 
         # Pass custom value to parent via super function
@@ -48,6 +49,7 @@ class Root(pr.Root):
         ##################################################################################
 
         self.bpmFreqMHz = float(bpmFreqMHz)
+        self.chMask = chMask
 
         # Check for ZONE1 operation
         if bpmFreqMHz < (3054//2):
@@ -238,6 +240,6 @@ class Root(pr.Root):
             readoutCtrl.SelectDirect.setDisp('DDC')
 
         # Tune the amplitude delays for the firmware position calculation
-        readoutCtrl.tuneAmpDelays()
+        readoutCtrl.tuneAmpDelays(self.chMask)
 
     ##################################################################################
