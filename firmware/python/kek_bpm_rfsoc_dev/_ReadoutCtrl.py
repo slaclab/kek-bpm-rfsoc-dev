@@ -271,5 +271,5 @@ class ReadoutCtrl(pr.Device):
                 for i in range(4):
                     if (chMask>>i)&0x1  != 0x1:
                         print( f'Skipping channel = {i}')
-                        peak[i] = peak[0] if i!=0 else peak[1]
+                        peak[i] = peak[0] if i!=0 else peak[3]
                 print( f'Checking peak alignment = {peak}' )
