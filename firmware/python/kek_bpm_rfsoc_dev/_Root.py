@@ -43,7 +43,7 @@ class Root(pr.Root):
         super().__init__(**kwargs)
 
         if zmqSrvEn:
-            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='*', port=0)
+            self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
             self.addInterface(self.zmqServer)
 
         ##################################################################################
