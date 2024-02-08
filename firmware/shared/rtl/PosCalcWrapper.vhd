@@ -27,9 +27,13 @@ entity PosCalcWrapper is
       dspClk          : in  sl;
       dspRst          : in  sl;
       ampPeakIn       : in  Slv16Array(3 downto 0);
+      ampPeakIn1      : in  Slv16Array(3 downto 0);
       xPos            : out slv(31 downto 0);
       yPos            : out slv(31 downto 0);
       charge          : out slv(31 downto 0);
+      xPos1           : out slv(31 downto 0);
+      yPos1           : out slv(31 downto 0);
+      charge1         : out slv(31 downto 0);
       -- AXI-Lite Interface
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
@@ -45,6 +49,10 @@ architecture mapping of PosCalcWrapper is
          bin                   : in  std_logic_vector(15 downto 0);
          cin                   : in  std_logic_vector(15 downto 0);
          din                   : in  std_logic_vector(15 downto 0);
+         ain1                  : in  std_logic_vector(15 downto 0);
+         bin1                  : in  std_logic_vector(15 downto 0);
+         cin1                  : in  std_logic_vector(15 downto 0);
+         din1                  : in  std_logic_vector(15 downto 0);
          clk                   : in  std_logic;
          poscalc_aresetn       : in  std_logic;
          poscalc_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
@@ -59,6 +67,9 @@ architecture mapping of PosCalcWrapper is
          chargeout             : out std_logic_vector(31 downto 0);
          xposout               : out std_logic_vector(31 downto 0);
          yposout               : out std_logic_vector(31 downto 0);
+         chargeout1            : out std_logic_vector(31 downto 0);
+         xposout1              : out std_logic_vector(31 downto 0);
+         yposout1              : out std_logic_vector(31 downto 0);
          poscalc_s_axi_awready : out std_logic;
          poscalc_s_axi_wready  : out std_logic;
          poscalc_s_axi_bresp   : out std_logic_vector(1 downto 0);
@@ -102,10 +113,17 @@ begin
          bin                   => ampPeakIn(1),
          cin                   => ampPeakIn(2),
          din                   => ampPeakIn(3),
+         ain1                  => ampPeakIn1(0),
+         bin1                  => ampPeakIn1(1),
+         cin1                  => ampPeakIn1(2),
+         din1                  => ampPeakIn1(3),
          -- Calculation Outbound Interface
          xposout               => xPos,
          yposout               => YPos,
          chargeout             => charge,
+         xposout1              => xPos1,
+         yposout1              => YPos1,
+         chargeout1            => charge1,
          -- AXI-Lite interface
          poscalc_aresetn       => dspRstL,
          poscalc_s_axi_awaddr  => axilWriteMaster.awaddr(11 downto 0),

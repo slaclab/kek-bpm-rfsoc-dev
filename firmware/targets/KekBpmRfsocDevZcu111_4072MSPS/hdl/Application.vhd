@@ -95,6 +95,9 @@ architecture mapping of Application is
    signal xPos       : slv(31 downto 0);
    signal yPos       : slv(31 downto 0);
    signal charge     : slv(31 downto 0);
+   signal xPos1      : slv(31 downto 0);
+   signal yPos1      : slv(31 downto 0);
+   signal charge1    : slv(31 downto 0);
    signal calcResult : slv(95 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
@@ -235,13 +238,20 @@ begin
          xPos            => xPos,
          yPos            => yPos,
          charge          => charge,
+         ampPeakIn1(0)   => amp(0)(143 downto 128),
+         ampPeakIn1(1)   => amp(1)(143 downto 128),
+         ampPeakIn1(2)   => amp(2)(143 downto 128),
+         ampPeakIn1(3)   => amp(3)(143 downto 128),
+         xPos1           => xPos1,
+         yPos1           => yPos1,
+         charge1         => charge1,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(POSCALC_INDEX_C),
          axilReadSlave   => dspReadSlaves(POSCALC_INDEX_C),
          axilWriteMaster => dspWriteMasters(POSCALC_INDEX_C),
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
-   calcResult <= charge & yPos & xPos;
+   calcResult <= charge & yPos & xPos & charge1 & yPos1 & xPos1;
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
@@ -350,7 +360,7 @@ begin
                14              => x"FF",
                15              => x"FF"),
             NUM_CH_G           => 1,
-            SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
+            SAMPLE_PER_CYCLE_G => 12,     -- 12 = 192-bit/(16b per sample)
             RAM_ADDR_WIDTH_G   => ite(i = 2, 9, 14),
             -- MEMORY_TYPE_G      => ite(i = 2, "block", "ultra"),
             MEMORY_TYPE_G      => "block",
