@@ -98,7 +98,7 @@ architecture mapping of Application is
    signal xPos1      : slv(31 downto 0);
    signal yPos1      : slv(31 downto 0);
    signal charge1    : slv(31 downto 0);
-   signal calcResult : slv(95 downto 0);
+   signal calcResult : slv(191 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
