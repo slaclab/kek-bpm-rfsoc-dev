@@ -29,7 +29,7 @@ class PosCalcProcessor(pr.DataReceiver):
 
         # Configurable variables
         self._maxSize  = maxSize
-        self._timeBin  = (1.0E+9/(254.5E+6)) # Units of ns
+        self._timeBin  = (1.0E+9/254.5E+6) # Units of ns
 
         self.add(pr.LocalVariable(
             name        = 'Time',
@@ -82,23 +82,6 @@ class PosCalcProcessor(pr.DataReceiver):
                 self.Xposition.value()[:]   = data[0:(self._maxSize*3)+0:3]
                 self.Yposition.value()[:]   = data[1:(self._maxSize*3)+1:3]
                 self.BunchCharge.value()[:] = data[2:(self._maxSize*3)+2:3]
-                
-                """
-                Xpos = np.zeros(shape=self._maxSize*2, dtype=np.float32, order='C')
-                Ypos = np.zeros(shape=self._maxSize*2, dtype=np.float32, order='C')
-                Charge = np.zeros(shape=self._maxSize*2, dtype=np.float32, order='C')
-                
-                Xpos[0::2]   = data[0:(self._maxSize*6)+0:6]
-                Ypos[0::2]   = data[1:(self._maxSize*6)+1:6]
-                Charge[0::2] = data[2:(self._maxSize*6)+2:6]
-                Xpos[1::2]   = data[3:(self._maxSize*6)+0:6]
-                Ypos[1::2]   = data[4:(self._maxSize*6)+1:6]
-                Charge[1::2] = data[5:(self._maxSize*6)+2:6]
-
-                self.Xposition.value()[:]   = np.where(np.abs(Xpos)>100 ,0, Xpos)
-                self.Yposition.value()[:]   = np.where(np.abs(Ypos)>100 ,0, Ypos)
-                self.BunchCharge.value()[:] = np.where(Charge<0 ,0, Charge)
-                """
 
                 self.writeAndVerifyBlocks(force=True, variable=self.Xposition)
                 self.writeAndVerifyBlocks(force=True, variable=self.Yposition)

@@ -33,7 +33,6 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
             # Get data from frame
             if not(self.NewDataReady.value()) or (self._faultDisp):
                 self._waveformData = self.Data.value()[:].view(np.int16)
-                print(self._waveformData)
 
             # Set the flag
             self.NewDataReady.set(True)
