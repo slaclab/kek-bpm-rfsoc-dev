@@ -355,7 +355,7 @@ begin
             NUM_CH_G           => 1,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
             RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
-            MEMORY_TYPE_G      => FAULT_CALC_MEMORY_TYPE_G,
+            MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
