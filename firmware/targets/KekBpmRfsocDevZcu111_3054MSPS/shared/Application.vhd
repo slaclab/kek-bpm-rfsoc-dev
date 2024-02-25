@@ -29,8 +29,9 @@ use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
 entity Application is
    generic (
-      TPD_G            : time := 1 ns;
-      AXIL_BASE_ADDR_G : slv(31 downto 0));
+      TPD_G                   : time := 1 ns;
+      FAULT_BUFF_ADDR_WIDTH_G : positive;
+      AXIL_BASE_ADDR_G        : slv(31 downto 0));
    port (
       -- PMOD Ports
       pmod            : inout Slv8Array(1 downto 0);
@@ -294,7 +295,7 @@ begin
                15              => x"FF"),
             NUM_CH_G           => ite(i = 0, 8, 4),
             SAMPLE_PER_CYCLE_G => 12,
-            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 14),
+            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, FAULT_BUFF_ADDR_WIDTH_G),
             MEMORY_TYPE_G      => ite(i = 0, "block", "ultra"),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -351,7 +352,7 @@ begin
                15              => x"FF"),
             NUM_CH_G           => 1,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, 14),
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
             -- MEMORY_TYPE_G      => ite(i = 2, "block", "ultra"),
             MEMORY_TYPE_G      => "block",
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
