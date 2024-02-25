@@ -34,7 +34,7 @@ class Root(pr.Root):
     def __init__(self,
             ip         = '',   # ETH Host Name (or IP address)
             top_level  = '',
-            bpmFreqMHz = 2000, # 2000 MHz, 1000 MHz or 500MHz
+            bpmFreqMHz = 2000, # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
             **kwargs):
@@ -51,8 +51,15 @@ class Root(pr.Root):
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
 
+        # Check for DDC bypass mode
+        if (bpmFreqMHz == 0):
+            self.SSR = 16
+            self.NcoFreqMHz = self.bpmFreqMHz
+            self.sampleRate = 4.072E+9 # Units of Hz
+            self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS_BypassDDC'
+
         # Check for ZONE1 operation
-        if bpmFreqMHz < (3054//2):
+        elif bpmFreqMHz < (3054//2):
             self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
