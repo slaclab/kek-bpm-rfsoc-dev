@@ -15,8 +15,9 @@ if { [get_ips ssr_ddc_0] eq ""  } {
 }
 
 # Load local source Code and constraints
-loadSource      -dir "$::DIR_PATH/hdl"
-loadConstraints -dir "$::DIR_PATH/hdl"
+loadSource      -dir "$::DIR_PATH/rtl"
+loadSource      -dir "$::DIR_PATH/shared"
+loadConstraints -dir "$::DIR_PATH/shared"
 
 # Load IP cores
 loadIpCore -dir "$::DIR_PATH/ip"

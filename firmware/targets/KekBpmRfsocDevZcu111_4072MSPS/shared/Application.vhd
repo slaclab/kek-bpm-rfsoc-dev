@@ -29,8 +29,11 @@ use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
 entity Application is
    generic (
-      TPD_G            : time := 1 ns;
-      AXIL_BASE_ADDR_G : slv(31 downto 0));
+      TPD_G                    : time := 1 ns;
+      FAULT_BUFF_ADDR_WIDTH_G  : positive;
+      FAULT_AMP_MEMORY_TYPE_G  : string;
+      FAULT_CALC_MEMORY_TYPE_G : string;
+      AXIL_BASE_ADDR_G         : slv(31 downto 0));
    port (
       -- PMOD Ports
       pmod            : inout Slv8Array(1 downto 0);
@@ -42,7 +45,7 @@ entity Application is
       -- ADC Interface (dspClk domain)
       dspClk          : in    sl;
       dspRst          : in    sl;
-      dspAdc          : in    Slv192Array(NUM_ADC_CH_C-1 downto 0);
+      dspAdc          : in    Slv256Array(NUM_ADC_CH_C-1 downto 0);
       dspRunCntrl     : out   sl;
       -- DAC Interface (dacClk domain)
       dacClk          : in    sl;
@@ -78,8 +81,8 @@ architecture mapping of Application is
    signal dspWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal dspWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal adc : Slv192Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
-   signal amp : Slv192Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal adc : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
+   signal amp : Slv256Array(NUM_ADC_CH_C-1 downto 0) := (others => (others => '0'));
 
    signal dacI : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
    signal dacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
@@ -121,7 +124,7 @@ begin
             SRL_EN_G     => true,
             DELAY_G      => 16,
             REG_OUTPUT_G => true,
-            WIDTH_G      => 192)
+            WIDTH_G      => 256)
          port map (
             clk   => dspClk,
             delay => courseDelay(i),
@@ -246,7 +249,7 @@ begin
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
          TPD_G             => TPD_G,
-         COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"0", 3 => x"0"))
+         COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"1", 3 => x"1"))
       port map (
          -- PMOD Ports
          pmod            => pmod,
@@ -293,9 +296,9 @@ begin
                14              => x"FF",
                15              => x"FF"),
             NUM_CH_G           => ite(i = 0, 8, 4),
-            SAMPLE_PER_CYCLE_G => 12,
-            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, 14),
-            MEMORY_TYPE_G      => ite(i = 0, "block", "ultra"),
+            SAMPLE_PER_CYCLE_G => 16,
+            RAM_ADDR_WIDTH_G   => ite(i = 0, 9, FAULT_BUFF_ADDR_WIDTH_G),
+            MEMORY_TYPE_G      => ite(i = 0, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (
@@ -351,9 +354,8 @@ begin
                15              => x"FF"),
             NUM_CH_G           => 1,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, 14),
-            -- MEMORY_TYPE_G      => ite(i = 2, "block", "ultra"),
-            MEMORY_TYPE_G      => "block",
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
+            MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
          port map (

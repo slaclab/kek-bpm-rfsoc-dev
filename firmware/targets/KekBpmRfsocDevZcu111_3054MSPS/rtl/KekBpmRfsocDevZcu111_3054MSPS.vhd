@@ -26,7 +26,7 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfsocDevZcu111_4072MSPS is
+entity KekBpmRfsocDevZcu111_3054MSPS is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
@@ -54,9 +54,9 @@ entity KekBpmRfsocDevZcu111_4072MSPS is
       -- SYSMON Ports
       vPIn      : in    sl;
       vNIn      : in    sl);
-end KekBpmRfsocDevZcu111_4072MSPS;
+end KekBpmRfsocDevZcu111_3054MSPS;
 
-architecture top_level of KekBpmRfsocDevZcu111_4072MSPS is
+architecture top_level of KekBpmRfsocDevZcu111_3054MSPS is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
@@ -88,7 +88,7 @@ architecture top_level of KekBpmRfsocDevZcu111_4072MSPS is
 
    signal dspClk      : sl;
    signal dspRst      : sl;
-   signal dspAdc      : Slv256Array(NUM_ADC_CH_C-1 downto 0);
+   signal dspAdc      : Slv192Array(NUM_ADC_CH_C-1 downto 0);
    signal dspRunCntrl : sl;
 
    signal dacClk  : sl;
@@ -229,8 +229,11 @@ begin
    --------------
    U_App : entity work.Application
       generic map (
-         TPD_G            => TPD_G,
-         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
+         TPD_G                    => TPD_G,
+         FAULT_BUFF_ADDR_WIDTH_G  => 14,
+         FAULT_AMP_MEMORY_TYPE_G  => "ultra",
+         FAULT_CALC_MEMORY_TYPE_G => "block",
+         AXIL_BASE_ADDR_G         => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
          -- PMOD Ports
          pmod            => pmod,

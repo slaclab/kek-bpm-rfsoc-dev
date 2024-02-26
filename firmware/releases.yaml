@@ -21,6 +21,11 @@ Targets:
     Extensions:
       - petalinux.tar.gz
       - ltx
+  KekBpmRfsocDevZcu111_4072MSPS_BypassDDC:
+    ImageDir: targets/KekBpmRfsocDevZcu111_4072MSPS_BypassDDC/images
+    Extensions:
+      - petalinux.tar.gz
+      - ltx
 
 Releases:
   all:
@@ -28,5 +33,6 @@ Releases:
     Targets:
       - KekBpmRfsocDevZcu111_3054MSPS
       - KekBpmRfsocDevZcu111_4072MSPS
+      - KekBpmRfsocDevZcu111_4072MSPS_BypassDDC
     Types:
       - petalinux

@@ -34,7 +34,7 @@ class Root(pr.Root):
     def __init__(self,
             ip         = '',   # ETH Host Name (or IP address)
             top_level  = '',
-            bpmFreqMHz = 2000, # 2000 MHz, 1000 MHz or 500MHz
+            bpmFreqMHz = 2000, # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
             **kwargs):
@@ -51,19 +51,29 @@ class Root(pr.Root):
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
 
-        # Check for ZONE1 operation
-        if bpmFreqMHz < (3054//2):
+        # Check for DDC bypass mode
+        if (bpmFreqMHz == 0):
             self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName = 'KekBpmRfsocDevZcu111_4072MSPS'
+            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS_BypassDDC'
+            self.faultDepth = 2**15
+
+        # Check for ZONE1 operation
+        elif bpmFreqMHz < (3054//2):
+            self.SSR = 16
+            self.NcoFreqMHz = self.bpmFreqMHz
+            self.sampleRate = 4.072E+9 # Units of Hz
+            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS'
+            self.faultDepth = 2**14
 
         # Else ZONE2 operation
         else:
             self.SSR = 12
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
-            self.ImageName = 'KekBpmRfsocDevZcu111_3054MSPS'
+            self.ImageName  = 'KekBpmRfsocDevZcu111_3054MSPS'
+            self.faultDepth = 2**14
 
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
@@ -98,10 +108,10 @@ class Root(pr.Root):
         self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
         self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9,SSR=self.SSR,faultDisp=False) for i in range(4)]
 
-        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**14,SSR=self.SSR,faultDisp=True) for i in range(4)]
+        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*self.faultDepth,SSR=self.SSR,faultDisp=True) for i in range(4)]
 
         self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
-        self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=2**14)
+        self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
 
         ##################################################################################
 
