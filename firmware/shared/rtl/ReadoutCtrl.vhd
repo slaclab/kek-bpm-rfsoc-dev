@@ -54,6 +54,10 @@ architecture rtl of ReadoutCtrl is
       faultTrig      : sl;
       faultTrigArm   : sl;
       faultTrigReady : sl;
+      faultTrigDlyEn : sl;
+      faultTrigDly   : slv(14 downto 0);
+      faultDlyCnt    : slv(14 downto 0);
+      trigFaultBuf   : sl;
       -- PMOD signals
       pmodInPolarity : sl;
       pmodInBus      : slv(3 downto 0);
@@ -75,6 +79,10 @@ architecture rtl of ReadoutCtrl is
       faultTrig      => '0',
       faultTrigArm   => '0',
       faultTrigReady => '0',
+      faultTrigDlyEn => '0',
+      faultTrigDly   => (others => '0'),
+      faultDlyCnt    => (others => '0'),
+      trigFaultBuf   => '0',
       -- PMOD signals
       pmodInPolarity => '0',
       pmodInBus      => (others => '0'),
@@ -108,6 +116,7 @@ begin
       v.sigGenTrig   := (others => '0');
       v.faultTrigArm := '0';
       v.faultTrig    := '0';
+      v.trigFaultBuf := '0';
 
       ----------------------------------------------------------------------
       --                AXI-Lite Register Logic
@@ -141,8 +150,9 @@ begin
       axiSlaveRegisterR(axilEp, x"24", 5, r.faultTrigReady);
 
       axiSlaveRegister (axilEp, x"28", 0, v.faultTrigArm);
-
       axiSlaveRegister (axilEp, x"28", 1, v.selectdirect);
+
+      axiSlaveRegister (axilEp, x"2C", 0, v.faultTrigDly);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
@@ -175,6 +185,40 @@ begin
       end if;
 
       ----------------------------------------------------------------------
+      -- Fault Buffering Trigger: Programmable Delay
+      ----------------------------------------------------------------------
+
+      -- Check for SW trigger or HW trigger event
+      if (r.sigGenTrig(1) = '1') or (r.faultTrig = '1') then
+
+         -- Reset the flag
+         v.faultTrigDlyEn := '1';
+
+         -- Preset the counter
+         v.faultDlyCnt := r.faultTrigDly;
+
+      end if;
+
+      -- Check if enabled
+      if (r.faultTrigDlyEn = '1') then
+
+         -- Check for last delay step
+         if (r.faultDlyCnt = 0) then
+
+            -- Reset the flag
+            v.faultTrigDlyEn := '0';
+
+            -- Output the trigger
+            v.trigFaultBuf := '1';
+
+         else
+            -- Decrement the counter
+            v.faultDlyCnt := r.faultDlyCnt - 1;
+         end if;
+
+      end if;
+
+      ----------------------------------------------------------------------
 
       -- Outputs
       axilWriteSlave <= r.axilWriteSlave;
@@ -191,8 +235,8 @@ begin
       -- sigGenTrig(0) - Live Display
       sigGenTrig(0) <= r.sigGenTrig(0);
 
-      -- sigGenTrig(1) - Fault Buffering: SW trigger OR'd with HW trigger
-      sigGenTrig(1) <= r.sigGenTrig(1) or r.faultTrig;
+      -- sigGenTrig(1) - Fault Buffering
+      sigGenTrig(1) <= r.trigFaultBuf;
 
       -- Reset
       if (dspRst = '1') then

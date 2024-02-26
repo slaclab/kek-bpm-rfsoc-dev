@@ -15,3 +15,6 @@ loadConstraints -dir "$::DIR_PATH/../KekBpmRfsocDevZcu111_4072MSPS/shared"
 
 # Load IP cores
 loadIpCore -dir "$::DIR_PATH/../KekBpmRfsocDevZcu111_4072MSPS/ip"
+
+# Set the top level simulation
+set_property top {AxiStreamRingBufferTb} [get_filesets sim_1]
