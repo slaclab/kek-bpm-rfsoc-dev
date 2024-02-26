@@ -56,8 +56,7 @@ class Root(pr.Root):
             self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
-            # self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS_BypassDDC'
-            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS'
+            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS_BypassDDC'
             self.faultDepth = 2**15
 
         # Check for ZONE1 operation
