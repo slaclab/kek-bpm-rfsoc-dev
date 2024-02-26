@@ -251,8 +251,8 @@ class ReadoutCtrl(pr.Device):
             units        = "microsec",
             disp         = '{:0.3f}',
             dependencies = [self.FaultTrigDlyRaw],
-            linkedGet    = lambda: (float(self.FaultTrigDlyRaw.value()+1) * (1.0/254.5.0)),
-            linkedSet    = lambda value, write: self.FaultTrigDlyRaw.set(int(value/(1.0/254.5.0))-1),
+            linkedGet    = lambda: (float(self.FaultTrigDlyRaw.value()+1) * (1.0/254.5)),
+            linkedSet    = lambda value, write: self.FaultTrigDlyRaw.set(int(value/(1.0/254.5))-1),
         ))
 
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
