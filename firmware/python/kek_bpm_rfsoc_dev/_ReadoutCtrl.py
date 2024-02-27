@@ -228,10 +228,31 @@ class ReadoutCtrl(pr.Device):
             bitSize      = 1,
             bitOffset    = 1,
             mode         = 'RW',
+            hidden       = True, # With KekBpmRfsocDevZcu111_4072MSPS_BypassDDC, we could consider removing this feature in the future
             enum        = {
                 0x0: 'DDC',
                 0x1: 'Direct sampling',
             },
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = "FaultTrigDlyRaw",
+            description  = "Sets a delay between trigger detection and stopping the ring buffer",
+            offset       = 0x2C,
+            bitSize      = 15,
+            mode         = "RW",
+            units        = '1/254.5MHz',
+        ))
+
+        self.add(pr.LinkVariable(
+            name         = "FaultTrigDly",
+            description  = "FaultTrigDly in microseconds",
+            mode         = "RW",
+            units        = "microsec",
+            disp         = '{:0.3f}',
+            dependencies = [self.FaultTrigDlyRaw],
+            linkedGet    = lambda: (float(self.FaultTrigDlyRaw.value()+1) * (1.0/254.5)),
+            linkedSet    = lambda value, write: self.FaultTrigDlyRaw.set(int(value/(1.0/254.5))-1),
         ))
 
         @self.command(description  = 'Tuning the amplitude delays before the Position calculating',hidden=False)
