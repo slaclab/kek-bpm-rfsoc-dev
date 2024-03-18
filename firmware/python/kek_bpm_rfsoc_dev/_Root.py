@@ -176,6 +176,56 @@ class Root(pr.Root):
         )
         self.addProtocol(self.epics)
 
+        ##################################################################################
+        ##                 Auto-close/open datafile for fault event support
+        ##################################################################################
+        self.add(pr.LocalVariable(
+            name   = 'EnableAutoReopen',
+            mode   = 'RW',
+            value  = False, # FALSE by default to prevent breaking any of the juypter notebooks that collect multiple waveforms in the fault event path
+            hidden = False,
+        ))
+
+        @self.command(hidden=True)
+        def getFaultEventStatus():
+            # Check if there is new data in the fault event path
+            newData = True
+            for i in range(4):
+                newData = newData and self.ampFaultProc[i].Updated.get()
+            newData = newData and self.bpmFaultProc.Updated.get()
+
+            # Check if this mode is enable
+            if (self.EnableAutoReopen.get()) and newData:
+
+                # Check if a file is already open
+                if self.dataWriter._isOpen():
+
+                    # Close file
+                    print( f'Closing {self.dataWriter.DataFile.get()}' )
+                    self.dataWriter._close()
+
+                    # Confirm file is not open
+                    while self.dataWriter._isOpen():
+                        time.sleep(0.01)
+
+                # Rename the file
+                self.dataWriter.AutoName()
+                print( f'Opening {self.dataWriter.DataFile.get()}' )
+                self.dataWriter._open()
+
+                # Reset the flags
+                for i in range(4):
+                    self.ampFaultProc[i].Updated.set(0)
+                self.bpmFaultProc.Updated.set(0)
+
+        self.add(pr.LocalVariable(
+            name         = 'GetFaultEventStatus',
+            mode         = 'RO',
+            localGet     = self.getFaultEventStatus,
+            pollInterval = 1, # periodically check the fault status once a second
+            hidden       = True,
+        ))
+
     ##################################################################################
 
     def start(self,**kwargs):
