@@ -236,15 +236,6 @@ class ReadoutCtrl(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'SetKeepArm',
-            description  = 'Keep FaultTrigReady = 1',
-            offset       = 0x28,
-            bitSize      = 1,
-            bitOffset    = 2,
-            mode         = 'WO',
-        ))
-
-        self.add(pr.RemoteVariable(
             name         = "FaultTrigDlyRaw",
             description  = "Sets a delay between trigger detection and stopping the ring buffer",
             offset       = 0x2C,
