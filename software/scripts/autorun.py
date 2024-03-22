@@ -15,7 +15,7 @@ class MyHandler(FileSystemEventHandler):
             subprocess.run(["python3", "makeplot.py"])  # スクリプトを実行
 
 def main():
-    path = '/home/nomaru/projects/kek-bpm-rfsoc-dev/software/datfile/'  # 監視するディレクトリのパスを指定
+    path = '../datfile/'  # 監視するディレクトリのパスを指定
     event_handler = MyHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=False)

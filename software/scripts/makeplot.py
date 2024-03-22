@@ -63,6 +63,7 @@ def datfile(filename):
             else:
                 hdrOffset = 0
                 print( 'No timestamp header detected' )
+                return 0,0
             
             # Check for error in frame
             if (header.error>0):
@@ -90,8 +91,11 @@ def datfile(filename):
                 print( f'UNDEFINED DATA STREAM[{header.channel}]!!!')
     return ampFault, recordtime
 
-def parse_and_plot(dat_file, output_file1, output_file2, date):
+def parse_and_plot(dat_file):
     ampFault, recordtime=datfile(dat_file)
+    if recordtime==0:
+        return
+    
     print(f'Selected time : {recordtime[0]}')
     
     def bunchindex(threshold,waveform):
@@ -116,7 +120,7 @@ def parse_and_plot(dat_file, output_file1, output_file2, date):
         print("end process")
         return
 
-    os.makedirs(f'plot/{date}', exist_ok=True)
+    os.makedirs(f'/home/nomaru/work/auto_BOR/plot/{recordtime[0]}', exist_ok=True)
     print(f'Num of bunch : {len(bunch_index)}')
     print(f'First bunch index : {firstbunch}')
     start=12800
@@ -194,33 +198,42 @@ def parse_and_plot(dat_file, output_file1, output_file2, date):
     ax4.set_xlabel("Turn")
     ax4.set_ylabel("Bunch ID")
     ax4.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
-    plt.savefig(output_file1,dpi=200,bbox_inches="tight",pad_inches=0.5)
+    plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[0]}/{recordtime[0]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
     plt.close()
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(17,8))
+    #make x axis
+    bunch_index_12=[]
+    for i in range(12):
+        bunch_index_12.append(bunch_index+5120*i)
+
+    x_axis=np.concatenate(bunch_index_12)/5120+1
+        
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(20,8))
     split=np.hsplit(y_pos,y_pos.shape[1])
-    ax1.set_title(f'{date}   Nb={len(bunch_index)}')
-    ax1.scatter(np.arange(0,y_pos.shape[0]*12)/y_pos.shape[0]+1,np.concatenate(split),color='red',s=10)
+    ax1.set_title(f'{recordtime[0]}   Nb={len(bunch_index)}')
+    ax1.scatter(x_axis,np.concatenate(split),color='red',s=10)
     ax1.set_ylabel("Y position (mm)")
     ax1.set_ylim(-0.4,0.4)
     ax1.grid()
+    ax1.text(0.05,0.05,'LER Vertical',transform=ax1.transAxes,ha='left',va='bottom',fontsize=20)
 
     split=np.hsplit(charge,charge.shape[1])
-    x=np.arange(0,charge.shape[0]*12)/charge.shape[0]+1
-    ax2.scatter(x,np.concatenate(split).reshape(len(x)),color='blue',s=10)
+    ax2.scatter(x_axis,np.concatenate(split).reshape(len(x_axis)),color='blue',s=10)
     ax2.set_xlabel("Turn")
     ax2.set_ylabel("Charge")
     ax2.set_ylim(0,1.2)
     ax2.grid()
     ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['1','2','3','4','5','6','7','8','9','10','11','12','abort'])
     ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-    ax2.set_xlim(1,13)
+    ax2.set_xlim(4,13)
+    ax2.text(0.05,0.05,'LER Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
     plt.subplots_adjust(hspace=.1)
-    plt.savefig(output_file2,dpi=200,bbox_inches="tight",pad_inches=0.5)
+    plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[0]}/{recordtime[0]}_position_charge.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
     plt.close()
     print("Plot saved successfully.")
-    print(f'Abort date:{date}')
+    print(f'Abort datetime:{recordtime[0]}')
 
     
 def main():
@@ -228,7 +241,7 @@ def main():
     latest_file, previous_file = find_latest_dat_files(directory)
     
     if latest_file:
-        parse_and_plot(previous_file, f'/home/nomaru/work/auto_BOR/plot/{os.path.basename(previous_file)[5:20]}/{os.path.basename(previous_file)[5:20]}_heatmap.png',  f'/home/nomaru/work/auto_BOR/plot/{os.path.basename(previous_file)[5:20]}/{os.path.basename(previous_file)[5:20]}_position_charge.png',os.path.basename(previous_file)[5:20])
+        parse_and_plot(previous_file)
     
     else:
         print("No dat files found in the directory.")
