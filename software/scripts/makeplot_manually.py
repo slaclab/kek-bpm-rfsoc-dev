@@ -102,12 +102,13 @@ def parse_and_plot(dat_file):
         
             return firstbunch, bunch_index
 
-        firstbunch, bunch_index=bunchindex(1000,ampFault[0][num])
+        firstbunch, bunch_index=bunchindex(800,ampFault[0][num])
         if firstbunch==0:
             print("end process")
             return
 
-        os.makedirs(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}', exist_ok=True)
+        os.makedirs(f'/mnt/SBOR/RFSoC/LERDV_{recordtime[num]}', exist_ok=True)
+        #os.makedirs(f'/home/nomaru/work/auto_BOR/plot/LERDV_{recordtime[num]}', exist_ok=True)
         print(f'Num of bunch : {len(bunch_index)}')
         print(f'First bunch index : {firstbunch}')
         start=12800
@@ -185,7 +186,8 @@ def parse_and_plot(dat_file):
         ax4.set_xlabel("Turn")
         ax4.set_ylabel("Bunch ID")
         ax4.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
-        plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        plt.savefig(f'/mnt/SBOR/RFSoC/LERDV_{recordtime[num]}/LERDV_{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/plot/LERDV_{recordtime[num]}/LERDV_{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
 
         #make x axis
@@ -199,25 +201,26 @@ def parse_and_plot(dat_file):
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(20,8))
         split=np.hsplit(y_pos,y_pos.shape[1])
         ax1.set_title(f'{recordtime[num]}   Nb={len(bunch_index)}')
-        ax1.scatter(x_axis,np.concatenate(split),color='red',s=10)
+        ax1.scatter(x_axis,np.concatenate(split),color='red',s=6)
         ax1.set_ylabel("Y position (mm)")
         ax1.set_ylim(-0.4,0.4)
         ax1.grid()
-        ax1.text(0.05,0.05,'LER Vertical',transform=ax1.transAxes,ha='left',va='bottom',fontsize=20)
+        ax1.text(0.03,0.05,'LER Vertical',transform=ax1.transAxes,ha='left',va='bottom',fontsize=20)
 
         split=np.hsplit(charge,charge.shape[1])
-        ax2.scatter(x_axis,np.concatenate(split).reshape(len(x_axis)),color='blue',s=10)
+        ax2.scatter(x_axis,np.concatenate(split).reshape(len(x_axis)),color='blue',s=6)
         ax2.set_xlabel("Turn")
         ax2.set_ylabel("Charge")
         ax2.set_ylim(0,1.2)
         ax2.grid()
         ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['1','2','3','4','5','6','7','8','9','10','11','12','abort'])
         ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-        ax2.set_xlim(4,13)
-        ax2.text(0.05,0.05,'LER Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
+        ax2.set_xlim(6,13)
+        ax2.text(0.03,0.05,'LER Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
         plt.subplots_adjust(hspace=.1)
-        plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/{recordtime[num]}_position_charge.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        plt.savefig(f'/mnt/SBOR/RFSoC/LERDV_{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/plot/LERDV_{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
         print("Plot saved successfully.")
         print(f'Abort datetime:{recordtime[num]}')
