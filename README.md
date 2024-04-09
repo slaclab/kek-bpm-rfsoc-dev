@@ -57,7 +57,7 @@ Assumes you are using the Xilinx XM500 daughter card.
 
 Connect J1 and J6, J2 and J5, J3 and J8, J4 and J7 using loopback SMA cables.
 
-<img src="docs/images/ZCU11_LOOPBACK.png" width="200">
+<img src="docs/images/ZCU111_LOOPBACK.png" width="200">
 
 
 <!--- ######################################################## -->
@@ -83,7 +83,7 @@ P2_224/N23_224 and J8/J11,
 P0_225/N01_225 and J18/J16, 
 P2_225/N23_225 and J42/J41 using the ADC's breakout cable
 
-<img src="docs/images/ZCU11_LOOPBACK.png" width="200">
+<img src="docs/images/ZCU208_LOOPBACK.png" width="200">
 
 <!--- ######################################################## -->
 
