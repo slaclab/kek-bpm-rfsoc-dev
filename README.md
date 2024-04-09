@@ -68,20 +68,9 @@ Assumes you are using the Xilinx XM655 daughter card.
 
 Connect J3 and J13, J7 and J38, J17 and J25, J40 and J33 using loopback SMA cables.
 
-Connect P0_224/N01_224 and J1/J5, 
-P2_224/N23_224 and J8/J11, 
-P0_225/N01_225 and J18/J16, 
-P2_225/N23_225 and J42/J41 using the ADC's breakout cable
+Connect P0_224/N01_224 and J1/J5, P2_224/N23_224 and J8/J11, P0_225/N01_225 and J18/J16, P2_225/N23_225 and J42/J41 using the ADC's breakout cable
 
-Connect P/N_0_228 and J26/J29, 
-P/N_2_228 and J31/J35, 
-P/N_0_229 and J15/J14, 
-P/N_2_229 and J39/J37 using the DAC's breakout cable
-
-
-P2_224/N23_224 and J8/J11, 
-P0_225/N01_225 and J18/J16, 
-P2_225/N23_225 and J42/J41 using the ADC's breakout cable
+Connect P/N_0_228 and J26/J29, P/N_2_228 and J31/J35, P/N_0_229 and J15/J14, P/N_2_229 and J39/J37 using the DAC's breakout cable
 
 <img src="docs/images/ZCU208_LOOPBACK.png" width="200">
 
