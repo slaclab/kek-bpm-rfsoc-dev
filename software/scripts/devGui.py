@@ -59,7 +59,14 @@ if __name__ == "__main__":
         default  = 0xF,
         help     = "4-bit bitmask for seleting BPM channels",
     )
-    
+
+    parser.add_argument(
+        "--boardType",
+        type     = str,
+        required = True,
+        help     = "Sets board type (zcu111 or zcu208)",
+    )
+
     # Get the arguments
     args = parser.parse_args()
 
@@ -72,6 +79,7 @@ if __name__ == "__main__":
         ip         = args.ip,
         bpmFreqMHz = args.bpmFreqMHz,
         chMask     = args.chMask,
+        boardType  = args.boardType,
     ) as root:
 
         ######################

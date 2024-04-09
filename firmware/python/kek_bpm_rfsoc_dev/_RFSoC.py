@@ -16,7 +16,12 @@ import surf.xilinx                                   as xil
 import kek_bpm_rfsoc_dev                             as rfsoc
 
 class RFSoC(pr.Device):
-    def __init__(self,sampleRate=0.0,ampDispProc=None,SSR=16,**kwargs):
+    def __init__(self,
+            sampleRate  = 0.0,
+            ampDispProc = None,
+            SSR         = 16,
+            boardType   = None,
+        **kwargs):
         super().__init__(**kwargs)
 
         self.add(socCore.AxiSocCore(
@@ -25,14 +30,15 @@ class RFSoC(pr.Device):
             # expand       = True,
         ))
 
-        self.add(xilinxZcu111.Hardware(
-            offset       = 0x8000_0000,
-            # expand       = True,
-        ))
+        if boardType == 'Zcu111':
+            self.add(xilinxZcu111.Hardware(
+                offset       = 0x8000_0000,
+                # expand       = True,
+            ))
 
         self.add(xil.RfDataConverter(
             offset    = 0x9000_0000,
-            gen3      = False, # True if using RFSoC GEN3 Hardware
+            gen3      = (boardType != 'Zcu111'), # True if using RFSoC GEN3 Hardware
             enAdcTile = [True,True,False,False], # adcTile[0,1]
             enDacTile = [True,True,False,False], # dacTile[0,1]
             # expand       = True,
