@@ -34,16 +34,56 @@ A 509 MHz reference clock connected to ZCU111's "J109" connect is required.
 Tested using a 509 MHz sine wave generator.  
 Sine wave amplitude needed to be between 10 mV and 500 mV to get a LMK/LMX lock.
 
-<img src="docs/images/CLK_REF.png" width="200">
+<img src="docs/images/ZCU111_CLK_REF.png" width="200">
 
 <!--- ######################################################## -->
 
-# RF Balun Daughter card
+# ZCU208 and External Clock reference
+
+A 509 MHz reference clock connected to ZCU208's J99/J100 ("DAC 229 CLK").
+The 509 MHz reference must be converted from a single-end signal to a 
+differential (AC-coupled) signal using a discrete balun circuit.
+Use either a [TM7SSSTS5FS031C](https://www.digikey.com/en/products/detail/carlisleit/TM7SSSTS5FS031C/12420541)
+or a [TM7SMSTS5MS031C](https://www.digikey.com/en/products/detail/carlisleit/TM7SMSTS5MS031C/12419925) for 
+the coaxial SMA to SSMP adapter. 
+
+<img src="docs/images/ZCU208_CLK_REF.png" width="200">
+
+<!--- ######################################################## -->
+
+# ZCU111 and RF Balun Daughter card for loopback testing
 
 Assumes you are using the Xilinx XM500 daughter card.
+
 Connect J1 and J6, J2 and J5, J3 and J8, J4 and J7 using loopback SMA cables.
 
-<img src="docs/images/LOOPBACK.png" width="200">
+<img src="docs/images/ZCU11_LOOPBACK.png" width="200">
+
+
+<!--- ######################################################## -->
+
+# ZCU208 and RF Balun Daughter card for loopback testing
+
+Assumes you are using the Xilinx XM655 daughter card.
+
+Connect J3 and J13, J7 and J38, J17 and J25, J40 and J33 using loopback SMA cables.
+
+Connect P0_224/N01_224 and J1/J5, 
+P2_224/N23_224 and J8/J11, 
+P0_225/N01_225 and J18/J16, 
+P2_225/N23_225 and J42/J41 using the ADC's breakout cable
+
+Connect P/N_0_228 and J26/J29, 
+P/N_2_228 and J31/J35, 
+P/N_0_229 and J15/J14, 
+P/N_2_229 and J39/J37 using the DAC's breakout cable
+
+
+P2_224/N23_224 and J8/J11, 
+P0_225/N01_225 and J18/J16, 
+P2_225/N23_225 and J42/J41 using the ADC's breakout cable
+
+<img src="docs/images/ZCU11_LOOPBACK.png" width="200">
 
 <!--- ######################################################## -->
 
@@ -185,7 +225,9 @@ sudo umount boot
 
 3) Power down the RFSoC board
 
-4) Confirm the Mode SW6 [4:1] = 1110 (Mode Pins [3:0]). Note: Switch OFF = 1 = High; ON = 0 = Low.
+4) Confirm the DIP switches
+- if ZCU111: SW6 [4:1] = 1110 (Mode Pins [3:0]). Note: Switch OFF = 1 = High; ON = 0 = Low.
+- if ZCU208: SW2 [4:1] = 1110 (Mode Pins [3:0]). Note: Switch OFF = 1 = High; ON = 0 = Low.
 
 5) Power up the RFSoC board
 
@@ -220,7 +262,7 @@ ssh root@10.0.0.10 '/bin/sync; /sbin/reboot'
 
 # How to run the Rogue GUI
 
-- Assumes the DHCP assigned IP address is 10.0.0.10
+- Assumes the DHCP assigned IP address is 10.0.0.10 and ZCU111 board type
 
 1) Setup the rogue environment (if on SLAC AFS network) else install rogue (recommend Anaconda method) on your local machine
 
@@ -235,7 +277,7 @@ $ conda activate rogue
 
 ```bash
 $ cd kek-bpm-rfsoc-dev/software
-$ python scripts/devGui.py --ip 10.0.0.10 --bpmFreqMHz 1000
+$ python scripts/devGui.py --ip 10.0.0.10 --boardType zcu111 --bpmFreqMHz 1000
 ```
 
 <!--- ######################################################## -->
