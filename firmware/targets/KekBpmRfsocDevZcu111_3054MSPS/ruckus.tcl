@@ -7,6 +7,7 @@ loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/Xilinx
 
 # Load common ruckus.tcl files
 loadRuckusTcl $::env(TOP_DIR)/shared
+loadSource -dir "$::env(TOP_DIR)/shared/rtl/3054MSPS"
 
 # Load model composer .ZIP output file
 if { [get_ips ssr_ddc_0] eq ""  } {
@@ -16,8 +17,7 @@ if { [get_ips ssr_ddc_0] eq ""  } {
 
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/rtl"
-loadSource      -dir "$::DIR_PATH/shared"
-loadConstraints -dir "$::DIR_PATH/shared"
+loadConstraints -dir "$::DIR_PATH/rtl"
 
 # Load IP cores
 loadIpCore -dir "$::DIR_PATH/ip"

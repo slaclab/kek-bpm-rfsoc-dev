@@ -3,7 +3,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load submodule code
 loadRuckusTcl $::env(TOP_DIR)/submodules/surf
-loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/XilinxZcu111
+loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/XilinxZcu208
 
 # Load common ruckus.tcl files
 loadRuckusTcl $::env(TOP_DIR)/shared
