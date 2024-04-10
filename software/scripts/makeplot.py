@@ -143,7 +143,7 @@ def parse_and_plot(dat_file):
 
     aspectratio=y_pos.shape[1]/y_pos.shape[0]
 
-    mean=np.mean(y_pos[:,0:3],axis=1)
+    mean=np.mean(y_pos[:,0:2],axis=1)
     y_pos=y_pos-mean[:,np.newaxis]        
     
     fig=plt.figure(figsize=(20,20))
@@ -174,7 +174,7 @@ def parse_and_plot(dat_file):
     ax2.set_ylabel("Bunch ID")
     ax2.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
 
-    charge_mean=np.mean(charge[:,0:3],axis=1)
+    charge_mean=np.mean(charge[:,0:2],axis=1)
     charge=charge/charge_mean[:,np.newaxis]
     
     im3=ax3.imshow(charge,aspect=aspectratio*1.08,cmap='plasma',interpolation='none',extent=(0.5,12.5,charge.shape[0],0)
@@ -211,7 +211,7 @@ def parse_and_plot(dat_file):
     x_axis=np.concatenate(bunch_index_12)/5120+1
         
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(22,8))
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(23,8))
     split=np.hsplit(y_pos,y_pos.shape[1])
     ax1.set_title(f'{recordtime[0]}')
     ax1.scatter(x_axis,np.concatenate(split),color='red',s=6)
@@ -226,9 +226,9 @@ def parse_and_plot(dat_file):
     ax2.set_ylabel("Charge")
     ax2.set_ylim(0,1.2)
     ax2.grid()
-    ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['1','2','3','4','5','6','7','8','9','10','11','12','abort'])
+    ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['0','0','1','2','3','4','5','6','7','8','9','10','abort'])
     ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-    ax2.set_xlim(4,13)
+    ax2.set_xlim(3,13)
     ax2.text(0.03,0.05,'Downstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
     plt.subplots_adjust(hspace=.1)
@@ -264,7 +264,7 @@ def parse_and_plot(dat_file):
 
     aspectratio=y_pos.shape[1]/y_pos.shape[0]
 
-    mean=np.mean(y_pos[:,0:3],axis=1)
+    mean=np.mean(y_pos[:,0:2],axis=1)
     y_pos=y_pos-mean[:,np.newaxis]        
     
     fig=plt.figure(figsize=(20,20))
@@ -295,7 +295,7 @@ def parse_and_plot(dat_file):
     ax2.set_ylabel("Bunch ID")
     ax2.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
 
-    charge_mean=np.mean(charge[:,0:3],axis=1)
+    charge_mean=np.mean(charge[:,0:2],axis=1)
     charge=charge/charge_mean[:,np.newaxis]
     
     im3=ax3.imshow(charge,aspect=aspectratio*1.08,cmap='plasma',interpolation='none',extent=(0.5,12.5,charge.shape[0],0)
@@ -332,7 +332,7 @@ def parse_and_plot(dat_file):
     x_axis=np.concatenate(bunch_index_12)/5120+1
         
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(22,8))
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(23,8))
     split=np.hsplit(y_pos,y_pos.shape[1])
     ax1.set_title(f'{recordtime[0]}')
     ax1.scatter(x_axis,np.concatenate(split),color='tomato',s=6)
@@ -347,9 +347,9 @@ def parse_and_plot(dat_file):
     ax2.set_ylabel("Charge")
     ax2.set_ylim(0,1.2)
     ax2.grid()
-    ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['1','2','3','4','5','6','7','8','9','10','11','12','abort'])
+    ax2.set_xticks([1,2,3,4,5,6,7,8,9,10,11,12,13],['0','0','1','2','3','4','5','6','7','8','9','10','abort'])
     ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-    ax2.set_xlim(4,13)
+    ax2.set_xlim(3,13)
     ax2.text(0.03,0.05,'Upstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
     plt.subplots_adjust(hspace=.1)
