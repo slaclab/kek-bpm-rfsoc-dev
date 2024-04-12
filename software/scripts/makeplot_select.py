@@ -125,6 +125,33 @@ def parse_and_plot(dat_file):
     os.makedirs(f'/mnt/SBOR/RFSoC/{recordtime[0]}', exist_ok=True)
     print(f'Downstream Num of bunch : {len(bunch_index)}')
     print(f'Downstream First bunch index : {firstbunch}')
+
+    num=0
+
+    if firstbunch>140000:
+            return
+
+    ascii_data=[]
+    ascii_data_2=[]
+    for k in range(12):
+        one_turn=[]
+        one_turn_2=[]
+        for l in range(5120):
+            sum=ampFault[0][num][firstbunch+l*8+5120*8*k]
+            delta=ampFault[1][num][firstbunch+l*8+5120*8*k]
+            if sum==0:
+                yposition=100
+            else:
+                yposition=delta/sum*16.58/5
+            one_turn.append(yposition)
+            one_turn_2.append(sum)
+        ascii_data.append(np.array(one_turn))
+        ascii_data_2.append(np.array(one_turn_2))
+    ascii_data=np.array(ascii_data)
+    ascii_data_2=np.array(ascii_data_2)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}.txt',ascii_data)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}_sum.txt',ascii_data_2)
+
     start=12800
     y_pos=[]
     charge=[]
@@ -245,6 +272,31 @@ def parse_and_plot(dat_file):
 
     print(f'Upstream Num of bunch : {len(bunch_index)}')
     print(f'Upstream First bunch index : {firstbunch}')
+
+    if firstbunch>140000:
+            return
+
+    ascii_data=[]
+    ascii_data_2=[]
+    for k in range(12):
+        one_turn=[]
+        one_turn_2=[]
+        for l in range(5120):
+            sum=ampFault[0][num][firstbunch+l*8+5120*8*k]
+            delta=ampFault[1][num][firstbunch+l*8+5120*8*k]
+            if sum==0:
+                yposition=100
+            else:
+                yposition=delta/sum*16.58/5
+            one_turn.append(yposition)
+            one_turn_2.append(sum)
+        ascii_data.append(np.array(one_turn))
+        ascii_data_2.append(np.array(one_turn_2))
+    ascii_data=np.array(ascii_data)
+    ascii_data_2=np.array(ascii_data_2)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}.txt',ascii_data)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}_sum.txt',ascii_data_2)
+    
     start=12800
     y_pos=[]
     charge=[]

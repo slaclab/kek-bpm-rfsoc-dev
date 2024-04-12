@@ -107,11 +107,30 @@ def parse_and_plot(dat_file):
             print("end process")
             return
 
-        #os.makedirs(f'/mnt/SBOR/RFSoC/{recordtime[num]}', exist_ok=True)
-        os.makedirs(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}', exist_ok=True)
-        os.makedirs(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}', exist_ok=True)
+        os.makedirs(f'/mnt/SBOR/RFSoC/{recordtime[num]}', exist_ok=True)
+        #os.makedirs(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}', exist_ok=True)
+        #os.makedirs(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}', exist_ok=True)
         print(f'Downstream Num of bunch : {len(bunch_index)}')
         print(f'Downstream First bunch index : {firstbunch}')
+
+        if firstbunch>140000:
+            return
+
+        ascii_data=[]
+        for k in range(12):
+            one_turn=[]
+            for l in range(5120):
+                sum=ampFault[0][num][firstbunch+l*8+5120*8*k]
+                delta=ampFault[1][num][firstbunch+l*8+5120*8*k]
+                if sum==0:
+                    yposition=100
+                else:
+                    yposition=delta/sum*16.58/5
+                one_turn.append(yposition)
+            ascii_data.append(np.array(one_turn))
+        ascii_data=np.array(ascii_data)
+        np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}.txt',ascii_data)
+
         start=12800
         y_pos=[]
         charge=[]
@@ -188,7 +207,7 @@ def parse_and_plot(dat_file):
         ax4.set_ylabel("Bunch ID")
         ax4.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
         #plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
-        plt.savefig(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}/LERDV_{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}/LERDV_{recordtime[num]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
 
         #make x axis
@@ -220,8 +239,8 @@ def parse_and_plot(dat_file):
         ax2.text(0.03,0.05,'Downstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
         plt.subplots_adjust(hspace=.1)
-        #plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
-        plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/LERDV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
 
         ################################
@@ -233,6 +252,25 @@ def parse_and_plot(dat_file):
 
         print(f'Upstream Num of bunch : {len(bunch_index)}')
         print(f'Upstream First bunch index : {firstbunch}')
+
+        if firstbunch>14000:
+            return
+
+        ascii_data=[]
+        for k in range(12):
+            one_turn=[]
+            for l in range(5120):
+                sum=ampFault[2][0][firstbunch+l*8+5120*8*k]
+                delta=ampFault[3][0][firstbunch+l*8+5120*8*k]
+                if sum==0:
+                    yposition=100
+                else:
+                    yposition=delta/sum*16.58/5
+                one_turn.append(yposition)
+            ascii_data.append(np.array(one_turn))
+        ascii_data=np.array(ascii_data)
+        np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}.txt',ascii_data)
+        
         start=12800
         y_pos=[]
         charge=[]
@@ -308,7 +346,7 @@ def parse_and_plot(dat_file):
         ax4.set_xlabel("Turn")
         ax4.set_ylabel("Bunch ID")
         ax4.set_xticks([2,3,4,5,6,7,8,9,10,11,12])
-        plt.savefig(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}/LERUV_{recordtime[0]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/heatmap/{recordtime[num]}/LERUV_{recordtime[0]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         #plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[0]}/LERUV_{recordtime[0]}_heatmap.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
 
@@ -341,8 +379,8 @@ def parse_and_plot(dat_file):
         ax2.text(0.03,0.05,'Upstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=20)
 
         plt.subplots_adjust(hspace=.1)
-        plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/LERUV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
-        #plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        #plt.savefig(f'/home/nomaru/work/auto_BOR/plot/{recordtime[num]}/LERUV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+        plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
         plt.close()
         
         
@@ -362,7 +400,7 @@ def main():
     directory_path = "../datfile"
 
     # 指定した日付
-    specified_date = datetime(2024, 4, 2, 19, 0, 0)
+    specified_date = datetime(2024, 4, 11, 0, 0, 0)
 
     # ディレクトリ内のすべての.datファイルに対して処理を実行
     for dat_file in glob.glob(os.path.join(directory_path, "*.dat")):
