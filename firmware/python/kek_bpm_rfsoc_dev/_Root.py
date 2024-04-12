@@ -26,7 +26,6 @@ import pyrogue.protocols.epicsV4
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import axi_soc_ultra_plus_core as soc_core
-import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
 
 rogue.Version.minVersion('6.1.1')
 
@@ -37,6 +36,7 @@ class Root(pr.Root):
             bpmFreqMHz = 2000, # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
+            boardType  = None, # Either zcu111 or zcu208
             **kwargs):
 
         # Pass custom value to parent via super function
@@ -50,13 +50,14 @@ class Root(pr.Root):
 
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
+        self.boardType = boardType[0].upper() + boardType[1:].lower()
 
         # Check for DDC bypass mode
         if (bpmFreqMHz == 0):
             self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS_BypassDDC'
+            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
             self.faultDepth = 2**15
 
         # Check for ZONE1 operation
@@ -64,7 +65,7 @@ class Root(pr.Root):
             self.SSR = 16
             self.NcoFreqMHz = self.bpmFreqMHz
             self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName  = 'KekBpmRfsocDevZcu111_4072MSPS'
+            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS'
             self.faultDepth = 2**14
 
         # Else ZONE2 operation
@@ -72,7 +73,7 @@ class Root(pr.Root):
             self.SSR = 12
             self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
             self.sampleRate = 3.054E+9 # Units of Hz
-            self.ImageName  = 'KekBpmRfsocDevZcu111_3054MSPS'
+            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_3054MSPS'
             self.faultDepth = 2**14
 
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
@@ -161,6 +162,7 @@ class Root(pr.Root):
             SSR         = self.SSR,
             offset      = 0x04_0000_0000, # Full 40-bit address space
             expand      = True,
+            boardType   = self.boardType,
         ))
 
         ##################################################################################
@@ -237,10 +239,18 @@ class Root(pr.Root):
         rfdc        = self.RFSoC.RfDataConverter
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
+        # Check for Expected HW Platform
+        if (self.boardType in axiVersion.HW_TYPE_C.getDisp()) != True:
+                errMsg = f'Actual.Hardware={axiVersion.HW_TYPE_C.getDisp()} != Expected.Hardware=Xilinx{self.boardType}'
+                click.secho(errMsg, bg='red')
+                self.stop()
+                raise ValueError(errMsg)
+
         # Check for Expected FW loaded
-        if axiVersion.ImageName.get() != self.ImageName:
+        if self.ImageName != axiVersion.ImageName.get():
                 errMsg = f'Actual.Firmware={axiVersion.ImageName.get()} != Expected.Firmware={self.ImageName}'
                 click.secho(errMsg, bg='red')
+                self.stop()
                 raise ValueError(errMsg)
 
         print('Issuing a reset to the user logic')
@@ -248,8 +258,9 @@ class Root(pr.Root):
         while(axiVersion.AppReset.get() != 0):
             time.sleep(0.1)
 
-        print('Initialize the LMK/LMX Clock chips')
-        self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
+        if self.boardType == 'Zcu111':
+            print('Initialize the LMK/LMX Clock chips')
+            self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
         print('Wait for DSP Clock to be stable')
         while(axiVersion.DspReset.get()):
