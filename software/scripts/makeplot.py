@@ -132,8 +132,8 @@ def parse_and_plot(dat_file):
     for k in range(12):
         one_turn=[]
         for l in range(5120):
-            sum=ampFault[0][num][firstbunch+l*8+5120*8*k]
-            delta=ampFault[1][num][firstbunch+l*8+5120*8*k]
+            sum=ampFault[0][0][firstbunch+l*8+5120*8*k]
+            delta=ampFault[1][0][firstbunch+l*8+5120*8*k]
             if sum==0:
                 yposition=100
             else:
@@ -141,7 +141,7 @@ def parse_and_plot(dat_file):
             one_turn.append(yposition)
         ascii_data.append(np.array(one_turn))
     ascii_data=np.array(ascii_data)
-    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERDV_{recordtime[num]}.txt',ascii_data)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[0]}/LERDV_{recordtime[0]}.txt',ascii_data)
 
     start=12800
     y_pos=[]
@@ -281,7 +281,7 @@ def parse_and_plot(dat_file):
             one_turn.append(yposition)
         ascii_data.append(np.array(one_turn))
     ascii_data=np.array(ascii_data)
-    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[num]}/LERUV_{recordtime[num]}.txt',ascii_data)
+    np.savetxt(f'/mnt/SBOR/RFSoC/{recordtime[0]}/LERUV_{recordtime[0]}.txt',ascii_data)
     
     start=12800
     y_pos=[]
