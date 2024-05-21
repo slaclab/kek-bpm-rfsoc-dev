@@ -15,7 +15,12 @@ import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import surf.axi                              as axi
 
 class Application(pr.Device):
-    def __init__(self,sampleRate=0.0,ampDispProc=None,SSR=16,**kwargs):
+    def __init__(self,
+            sampleRate  = 0.0,
+            ampDispProc = None,
+            SSR         = 16,
+            boardType   = None,
+        **kwargs):
         super().__init__(**kwargs)
 
         self.add(rfsoc_utility.SigGen(
@@ -32,6 +37,7 @@ class Application(pr.Device):
             sampleRate  = sampleRate,
             ampDispProc = ampDispProc,
             SSR         = SSR,
+            boardType   = boardType,
             expand      = True,
         ))
 

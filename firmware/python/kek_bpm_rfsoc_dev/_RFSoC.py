@@ -54,6 +54,7 @@ class RFSoC(pr.Device):
             sampleRate  = sampleRate,
             ampDispProc = ampDispProc,
             SSR         = SSR,
+            boardType   = boardType,
             expand      = True,
             enabled     = False, # Do not configure until after LMK/LMX is up
         ))
