@@ -11,11 +11,8 @@ loadSource -path "$::env(TOP_DIR)/shared/rtl/4072MSPS/Application.vhd"
 
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/hdl"
-loadSource     -path "$::DIR_PATH/../KekBpmRfsocDevZcu111_4072MSPS/rtl/RfDataConverter.vhd"
-loadConstraints -dir "$::DIR_PATH/../KekBpmRfsocDevZcu111_4072MSPS/rtl"
+loadConstraints -dir "$::DIR_PATH/hdl"
 
 # Load IP cores
-loadIpCore -dir "$::DIR_PATH/../KekBpmRfsocDevZcu111_4072MSPS/ip"
+loadIpCore -dir "$::DIR_PATH/ip"
 
-# Set the top level simulation
-set_property top {AxiStreamRingBufferTb} [get_filesets sim_1]
