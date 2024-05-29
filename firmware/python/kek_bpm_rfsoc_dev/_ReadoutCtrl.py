@@ -12,7 +12,12 @@ import pyrogue as pr
 import time
 
 class ReadoutCtrl(pr.Device):
-    def __init__(self,sampleRate=0.0,ampDispProc=None,SSR=16,**kwargs):
+    def __init__(self,
+            sampleRate  = 0.0,
+            ampDispProc = None,
+            SSR         = 16,
+            boardType   = None,
+        **kwargs):
         super().__init__(**kwargs)
 
         self.smplTime = 1/sampleRate
@@ -139,33 +144,34 @@ class ReadoutCtrl(pr.Device):
                 # hidden       = True,
             ))
 
-        for i in range(2):
-            self.add(pr.RemoteVariable(
-                name         = f'PmodOut[{i}]',
-                description  = 'Software control of the PMOD lower 6 bits',
-                offset       = 0x20,
-                bitSize      = 6,
-                bitOffset    = 8*i,
-                mode         = 'RW',
-                hidden       = True,
-            ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'PmodInSel',
-            description  = 'Selects the input PMOD port to use as fault signal',
-            offset       = 0x20,
-            bitSize      = 2,
-            bitOffset    = 16,
-            enum        = {
+        if boardType == 'Zcu111':
+            intfType = 'Pmod'
+            intfDict = {
                 0x0: 'Pmod0Bit6',
                 0x1: 'Pmod0Bit7',
                 0x2: 'Pmod1Bit6',
                 0x3: 'Pmod1Bit7',
-            },
+            }
+        else:
+            intfType = 'Rfmc'
+            intfDict = {
+                0x0: 'AdcIo6',
+                0x1: 'AdcIo7',
+                0x2: 'DacIo6',
+                0x3: 'DacIo7',
+            }
+
+        self.add(pr.RemoteVariable(
+            name         = f'{intfType}InSel',
+            description  = f'Selects the input {intfType} port to use as fault signal',
+            offset       = 0x20,
+            bitSize      = 2,
+            bitOffset    = 16,
+            enum         = intfDict,
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'PmodInPolarity',
+            name         = f'{intfType}InPolarity',
             description  = 'Sets the polarity of the fault signal',
             offset       = 0x20,
             bitSize      = 1,
@@ -176,16 +182,10 @@ class ReadoutCtrl(pr.Device):
             },
         ))
 
-        nameList = [
-            'Pmod0Bit6',
-            'Pmod0Bit7',
-            'Pmod1Bit6',
-            'Pmod1Bit7',
-        ]
         for i in range(4):
             self.add(pr.RemoteVariable(
-                name         = nameList[i],
-                description  = 'Current value of the PMOD input pin',
+                name         = intfDict[i],
+                description  = f'Current value of the {intfType} input pin',
                 offset       = 0x24,
                 bitSize      = 1,
                 bitOffset    = i,
@@ -194,8 +194,8 @@ class ReadoutCtrl(pr.Device):
             ))
 
         self.add(pr.RemoteVariable(
-            name         = 'PmodIn',
-            description  = 'PmodIn = PmodInSel xor PmodInPolarity',
+            name         = f'{intfType}In',
+            description  = f'{intfType}In = {intfType}InSel xor {intfType}InPolarity',
             offset       = 0x24,
             bitSize      = 1,
             bitOffset    = 4,

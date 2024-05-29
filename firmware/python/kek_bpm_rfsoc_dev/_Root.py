@@ -188,8 +188,45 @@ class Root(pr.Root):
             hidden = False,
         ))
 
+        self.add(pr.LocalVariable(
+            name        = 'EnableFaultTrigTimer',
+            description = 'Used to enable the periodic fault triggering from software',
+            mode        = 'RW',
+            value       = False, # FALSE by default
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'FaultTrigTimerSize',
+            description = 'Number of seconds between software fault triggers',
+            mode        = 'RW',
+            value       = 60,
+            units       = 'seconds',
+        ))
+
+        self.add(pr.LocalVariable(
+            name        = 'FaultTrigTimerValue',
+            description = 'periodic fault trigger timer value',
+            mode        = 'RO',
+            value       = 0,
+            units       = 'seconds',
+        ))
+
         @self.command(hidden=True)
         def getFaultEventStatus():
+            # Check if periodic fault triggering from software is enabled
+            if self.EnableFaultTrigTimer.get() and (self.FaultTrigTimerSize.get() > 0):
+                # Increment the timer
+                self.FaultTrigTimerValue.set(self.FaultTrigTimerValue.get()+1)
+                # Check for timeout
+                if (self.FaultTrigTimerValue.get() >= self.FaultTrigTimerSize.get()):
+                    # Reset the timer
+                    self.FaultTrigTimerValue.set(0)
+                    # Issue the software fault trigger
+                    self.RFSoC.Application.ReadoutCtrl.SwFaultTrig()
+            else:
+                # Reset the timer
+                self.FaultTrigTimerValue.set(0)
+
             # Check if there is new data in the fault event path
             newData = True
             for i in range(4):
