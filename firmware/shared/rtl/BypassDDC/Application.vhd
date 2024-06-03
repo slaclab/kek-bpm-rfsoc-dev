@@ -332,55 +332,55 @@ begin
 
    end generate GEN_BUFFER_A;
 
-   GEN_BUFFER_B :
-   for i in 3 downto 2 generate
-
-      U_RingBuffer : entity axi_soc_ultra_plus_core.AppRingBufferEngine
-         generic map (
-            TPD_G              => TPD_G,
-            TDEST_ROUTES_G     => (
-               0               => toSlv(8*i+0, 8),
-               1               => x"FF",
-               2               => x"FF",
-               3               => x"FF",
-               4               => x"FF",
-               5               => x"FF",
-               6               => x"FF",
-               7               => x"FF",
-               8               => x"FF",
-               9               => x"FF",
-               10              => x"FF",
-               11              => x"FF",
-               12              => x"FF",
-               13              => x"FF",
-               14              => x"FF",
-               15              => x"FF"),
-            NUM_CH_G           => 1,
-            SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
-            MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
-            COMMON_CLK_G       => true,  -- true if dataClk=axilClk
-            AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
-         port map (
-            -- AXI-Stream Interface (axisClk domain)
-            axisClk         => dmaClk,
-            axisRst         => dmaRst,
-            axisMaster      => axisMasters(i),
-            axisSlave       => axisSlaves(i),
-            -- DATA Interface (dataClk domain)
-            dataClk         => dspClk,
-            dataRst         => dspReset,
-            data0           => calcResult,
-            extTrigIn       => sigGenTrig(i-2),
-            -- AXI-Lite Interface (axilClk domain)
-            axilClk         => dspClk,
-            axilRst         => dspReset,
-            axilReadMaster  => dspReadMasters(RING_INDEX_C+i),
-            axilReadSlave   => dspReadSlaves(RING_INDEX_C+i),
-            axilWriteMaster => dspWriteMasters(RING_INDEX_C+i),
-            axilWriteSlave  => dspWriteSlaves(RING_INDEX_C+i));
-
-   end generate GEN_BUFFER_B;
+--   GEN_BUFFER_B :
+--   for i in 3 downto 2 generate
+--
+--      U_RingBuffer : entity axi_soc_ultra_plus_core.AppRingBufferEngine
+--         generic map (
+--            TPD_G              => TPD_G,
+--            TDEST_ROUTES_G     => (
+--               0               => toSlv(8*i+0, 8),
+--               1               => x"FF",
+--               2               => x"FF",
+--               3               => x"FF",
+--               4               => x"FF",
+--               5               => x"FF",
+--               6               => x"FF",
+--               7               => x"FF",
+--               8               => x"FF",
+--               9               => x"FF",
+--               10              => x"FF",
+--               11              => x"FF",
+--               12              => x"FF",
+--               13              => x"FF",
+--               14              => x"FF",
+--               15              => x"FF"),
+--            NUM_CH_G           => 1,
+--            SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
+--            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
+--            MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
+--            COMMON_CLK_G       => true,  -- true if dataClk=axilClk
+--            AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
+--         port map (
+--            -- AXI-Stream Interface (axisClk domain)
+--            axisClk         => dmaClk,
+--            axisRst         => dmaRst,
+--            axisMaster      => axisMasters(i),
+--            axisSlave       => axisSlaves(i),
+--            -- DATA Interface (dataClk domain)
+--            dataClk         => dspClk,
+--            dataRst         => dspReset,
+--            data0           => calcResult,
+--            extTrigIn       => sigGenTrig(i-2),
+--            -- AXI-Lite Interface (axilClk domain)
+--            axilClk         => dspClk,
+--            axilRst         => dspReset,
+--            axilReadMaster  => dspReadMasters(RING_INDEX_C+i),
+--            axilReadSlave   => dspReadSlaves(RING_INDEX_C+i),
+--            axilWriteMaster => dspWriteMasters(RING_INDEX_C+i),
+--            axilWriteSlave  => dspWriteSlaves(RING_INDEX_C+i));
+--
+--   end generate GEN_BUFFER_B;
 
    U_Mux : entity surf.AxiStreamMux
       generic map (
