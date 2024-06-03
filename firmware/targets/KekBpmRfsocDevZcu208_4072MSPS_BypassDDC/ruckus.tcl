@@ -7,7 +7,7 @@ loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/Xilinx
 
 # Load common ruckus.tcl files
 loadRuckusTcl $::env(TOP_DIR)/shared
-loadSource -path "$::env(TOP_DIR)/shared/rtl/4072MSPS/Application.vhd"
+loadSource -dir "$::env(TOP_DIR)/shared/rtl/BypassDDC"
 
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/hdl"

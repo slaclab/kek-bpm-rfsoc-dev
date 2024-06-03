@@ -40,6 +40,7 @@ entity ReadoutCtrl is
       fineDelay       : out   Slv4Array(3 downto 0);
       courseDelay     : out   Slv4Array(3 downto 0);
       selectdirect    : out   sl;
+      muxSelect       : out   sl;
       -- AXI-Lite Interface
       axilReadMaster  : in    AxiLiteReadMasterType;
       axilReadSlave   : out   AxiLiteReadSlaveType;
@@ -71,6 +72,7 @@ architecture rtl of ReadoutCtrl is
       fineDelay      : Slv4Array(3 downto 0);
       courseDelay    : Slv4Array(3 downto 0);
       selectdirect   : sl;
+      muxSelect      : sl;
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
    end record RegType;
@@ -96,6 +98,7 @@ architecture rtl of ReadoutCtrl is
       fineDelay      => (others => x"0"),
       courseDelay    => COURSE_DLY_INIT_G,
       selectdirect   => '0',
+      muxSelect      => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -151,6 +154,7 @@ begin
 
       axiSlaveRegister (axilEp, x"28", 0, v.faultTrigArm);
       axiSlaveRegister (axilEp, x"28", 1, v.selectdirect);
+      axiSlaveRegister (axilEp, x"28", 2, v.muxSelect);
 
       axiSlaveRegister (axilEp, x"2C", 0, v.faultTrigDly);
 
@@ -228,6 +232,7 @@ begin
       fineDelay      <= r.fineDelay;
       courseDelay    <= r.courseDelay;
       selectdirect   <= r.selectdirect;
+      muxSelect      <= r.muxSelect;
       for i in 0 to 1 loop
          pmod(i)(5 downto 0) <= not(r.pmodOut(i));
       end loop;

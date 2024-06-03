@@ -43,5 +43,5 @@ class Application(pr.Device):
 
         self.add(rfsoc.PosCalc(
             offset = 0x06_000000,
-            expand = True,
+            expand = False,
         ))
