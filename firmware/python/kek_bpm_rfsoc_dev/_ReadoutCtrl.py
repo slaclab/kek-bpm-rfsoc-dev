@@ -240,7 +240,7 @@ class ReadoutCtrl(pr.Device):
             description  = 'Select raw or down sampled ADC for the ring buffer',
             offset       = 0x28,
             bitSize      = 1,
-            bitOffset    = 2,
+            bitOffset    = 3,
             mode         = 'RW',
             enum        = {
                 0x0: 'RAW_ADC',

@@ -154,7 +154,7 @@ begin
 
       axiSlaveRegister (axilEp, x"28", 0, v.faultTrigArm);
       axiSlaveRegister (axilEp, x"28", 1, v.selectdirect);
-      axiSlaveRegister (axilEp, x"28", 2, v.muxSelect);
+      axiSlaveRegister (axilEp, x"28", 3, v.muxSelect);
 
       axiSlaveRegister (axilEp, x"2C", 0, v.faultTrigDly);
 
