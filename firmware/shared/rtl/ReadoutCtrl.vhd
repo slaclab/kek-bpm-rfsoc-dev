@@ -58,6 +58,7 @@ architecture rtl of ReadoutCtrl is
       faultTrigDly   : slv(14 downto 0);
       faultDlyCnt    : slv(14 downto 0);
       trigFaultBuf   : sl;
+      setkeepArm     : sl;
       -- PMOD signals
       pmodInPolarity : sl;
       pmodInBus      : slv(3 downto 0);
@@ -83,6 +84,7 @@ architecture rtl of ReadoutCtrl is
       faultTrigDly   => (others => '0'),
       faultDlyCnt    => (others => '0'),
       trigFaultBuf   => '0',
+      setkeepArm     => '0',
       -- PMOD signals
       pmodInPolarity => '0',
       pmodInBus      => (others => '0'),
@@ -151,6 +153,7 @@ begin
 
       axiSlaveRegister (axilEp, x"28", 0, v.faultTrigArm);
       axiSlaveRegister (axilEp, x"28", 1, v.selectdirect);
+      axiSlaveRegister (axilEp, x"28", 2, v.setkeepArm);
 
       axiSlaveRegister (axilEp, x"2C", 0, v.faultTrigDly);
 
@@ -181,6 +184,11 @@ begin
 
          -- Set the flag
          v.faultTrig := '1';
+
+         --keep Arm
+         if (r.setkeepArm = '1') then
+             v.faultTrigReady := '1';
+         end if;
 
       end if;
 
