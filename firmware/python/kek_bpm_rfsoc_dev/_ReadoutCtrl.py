@@ -236,6 +236,15 @@ class ReadoutCtrl(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
+            name         = 'SetKeepArm',
+            description  = 'Keep FaultTrigReady = 1',
+            offset       = 0x28,
+            bitSize      = 1,
+            bitOffset    = 2,
+            mode         = 'WO',
+        ))
+
+        self.add(pr.RemoteVariable(
             name         = 'MuxSelect',
             description  = 'Select raw or down sampled ADC for the ring buffer',
             offset       = 0x28,
