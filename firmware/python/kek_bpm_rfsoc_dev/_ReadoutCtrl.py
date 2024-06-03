@@ -245,6 +245,19 @@ class ReadoutCtrl(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
+            name         = 'MuxSelect',
+            description  = 'Select raw or down sampled ADC for the ring buffer',
+            offset       = 0x28,
+            bitSize      = 1,
+            bitOffset    = 3,
+            mode         = 'RW',
+            enum        = {
+                0x0: 'RAW_ADC',
+                0x1: 'DownSampledAdc',
+            },
+        ))
+
+        self.add(pr.RemoteVariable(
             name         = "FaultTrigDlyRaw",
             description  = "Sets a delay between trigger detection and stopping the ring buffer",
             offset       = 0x2C,
