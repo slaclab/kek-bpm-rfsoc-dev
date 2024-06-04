@@ -20,6 +20,8 @@ class RingBufferProcessor(rfsoc_utility.RingBufferProcessor):
         self._waveformData = np.zeros(shape=self._maxSize, dtype=np.int16, order='C')
         self._faultDisp = faultDisp
         self._SSR = SSR
+        self._timeStepsFine   = np.linspace(0, self._timeBin*(self._maxSize-1),   num=self._maxSize)
+        self._timeStepsCourse = np.linspace(0, self._timeBin*(self._maxSize-1)*8, num=self._maxSize)
 
     def _start(self):
         super()._start()
