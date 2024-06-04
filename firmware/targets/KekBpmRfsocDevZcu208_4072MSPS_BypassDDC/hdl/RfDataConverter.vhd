@@ -14,6 +14,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -219,36 +221,44 @@ architecture mapping of RfDataConverter is
 
    signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
 
-   signal plSysRefRaw : sl := '0';
-   signal adcSysRef   : sl := '0';
-   signal dacSysRef   : sl := '0';
+   signal sysRefCnt   : slv(7 downto 0);
+   -- signal plSysRefRaw : sl := '0';
+   -- signal adcSysRef   : sl := '0';
+   -- signal dacSysRef   : sl := '0';
    signal dummySig    : slv(1 downto 0);
 
    signal dacData : Slv96Array(NUM_DAC_CH_C-1 downto 0) := (others => (others => '0'));
 
 begin
 
-   U_plSysRefRaw : IBUFDS
-      port map (
-         I  => plSysRefP,
-         IB => plSysRefN,
-         O  => plSysRefRaw);
+   -- U_plSysRefRaw : IBUFDS
+      -- port map (
+         -- I  => plSysRefP,
+         -- IB => plSysRefN,
+         -- O  => plSysRefRaw);
 
-   U_adcSysRef : entity surf.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => adcClock,
-         dataIn  => plSysRefRaw,
-         dataOut => adcSysRef);
+   -- U_adcSysRef : entity surf.Synchronizer
+      -- generic map (
+         -- TPD_G => TPD_G)
+      -- port map (
+         -- clk     => adcClock,
+         -- dataIn  => plSysRefRaw,
+         -- dataOut => adcSysRef);
 
-   U_dacSysRef : entity surf.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => dacClock,
-         dataIn  => plSysRefRaw,
-         dataOut => dacSysRef);
+   -- U_dacSysRef : entity surf.Synchronizer
+      -- generic map (
+         -- TPD_G => TPD_G)
+      -- port map (
+         -- clk     => dacClock,
+         -- dataIn  => plSysRefRaw,
+         -- dataOut => dacSysRef);
+
+   process(adcClock)
+   begin
+      if rising_edge(adcClock) then
+         sysRefCnt <= sysRefCnt + 1;
+      end if;
+   end process;
 
    U_IpCore : RfDataConverterIpCore
       port map (
@@ -287,8 +297,8 @@ begin
          -- Misc. Ports
          sysref_in_p     => sysRefP,
          sysref_in_n     => sysRefN,
-         user_sysref_adc => adcSysRef,
-         user_sysref_dac => dacSysRef,
+         user_sysref_adc => sysRefCnt(7),
+         user_sysref_dac => '0',
 
          -- ADC Ports
          vin0_01_p => adcP(0),

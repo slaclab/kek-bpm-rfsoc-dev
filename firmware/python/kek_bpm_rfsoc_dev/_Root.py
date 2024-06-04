@@ -51,6 +51,7 @@ class Root(pr.Root):
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
         self.boardType = boardType[0].upper() + boardType[1:].lower()
+        self.MuxSelect = 0
 
         # Check for DDC bypass mode
         if (bpmFreqMHz == 0):
@@ -256,6 +257,17 @@ class Root(pr.Root):
                 for i in range(4):
                     self.ampFaultProc[i].Updated.set(0)
                 self.bpmFaultProc.Updated.set(0)
+
+            # Check if MuxSelect changed
+            if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):
+                self.MuxSelect = self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()
+                for i in range(4):
+                    if (self.MuxSelect == 0):
+                        self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
+                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
+                    else:
+                        self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
+                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
 
         self.add(pr.LocalVariable(
             name         = 'GetFaultEventStatus',

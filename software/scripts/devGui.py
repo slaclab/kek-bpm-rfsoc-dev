@@ -48,7 +48,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--bpmFreqMHz",
         type     = int,
-        required = True,
+        required = False,
+        default  = 0,
         help     = "BPM ringing frequency (in units of MHz)",
     )
 
