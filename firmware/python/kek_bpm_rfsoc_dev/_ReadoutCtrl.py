@@ -245,6 +245,7 @@ class ReadoutCtrl(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
+
             name         = 'MuxSelect',
             description  = 'Select raw or down sampled ADC for the ring buffer',
             offset       = 0x28,
