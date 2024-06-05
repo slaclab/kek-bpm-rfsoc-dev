@@ -101,11 +101,11 @@ class Root(pr.Root):
 
         self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8)) for i in range(4)]
 
-        self.bpmDispBuff  = stream.TcpClient(ip,10000+2*16)
-        self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
+        # self.bpmDispBuff  = stream.TcpClient(ip,10000+2*16)
+        # self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
 
         self.ampFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(4)]
-        self.bpmFaultWithHdr = rfsoc.PrependLocalTime()
+        # self.bpmFaultWithHdr = rfsoc.PrependLocalTime()
 
         ##################################################################################
 
@@ -115,8 +115,8 @@ class Root(pr.Root):
 
         self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*self.faultDepth,SSR=self.SSR,faultDisp=True) for i in range(4)]
 
-        self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
-        self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
+        # self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
+        # self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
 
         ##################################################################################
 
@@ -136,14 +136,14 @@ class Root(pr.Root):
             self.ampFaultBuff[i] >> self.ampFaultProc[i]
             self.add(self.ampFaultProc[i])
 
-        # PosCalc Live Display Path
-        self.bpmDispBuff >> self.bpmDispProc
-        self.add(self.bpmDispProc)
+        # # PosCalc Live Display Path
+        # self.bpmDispBuff >> self.bpmDispProc
+        # self.add(self.bpmDispProc)
 
-        # PosCalc Fault Display Path
-        self.bpmFaultBuff  >> self.bpmFaultWithHdr >> self.dataWriter.getChannel(24)
-        self.bpmFaultBuff >> self.bpmFaultProc
-        self.add(self.bpmFaultProc)
+        # # PosCalc Fault Display Path
+        # self.bpmFaultBuff  >> self.bpmFaultWithHdr >> self.dataWriter.getChannel(24)
+        # self.bpmFaultBuff >> self.bpmFaultProc
+        # self.add(self.bpmFaultProc)
 
         ##################################################################################
         ##                              Register Access
@@ -232,7 +232,6 @@ class Root(pr.Root):
             newData = True
             for i in range(4):
                 newData = newData and self.ampFaultProc[i].Updated.get()
-            newData = newData and self.bpmFaultProc.Updated.get()
 
             # Check if this mode is enable
             if (self.EnableAutoReopen.get()) and newData:
@@ -256,7 +255,6 @@ class Root(pr.Root):
                 # Reset the flags
                 for i in range(4):
                     self.ampFaultProc[i].Updated.set(0)
-                self.bpmFaultProc.Updated.set(0)
 
             # Check if MuxSelect changed
             if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):

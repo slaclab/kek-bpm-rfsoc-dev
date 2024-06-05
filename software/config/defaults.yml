@@ -11,31 +11,31 @@ Root:
         Continuous: 0x1 # Continuous mode
         CsvFilePath: 'DacPatterns/16nsSpacingNoGap.csv'
       ########################################################
-      PosCalc:
-        ScratchPad: 0xBABECAFE
-        AmpGainCorrect[:]: 1.0
-        ####################
-        xCoeff[0]: 0.0
-        xCoeff[1]: +2.3567E+01
-        xCoeff[2]: +2.714E-03
-        xCoeff[3]: +1.081E-02
-        xCoeff[4]: -1.289E-01
-        xCoeff[5]: +6.191E-04
-        xCoeff[6]: 0.0
-        xCoeff[7]: -3.52E-01
-        xCoeff[8]: -3.068E+01
-        xCoeff[9]: 0.0
-        ####################
-        yCoeff[0]: 0.0
-        yCoeff[1]: +2.714E-03
-        yCoeff[2]: +2.3567E+01
-        yCoeff[3]: +6.191E-04
-        yCoeff[4]: -1.289E-01
-        yCoeff[5]: +1.081E-02
-        yCoeff[6]: 0.0
-        yCoeff[7]: -3.068E+01
-        yCoeff[8]: -3.52E-01
-        yCoeff[9]: 0.0
-        ####################
-        SelectCross: Normal
+      # PosCalc:
+        # ScratchPad: 0xBABECAFE
+        # AmpGainCorrect[:]: 1.0
+        # ####################
+        # xCoeff[0]: 0.0
+        # xCoeff[1]: +2.3567E+01
+        # xCoeff[2]: +2.714E-03
+        # xCoeff[3]: +1.081E-02
+        # xCoeff[4]: -1.289E-01
+        # xCoeff[5]: +6.191E-04
+        # xCoeff[6]: 0.0
+        # xCoeff[7]: -3.52E-01
+        # xCoeff[8]: -3.068E+01
+        # xCoeff[9]: 0.0
+        # ####################
+        # yCoeff[0]: 0.0
+        # yCoeff[1]: +2.714E-03
+        # yCoeff[2]: +2.3567E+01
+        # yCoeff[3]: +6.191E-04
+        # yCoeff[4]: -1.289E-01
+        # yCoeff[5]: +1.081E-02
+        # yCoeff[6]: 0.0
+        # yCoeff[7]: -3.068E+01
+        # yCoeff[8]: -3.52E-01
+        # yCoeff[9]: 0.0
+        # ####################
+        # SelectCross: Normal
       ########################################################

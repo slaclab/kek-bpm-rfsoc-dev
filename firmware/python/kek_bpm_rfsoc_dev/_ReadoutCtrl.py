@@ -262,7 +262,7 @@ class ReadoutCtrl(pr.Device):
             name         = "FaultTrigDlyRaw",
             description  = "Sets a delay between trigger detection and stopping the ring buffer",
             offset       = 0x2C,
-            bitSize      = 15,
+            bitSize      = 24,
             mode         = "RW",
             units        = '1/254.5MHz',
         ))
