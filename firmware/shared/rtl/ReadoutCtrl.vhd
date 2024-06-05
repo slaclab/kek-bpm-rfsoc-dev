@@ -56,8 +56,8 @@ architecture rtl of ReadoutCtrl is
       faultTrigArm   : sl;
       faultTrigReady : sl;
       faultTrigDlyEn : sl;
-      faultTrigDly   : slv(14 downto 0);
-      faultDlyCnt    : slv(14 downto 0);
+      faultTrigDly   : slv(23 downto 0);
+      faultDlyCnt    : slv(23 downto 0);
       trigFaultBuf   : sl;
       setkeepArm     : sl;
       -- PMOD signals
