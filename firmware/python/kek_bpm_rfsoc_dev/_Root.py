@@ -262,10 +262,10 @@ class Root(pr.Root):
                 for i in range(4):
                     if (self.MuxSelect == 0):
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
-                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
+                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
                     else:
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
-                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
+                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
 
         self.add(pr.LocalVariable(
             name         = 'GetFaultEventStatus',
