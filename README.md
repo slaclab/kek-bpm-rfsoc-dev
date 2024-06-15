@@ -266,7 +266,7 @@ $ conda activate rogue
 
 ```bash
 $ cd kek-bpm-rfsoc-dev/software
-$ python scripts/devGui.py --ip 10.0.0.10 --boardType zcu111 --bpmFreqMHz 1000
+$ python scripts/devGui.py --ip 10.0.0.10 --boardType zcu111
 ```
 
 <!--- ######################################################## -->
