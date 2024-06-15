@@ -60,6 +60,7 @@ class Root(pr.Root):
             self.sampleRate = 4.072E+9 # Units of Hz
             self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
             self.faultDepth = 2**15
+            # self.faultDepth = 2**9 # Smaller window for development/debugging
 
         # Check for ZONE1 operation
         elif bpmFreqMHz < (3054//2):
@@ -337,9 +338,11 @@ class Root(pr.Root):
         readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
         readoutCtrl.DspRunCntrl.set(1)
 
-        # MTS Sync the RF Data Converter
-        rfdc.MtsAdcSync()
-        rfdc.MtsDacSync()
+        #############################
+        # Broken so commenting it out
+        #############################
+        # rfdc.MtsAdcSync()
+        # rfdc.MtsDacSync()
 
         # Load the Default YAML file and refresh all remote variables
         print(f'Loading path={self.defaultFile} Default Configuration File...')

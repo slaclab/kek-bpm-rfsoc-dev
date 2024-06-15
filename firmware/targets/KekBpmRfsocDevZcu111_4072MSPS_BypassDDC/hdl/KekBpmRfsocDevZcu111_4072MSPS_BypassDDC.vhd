@@ -230,7 +230,12 @@ begin
    U_App : entity work.Application
       generic map (
          TPD_G                    => TPD_G,
-         FAULT_BUFF_ADDR_WIDTH_G  => 15,  -- Able to have a bigger buffer and meet timing by not building the SsrDdc Module
+
+
+         -- FAULT_BUFF_ADDR_WIDTH_G  => 15,  -- Able to have a bigger buffer and meet timing by not building the SsrDdc Module
+         FAULT_BUFF_ADDR_WIDTH_G  => 9,  -- Smaller window for development/debugging
+
+
          FAULT_AMP_MEMORY_TYPE_G  => "ultra",
          FAULT_CALC_MEMORY_TYPE_G => "block",
          AXIL_BASE_ADDR_G         => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
