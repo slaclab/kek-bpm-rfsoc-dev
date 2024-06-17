@@ -50,6 +50,7 @@ entity RfDataConverter is
       plClkN          : in  sl;
       plSysRefP       : in  sl;
       plSysRefN       : in  sl;
+      rfdcIrq         : out  sl;
       -- ADC Interface (dspClk domain)
       dspClk          : out sl;
       dspRst          : out sl;
@@ -261,6 +262,8 @@ begin
 
    U_IpCore : RfDataConverterIpCore
       port map (
+         irq    => rfdcIrq,
+
          -- Clock Ports
          adc0_clk_p    => adcClkP(0),
          adc0_clk_n    => adcClkN(0),

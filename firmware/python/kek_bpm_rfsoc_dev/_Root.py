@@ -51,7 +51,7 @@ class Root(pr.Root):
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
         self.boardType = boardType[0].upper() + boardType[1:].lower()
-        self.MuxSelect = 0
+        self.MuxSelect = 1
 
         # Check for DDC bypass mode
         if (bpmFreqMHz == 0):
@@ -263,10 +263,10 @@ class Root(pr.Root):
                 for i in range(4):
                     if (self.MuxSelect == 0):
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
-                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
+                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
                     else:
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
-                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
+                        self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
 
         self.add(pr.LocalVariable(
             name         = 'GetFaultEventStatus',
@@ -359,7 +359,11 @@ class Root(pr.Root):
         else:
             readoutCtrl.SelectDirect.setDisp('DDC')
 
-        # Tune the amplitude delays for the firmware position calculation
-        readoutCtrl.tuneAmpDelays(self.chMask)
+        ###################################################################
+        ####### Commenting out the software delay tuning.
+        ####### The whole point of this dev branch is to get rid of this
+        ###################################################################
+        # # Tune the amplitude delays for the firmware position calculation
+        # readoutCtrl.tuneAmpDelays(self.chMask)
 
     ##################################################################################

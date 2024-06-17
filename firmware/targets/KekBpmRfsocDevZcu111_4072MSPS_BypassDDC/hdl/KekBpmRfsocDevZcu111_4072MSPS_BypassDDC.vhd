@@ -96,6 +96,8 @@ architecture top_level of KekBpmRfsocDevZcu111_4072MSPS_BypassDDC is
    signal dspDacI : Slv48Array(NUM_DAC_CH_C-1 downto 0);
    signal dspDacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0);
 
+   signal rfdcIrq         : sl;
+
 begin
 
    -----------------------
@@ -111,6 +113,7 @@ begin
          ------------------------
          --  Top Level Interfaces
          ------------------------
+         rfdcIrq         => rfdcIrq,
          -- DSP Clock and Reset Monitoring
          dspClk          => dspClk,
          dspRst          => dspRst,
@@ -191,6 +194,7 @@ begin
          TPD_G            => TPD_G,
          AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RFDC_INDEX_C).baseAddr)
       port map (
+         rfdcIrq         => rfdcIrq,
          -- RF DATA CONVERTER Ports
          adcClkP         => adcClkP,
          adcClkN         => adcClkN,
