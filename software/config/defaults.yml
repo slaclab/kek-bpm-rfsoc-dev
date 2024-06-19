@@ -4,6 +4,8 @@ Root:
       ########################################################
       ReadoutCtrl:
         EnableSoftTrig: True
+        FineDelay[:]: 0
+        CourseDelay[:]: 0 
       ########################################################
       DacSigGen:
         enable: True

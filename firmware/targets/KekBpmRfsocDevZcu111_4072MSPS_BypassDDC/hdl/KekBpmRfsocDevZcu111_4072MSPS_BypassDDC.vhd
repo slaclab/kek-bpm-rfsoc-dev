@@ -113,7 +113,7 @@ begin
          ------------------------
          --  Top Level Interfaces
          ------------------------
-         rfdcIrq         => rfdcIrq,
+--         rfdcIrq         => rfdcIrq,
          -- DSP Clock and Reset Monitoring
          dspClk          => dspClk,
          dspRst          => dspRst,
