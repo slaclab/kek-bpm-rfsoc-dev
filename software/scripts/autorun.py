@@ -12,10 +12,10 @@ class MyHandler(FileSystemEventHandler):
         elif event.src_path.endswith('.dat'):
             time.sleep(5)
             print(f"{event.src_path} has been created. Running script...")
-            subprocess.run(["python3", "makeplot.py"])  # スクリプトを実行
+            subprocess.run(["python3", "makeplot_newFW.py"])  # スクリプトを実行
 
 def main():
-    path = '../datfile/'  # 監視するディレクトリのパスを指定
+    path = '/mnt/SBOR/ZCU111/'  # 監視するディレクトリのパスを指定
     event_handler = MyHandler()
     observer = Observer()
     observer.schedule(event_handler, path, recursive=False)
@@ -23,7 +23,7 @@ def main():
 
     try:
         while True:
-            time.sleep(60)
+            time.sleep(10)
             
     except KeyboardInterrupt:
         observer.stop()
