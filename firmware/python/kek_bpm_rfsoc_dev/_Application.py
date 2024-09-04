@@ -41,7 +41,7 @@ class Application(pr.Device):
             expand      = True,
         ))
 
-        # self.add(rfsoc.PosCalc(
+        # self.add(rfsoc.AbortIssue(
             # offset = 0x06_000000,
             # expand = False,
         # ))
