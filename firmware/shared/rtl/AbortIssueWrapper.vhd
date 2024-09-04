@@ -93,7 +93,7 @@ begin
          rstIn  => dspRst,
          rstOut => dspReset);
 
-   U_poscalc : poscalc_0
+   U_abort_issue : abort_issue_0
       port map (
          -- Clock
          clk                   => dspClk,
