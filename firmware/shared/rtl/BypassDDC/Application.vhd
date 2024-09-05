@@ -226,7 +226,7 @@ begin
          validOut  => dataValid,
          muxSelect => muxSelect);
 
-   U_PosCalc : entity work.PosCalcWrapper
+   U_AbortIssue : entity work.AbortIssueWrapper
       generic map (
          TPD_G => TPD_G)
       port map (
