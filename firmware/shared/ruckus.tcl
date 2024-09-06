@@ -13,7 +13,7 @@ if { [get_ips poscalc_0] eq ""  } {
 # Load model composer .ZIP output file
 if { [get_ips abort_issue_0] eq ""  } {
    loadZipIpCore  -repo_path $::env(IP_REPO) -dir "$::DIR_PATH/model_composer/Abort_issue/netlist/ip"
-   create_ip -name poscalc -vendor SLAC -library KEK_BPM -version 1.0 -module_name abort_issue_0
+   create_ip -name abort_issue -vendor SLAC -library KEK_BPM -version 1.0 -module_name abort_issue_0
 }
 
 # Updating the impl_1 strategy

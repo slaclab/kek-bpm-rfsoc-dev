@@ -26,8 +26,8 @@ entity AbortIssueWrapper is
       -- DSP Interface
       dspClk          : in  sl;
       dspRst          : in  sl;
-      ampPeakIn       : in  Slv16Array(3 downto 0);
-      xPos            : out slv(31 downto 0);
+      ampPeakIn       : in  Slv32Array(3 downto 0);
+      xPos            : out slv(15 downto 0);
       yPos            : out slv(31 downto 0);
       charge          : out slv(31 downto 0);
       -- AXI-Lite Interface
@@ -41,32 +41,36 @@ architecture mapping of AbortIssueWrapper is
 
    component abort_issue_0
       port (
-         ain                   : in  std_logic_vector(15 downto 0);
-         bin                   : in  std_logic_vector(15 downto 0);
-         cin                   : in  std_logic_vector(15 downto 0);
-         din                   : in  std_logic_vector(15 downto 0);
-         clk                   : in  std_logic;
-         poscalc_aresetn       : in  std_logic;
-         poscalc_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
-         poscalc_s_axi_awvalid : in  std_logic;
-         poscalc_s_axi_wdata   : in  std_logic_vector(31 downto 0);
-         poscalc_s_axi_wstrb   : in  std_logic_vector(3 downto 0);
-         poscalc_s_axi_wvalid  : in  std_logic;
-         poscalc_s_axi_bready  : in  std_logic;
-         poscalc_s_axi_araddr  : in  std_logic_vector(11 downto 0);
-         poscalc_s_axi_arvalid : in  std_logic;
-         poscalc_s_axi_rready  : in  std_logic;
-         chargeout             : out std_logic_vector(31 downto 0);
-         xposout               : out std_logic_vector(31 downto 0);
-         yposout               : out std_logic_vector(31 downto 0);
-         poscalc_s_axi_awready : out std_logic;
-         poscalc_s_axi_wready  : out std_logic;
-         poscalc_s_axi_bresp   : out std_logic_vector(1 downto 0);
-         poscalc_s_axi_bvalid  : out std_logic;
-         poscalc_s_axi_arready : out std_logic;
-         poscalc_s_axi_rdata   : out std_logic_vector(31 downto 0);
-         poscalc_s_axi_rresp   : out std_logic_vector(1 downto 0);
-         poscalc_s_axi_rvalid  : out std_logic
+         dv_delta_1                : in  std_logic_vector(15 downto 0);
+         dv_delta_2                : in  std_logic_vector(15 downto 0);
+         dv_sum_1                  : in  std_logic_vector(15 downto 0);
+         dv_sum_2                  : in  std_logic_vector(15 downto 0);
+         uv_delta_1                : in  std_logic_vector(15 downto 0);
+         uv_delta_2                : in  std_logic_vector(15 downto 0);
+         uv_sum_1                  : in  std_logic_vector(15 downto 0);
+         uv_sum_2                  : in  std_logic_vector(15 downto 0);
+         clk                       : in  std_logic;
+         abort_issue_aresetn       : in  std_logic;
+         abort_issue_s_axi_awaddr  : in  std_logic_vector(11 downto 0);
+         abort_issue_s_axi_awvalid : in  std_logic;
+         abort_issue_s_axi_wdata   : in  std_logic_vector(31 downto 0);
+         abort_issue_s_axi_wstrb   : in  std_logic_vector(3 downto 0);
+         abort_issue_s_axi_wvalid  : in  std_logic;
+         abort_issue_s_axi_bready  : in  std_logic;
+         abort_issue_s_axi_araddr  : in  std_logic_vector(11 downto 0);
+         abort_issue_s_axi_arvalid : in  std_logic;
+         abort_issue_s_axi_rready  : in  std_logic;
+         abort_trigger             : out std_logic_vector(0 downto 0);
+         dv_maout                  : out std_logic_vector(31 downto 0);
+         uv_maout                  : out std_logic_vector(31 downto 0);
+         abort_issue_s_axi_awready : out std_logic;
+         abort_issue_s_axi_wready  : out std_logic;
+         abort_issue_s_axi_bresp   : out std_logic_vector(1 downto 0);
+         abort_issue_s_axi_bvalid  : out std_logic;
+         abort_issue_s_axi_arready : out std_logic;
+         abort_issue_s_axi_rdata   : out std_logic_vector(31 downto 0);
+         abort_issue_s_axi_rresp   : out std_logic_vector(1 downto 0);
+         abort_issue_s_axi_rvalid  : out std_logic
          );
    end component;
 
@@ -98,32 +102,36 @@ begin
          -- Clock
          clk                   => dspClk,
          -- Amplitude Peak Inbound Interface
-         ain                   => ampPeakIn(0),
-         bin                   => ampPeakIn(1),
-         cin                   => ampPeakIn(2),
-         din                   => ampPeakIn(3),
+         dv_delta_1                 => ampPeakIn(0)(31 downto 16),
+         dv_delta_2                 => ampPeakIn(0)(15 downto 0),
+         dv_sum_1                   => ampPeakIn(1)(31 downto 16),
+         dv_sum_2                   => ampPeakIn(1)(15 downto 0),
+         uv_delta_1                 => ampPeakIn(2)(31 downto 16),
+         uv_delta_2                 => ampPeakIn(2)(15 downto 0),
+         uv_sum_1                   => ampPeakIn(3)(31 downto 16),
+         uv_sum_2                   => ampPeakIn(3)(15 downto 0),
          -- Calculation Outbound Interface
-         xposout               => xPos,
-         yposout               => YPos,
-         chargeout             => charge,
+         abort_trigger(0)          => xPos(0),
+         dv_maout                  => YPos,
+         uv_maout                  => charge,
          -- AXI-Lite interface
-         poscalc_aresetn       => dspRstL,
-         poscalc_s_axi_awaddr  => axilWriteMaster.awaddr(11 downto 0),
-         poscalc_s_axi_awvalid => axilWriteMaster.awvalid,
-         poscalc_s_axi_awready => axilWriteSlave.awready,
-         poscalc_s_axi_wdata   => axilWriteMaster.wdata,
-         poscalc_s_axi_wstrb   => axilWriteMaster.wstrb,
-         poscalc_s_axi_wvalid  => axilWriteMaster.wvalid,
-         poscalc_s_axi_wready  => axilWriteSlave.wready,
-         poscalc_s_axi_bresp   => axilWriteSlave.bresp,
-         poscalc_s_axi_bvalid  => axilWriteSlave.bvalid,
-         poscalc_s_axi_bready  => axilWriteMaster.bready,
-         poscalc_s_axi_araddr  => axilReadMaster.araddr(11 downto 0),
-         poscalc_s_axi_arvalid => axilReadMaster.arvalid,
-         poscalc_s_axi_arready => axilReadSlave.arready,
-         poscalc_s_axi_rdata   => axilReadSlave.rdata,
-         poscalc_s_axi_rresp   => axilReadSlave.rresp,
-         poscalc_s_axi_rvalid  => axilReadSlave.rvalid,
-         poscalc_s_axi_rready  => axilReadMaster.rready);
+         abort_issue_aresetn       => dspRstL,
+         abort_issue_s_axi_awaddr  => axilWriteMaster.awaddr(11 downto 0),
+         abort_issue_s_axi_awvalid => axilWriteMaster.awvalid,
+         abort_issue_s_axi_awready => axilWriteSlave.awready,
+         abort_issue_s_axi_wdata   => axilWriteMaster.wdata,
+         abort_issue_s_axi_wstrb   => axilWriteMaster.wstrb,
+         abort_issue_s_axi_wvalid  => axilWriteMaster.wvalid,
+         abort_issue_s_axi_wready  => axilWriteSlave.wready,
+         abort_issue_s_axi_bresp   => axilWriteSlave.bresp,
+         abort_issue_s_axi_bvalid  => axilWriteSlave.bvalid,
+         abort_issue_s_axi_bready  => axilWriteMaster.bready,
+         abort_issue_s_axi_araddr  => axilReadMaster.araddr(11 downto 0),
+         abort_issue_s_axi_arvalid => axilReadMaster.arvalid,
+         abort_issue_s_axi_arready => axilReadSlave.arready,
+         abort_issue_s_axi_rdata   => axilReadSlave.rdata,
+         abort_issue_s_axi_rresp   => axilReadSlave.rresp,
+         abort_issue_s_axi_rvalid  => axilReadSlave.rvalid,
+         abort_issue_s_axi_rready  => axilReadMaster.rready);
 
 end mapping;
