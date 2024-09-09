@@ -95,10 +95,15 @@ architecture mapping of Application is
    signal courseDelay : Slv4Array(3 downto 0);
    signal muxSelect   : sl;
 
-   signal xPos       : slv(15 downto 0);
+   signal xPos       : slv(31 downto 0);
    signal yPos       : slv(31 downto 0);
+   signal xPos_2     : slv(31 downto 0);
+   signal yPos_2     : slv(31 downto 0);
+   signal xPos_3     : slv(31 downto 0);
+   signal yPos_3     : slv(31 downto 0);
    signal charge     : slv(31 downto 0);
-   signal calcResult : slv(79 downto 0);
+   signal calcResult : slv(95 downto 0);
+   signal calcResult_2: slv(95 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
@@ -237,9 +242,13 @@ begin
          ampPeakIn(1)    => amp(1)(255 downto 224),
          ampPeakIn(2)    => amp(2)(255 downto 224),
          ampPeakIn(3)    => amp(3)(255 downto 224),
-         xPos            => xPos,
-         yPos            => yPos,
-         charge          => charge,
+         MA_UV           => xPos,
+         MA_DV           => yPos,
+         Pos_UV          => xPos_2,
+         Pos_DV          => yPos_2,
+         Std_UV          => xPos_3,
+         Std_DV          => yPos_3,
+         abort_trigger   => charge,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(POSCALC_INDEX_C),
          axilReadSlave   => dspReadSlaves(POSCALC_INDEX_C),
@@ -247,6 +256,7 @@ begin
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
    calcResult <= charge & yPos & xPos;
+   calcResult_2(63 downto 0) <= ypos_2 & xPos_2;
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
@@ -356,8 +366,8 @@ begin
                14              => x"FF",
                15              => x"FF"),
             NUM_CH_G           => 1,
-            SAMPLE_PER_CYCLE_G => 5,     -- 5 = 80-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-2),
+            SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-1),
             MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -371,6 +381,7 @@ begin
             dataClk         => dspClk,
             dataRst         => dspReset,
             data0           => calcResult,
+            --data1           => calcResult_2,
             extTrigIn       => sigGenTrig(i-2),
             -- AXI-Lite Interface (axilClk domain)
             axilClk         => dspClk,

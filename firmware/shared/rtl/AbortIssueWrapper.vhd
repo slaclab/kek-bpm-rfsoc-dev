@@ -27,9 +27,13 @@ entity AbortIssueWrapper is
       dspClk          : in  sl;
       dspRst          : in  sl;
       ampPeakIn       : in  Slv32Array(3 downto 0);
-      xPos            : out slv(15 downto 0);
-      yPos            : out slv(31 downto 0);
-      charge          : out slv(31 downto 0);
+      abort_trigger   : out slv(31 downto 0);
+      MA_UV           : out slv(31 downto 0);
+      MA_DV           : out slv(31 downto 0);
+      Pos_UV          : out slv(31 downto 0);
+      Pos_DV          : out slv(31 downto 0);
+      Std_UV          : out slv(31 downto 0);
+      Std_DV          : out slv(31 downto 0);
       -- AXI-Lite Interface
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
@@ -61,8 +65,12 @@ architecture mapping of AbortIssueWrapper is
          abort_issue_s_axi_arvalid : in  std_logic;
          abort_issue_s_axi_rready  : in  std_logic;
          abort_trigger             : out std_logic_vector(0 downto 0);
-         dv_maout                  : out std_logic_vector(31 downto 0);
          uv_maout                  : out std_logic_vector(31 downto 0);
+         dv_maout                  : out std_logic_vector(31 downto 0);
+         uv_posout                 : out std_logic_vector(31 downto 0);
+         dv_posout                 : out std_logic_vector(31 downto 0);
+         uv_stdout                 : out std_logic_vector(31 downto 0);
+         dv_stdout                 : out std_logic_vector(31 downto 0);
          abort_issue_s_axi_awready : out std_logic;
          abort_issue_s_axi_wready  : out std_logic;
          abort_issue_s_axi_bresp   : out std_logic_vector(1 downto 0);
@@ -102,18 +110,22 @@ begin
          -- Clock
          clk                   => dspClk,
          -- Amplitude Peak Inbound Interface
-         dv_delta_1                 => ampPeakIn(0)(31 downto 16),
-         dv_delta_2                 => ampPeakIn(0)(15 downto 0),
-         dv_sum_1                   => ampPeakIn(1)(31 downto 16),
-         dv_sum_2                   => ampPeakIn(1)(15 downto 0),
-         uv_delta_1                 => ampPeakIn(2)(31 downto 16),
-         uv_delta_2                 => ampPeakIn(2)(15 downto 0),
-         uv_sum_1                   => ampPeakIn(3)(31 downto 16),
-         uv_sum_2                   => ampPeakIn(3)(15 downto 0),
+         dv_delta_1                => ampPeakIn(1)(31 downto 16),
+         dv_delta_2                => ampPeakIn(1)(15 downto 0),
+         dv_sum_1                  => ampPeakIn(0)(31 downto 16),
+         dv_sum_2                  => ampPeakIn(0)(15 downto 0),
+         uv_delta_1                => ampPeakIn(3)(31 downto 16),
+         uv_delta_2                => ampPeakIn(3)(15 downto 0),
+         uv_sum_1                  => ampPeakIn(2)(31 downto 16),
+         uv_sum_2                  => ampPeakIn(2)(15 downto 0),
          -- Calculation Outbound Interface
-         abort_trigger(0)          => xPos(0),
-         dv_maout                  => YPos,
-         uv_maout                  => charge,
+         abort_trigger(0)          => abort_trigger(0),
+         uv_maout                  => MA_UV,
+         dv_maout                  => MA_DV,
+         uv_posout                 => Pos_UV,
+         dv_posout                 => Pos_DV,
+         uv_stdout                 => Std_UV,
+         dv_stdout                 => Std_DV,
          -- AXI-Lite interface
          abort_issue_aresetn       => dspRstL,
          abort_issue_s_axi_awaddr  => axilWriteMaster.awaddr(11 downto 0),
