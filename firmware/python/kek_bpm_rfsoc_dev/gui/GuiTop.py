@@ -74,6 +74,9 @@ class GuiTop(Display):
         # # BPM Live Display (Tab Index=4)
         # self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmDispProc'),'BPM Live')
 
+        # BPM Live Display (Tab Index=4)
+        self.tab.addTab(guiUser.AbortDisplay(parent=None, init_channel=Channel, dispType='AbortDispProc'),'Abort Live')
+
         ######################################################################################################
 
         # AMP Fault Display (Tab Index=5)
@@ -81,6 +84,9 @@ class GuiTop(Display):
 
         # # BPM Fault Display (Tab Index=6)
         # self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmFaultProc'),'BPM Fault')
+
+        # BPM Fault Display (Tab Index=6)
+        self.tab.addTab(guiUser.AbortDisplay(parent=None, init_channel=Channel, dispType='AbortFaultProc'),'Abort Fault')
 
         ######################################################################################################
 

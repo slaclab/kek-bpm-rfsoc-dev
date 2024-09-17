@@ -95,14 +95,15 @@ architecture mapping of Application is
    signal courseDelay : Slv4Array(3 downto 0);
    signal muxSelect   : sl;
 
-   signal xPos       : slv(31 downto 0);
-   signal yPos       : slv(31 downto 0);
-   signal xPos_2     : slv(31 downto 0);
-   signal yPos_2     : slv(31 downto 0);
-   signal xPos_3     : slv(31 downto 0);
-   signal yPos_3     : slv(31 downto 0);
-   signal charge     : slv(31 downto 0);
-   signal calcResult : slv(95 downto 0);
+   signal uvPos       : slv(31 downto 0);
+   signal dvPos       : slv(31 downto 0);
+   signal uvMA        : slv(31 downto 0);
+   signal dvMA        : slv(31 downto 0);
+   signal uvSTD       : slv(31 downto 0);
+   signal dvSTD       : slv(31 downto 0);
+   signal abortFlag   : slv(31 downto 0);
+   signal dummy_sig   : slv(31 downto 0);
+   signal calcResult  : slv(95 downto 0);
    signal calcResult_2: slv(95 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
@@ -242,21 +243,22 @@ begin
          ampPeakIn(1)    => amp(1)(255 downto 224),
          ampPeakIn(2)    => amp(2)(255 downto 224),
          ampPeakIn(3)    => amp(3)(255 downto 224),
-         MA_UV           => xPos,
-         MA_DV           => yPos,
-         Pos_UV          => xPos_2,
-         Pos_DV          => yPos_2,
-         Std_UV          => xPos_3,
-         Std_DV          => yPos_3,
-         abort_trigger   => charge,
+         MA_UV           => uvMA,
+         MA_DV           => dvMA,
+         Pos_UV          => uvPos,
+         Pos_DV          => dvPos,
+         Std_UV          => uvSTD,
+         Std_DV          => dvSTD,
+         abort_trigger   => abortFlag,
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(POSCALC_INDEX_C),
          axilReadSlave   => dspReadSlaves(POSCALC_INDEX_C),
          axilWriteMaster => dspWriteMasters(POSCALC_INDEX_C),
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
-   calcResult <= charge & yPos & xPos;
-   calcResult_2(63 downto 0) <= ypos_2 & xPos_2;
+   calcResult <= dvMA & uvMA & abortFlag;
+   calcResult_2 <= dvPos & uvPos & dummy_sig;
+
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
@@ -350,7 +352,7 @@ begin
             TPD_G              => TPD_G,
             TDEST_ROUTES_G     => (
                0               => toSlv(8*i+0, 8),
-               1               => x"FF",
+               1               => toSlv(8*i+1, 8),
                2               => x"FF",
                3               => x"FF",
                4               => x"FF",
@@ -365,7 +367,7 @@ begin
                13              => x"FF",
                14              => x"FF",
                15              => x"FF"),
-            NUM_CH_G           => 1,
+            NUM_CH_G           => 2,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
             RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-1),
             MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
@@ -381,7 +383,7 @@ begin
             dataClk         => dspClk,
             dataRst         => dspReset,
             data0           => calcResult,
-            --data1           => calcResult_2,
+            data1           => calcResult_2,
             extTrigIn       => sigGenTrig(i-2),
             -- AXI-Lite Interface (axilClk domain)
             axilClk         => dspClk,

@@ -104,8 +104,16 @@ class Root(pr.Root):
         # self.bpmDispBuff  = stream.TcpClient(ip,10000+2*16)
         # self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
 
+        #--------Abort issue--------#
+        self.abortDispBuff  = [stream.TcpClient(ip,10000+2*(16+i)) for i in range(2)]
+        self.abortFaultBuff = [stream.TcpClient(ip,10000+2*(24+i)) for i in range(2)]
+        #---------------------------#
+
         self.ampFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(4)]
         # self.bpmFaultWithHdr = rfsoc.PrependLocalTime()
+        #--------Abort issue--------#
+        self.abortFaultWithHdr = rfsoc.PrependLocalTime()
+        #---------------------------#
 
         ##################################################################################
 
@@ -117,6 +125,11 @@ class Root(pr.Root):
 
         # self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
         # self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
+
+	#--------Abort issue--------#
+        self.abortDispProc  = [rfsoc.AbortIssueProcessor(name=f'AbortDispProc[{i}]',maxSize=2**9) for i in range(2)]
+        self.abortFaultProc = [rfsoc.AbortIssueProcessor(name=f'AbortFaultProc[{i}]',maxSize=2**9) for i in range(2)]
+	#---------------------------#
 
         ##################################################################################
 
@@ -144,6 +157,20 @@ class Root(pr.Root):
         # self.bpmFaultBuff  >> self.bpmFaultWithHdr >> self.dataWriter.getChannel(24)
         # self.bpmFaultBuff >> self.bpmFaultProc
         # self.add(self.bpmFaultProc)
+
+        #--------Abort issue--------#
+        for i in range(2):
+
+            #AbortIssue Live Display Path
+            self.abortDispBuff[i] >> self.abortDispProc[i]
+            self.add(self.abortDispProc[i])
+
+            #AbortIssue Fault Display Path
+            self.abortFaultBuff[i] >> self.abortFaultWithHdr >> self.dataWriter.getChannel(24+i)
+            self.abortFaultBuff[i] >> self.abortFaultProc[i]
+            self.add(self.abortFaultProc[i])
+
+        #---------------------------#
 
         ##################################################################################
         ##                              Register Access
