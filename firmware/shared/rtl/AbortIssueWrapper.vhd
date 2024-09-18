@@ -119,7 +119,7 @@ begin
          uv_sum_1                  => ampPeakIn(2)(31 downto 16),
          uv_sum_2                  => ampPeakIn(2)(15 downto 0),
          -- Calculation Outbound Interface
-         abort_trigger(0)          => abort_trigger(0),
+         abort_trigger(0)          => abort_trigger(30),--This is 2 in float32
          uv_maout                  => MA_UV,
          dv_maout                  => MA_DV,
          uv_posout                 => Pos_UV,

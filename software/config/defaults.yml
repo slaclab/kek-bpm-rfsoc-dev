@@ -39,3 +39,6 @@ Root:
         # ####################
         # SelectCross: Normal
       ########################################################
+      AbortIssue:
+        ScratchPad: 0xBABECAFE
+        MAReset: 'Reset'

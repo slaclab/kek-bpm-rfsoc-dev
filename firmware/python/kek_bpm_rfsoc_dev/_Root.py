@@ -105,8 +105,8 @@ class Root(pr.Root):
         # self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
 
         #--------Abort issue--------#
-        self.abortDispBuff  = [stream.TcpClient(ip,10000+2*(16+i)) for i in range(2)]
-        self.abortFaultBuff = [stream.TcpClient(ip,10000+2*(24+i)) for i in range(2)]
+        self.abortDispBuff  = [stream.TcpClient(ip,10000+2*(16+i)) for i in range(3)]
+        self.abortFaultBuff = [stream.TcpClient(ip,10000+2*(24+i)) for i in range(3)]
         #---------------------------#
 
         self.ampFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(4)]
@@ -127,8 +127,8 @@ class Root(pr.Root):
         # self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
 
 	#--------Abort issue--------#
-        self.abortDispProc  = [rfsoc.AbortIssueProcessor(name=f'AbortDispProc[{i}]',maxSize=2**9) for i in range(2)]
-        self.abortFaultProc = [rfsoc.AbortIssueProcessor(name=f'AbortFaultProc[{i}]',maxSize=2**9) for i in range(2)]
+        self.abortDispProc  = [rfsoc.AbortIssueProcessor(name=f'AbortDispProc[{i}]',maxSize=2**9) for i in range(3)]
+        self.abortFaultProc = [rfsoc.AbortIssueProcessor(name=f'AbortFaultProc[{i}]',maxSize=self.faultDepth//4) for i in range(3)]
 	#---------------------------#
 
         ##################################################################################
@@ -159,7 +159,7 @@ class Root(pr.Root):
         # self.add(self.bpmFaultProc)
 
         #--------Abort issue--------#
-        for i in range(2):
+        for i in range(3):
 
             #AbortIssue Live Display Path
             self.abortDispBuff[i] >> self.abortDispProc[i]

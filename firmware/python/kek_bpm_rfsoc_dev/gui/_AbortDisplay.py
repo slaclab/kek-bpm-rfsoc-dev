@@ -25,7 +25,7 @@ class AbortDisplay(PyDMFrame):
         self._node     = None
         self._dispType = dispType
         self.color     = ["white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink","white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink"]
-        self.path      = [f'{self.channel}.{self._dispType}[{i}]' for i in range(2)]
+        self.path      = [f'{self.channel}.{self._dispType}[{i}]' for i in range(3)]
 
     # Reset the auto-ranging
     def resetScales(self):
@@ -46,7 +46,7 @@ class AbortDisplay(PyDMFrame):
 
         #-----------------------------------------------------------------------------
 
-        gb = QGroupBox('UV Position - white, DV Position - red, UV MA - yellow, DV MA - turquoise, abort Flag - magenta')
+        gb = QGroupBox('UV Position - white, DV Position - red, UV MA - yellow, DV MA - turquoise, UV STD - foresrgreen, DV STD - deeppink, abort Flag - magenta')
         vb.addWidget(gb)
 
         fl = QFormLayout()
@@ -86,6 +86,22 @@ class AbortDisplay(PyDMFrame):
             x_channel  = f'{self.path[0]}.Time',
             y_channel  = f'{self.path[0]}.MovingAverage_DV',
             color      = 'turquoise',
+            symbol     = 'o',
+            symbolSize = 3,
+        )
+        self.posPlot.addChannel(
+            name       = 'Position',
+            x_channel  = f'{self.path[2]}.Time',
+            y_channel  = f'{self.path[2]}.StandardDeviation_UV',
+            color      = 'forestgreen',
+            symbol     = 'o',
+            symbolSize = 3,
+        )
+        self.posPlot.addChannel(
+            name       = 'Position',
+            x_channel  = f'{self.path[2]}.Time',
+            y_channel  = f'{self.path[2]}.StandardDeviation_DV',
+            color      = 'deeppink',
             symbol     = 'o',
             symbolSize = 3,
         )

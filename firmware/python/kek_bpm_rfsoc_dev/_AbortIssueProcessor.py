@@ -72,6 +72,22 @@ class AbortIssueProcessor(pr.DataReceiver):
          ))
 
         self.add(pr.LocalVariable(
+             name        = 'StandardDeviation_UV',
+             description = 'Data Frame Container',
+             typeStr     = 'Float[np]',
+             value       = np.zeros(shape=self._maxSize, dtype=np.float32, order='C'),
+             hidden      = True,
+         ))
+
+        self.add(pr.LocalVariable(
+             name        = 'StandardDeviation_DV',
+             description = 'Data Frame Container',
+             typeStr     = 'Float[np]',
+             value       = np.zeros(shape=self._maxSize, dtype=np.float32, order='C'),
+             hidden      = True,
+         ))
+
+        self.add(pr.LocalVariable(
              name        = 'AbortFlag',
              description = 'Data Frame Container',
              typeStr     = 'Float[np]',
@@ -107,10 +123,6 @@ class AbortIssueProcessor(pr.DataReceiver):
                     self.AbortFlag.value()[:] = data[0:(self._maxSize*3)+0:3]
                     self.MovingAverage_UV.value()[:] = data[1:(self._maxSize*3)+1:3]
                     self.MovingAverage_DV.value()[:] = data[2:(self._maxSize*3)+2:3]
-                    print('UV')
-                    print(self.MovingAverage_UV.value())
-                    print('DV')
-                    print(self.MovingAverage_DV.value())
 
                     self.writeAndVerifyBlocks(force=True, variable=self.AbortFlag)
                     self.writeAndVerifyBlocks(force=True, variable=self.MovingAverage_UV)
@@ -127,5 +139,17 @@ class AbortIssueProcessor(pr.DataReceiver):
                     self.writeAndVerifyBlocks(force=True, variable=self.Dummy)
                     self.writeAndVerifyBlocks(force=True, variable=self.Position_UV)
                     self.writeAndVerifyBlocks(force=True, variable=self.Position_DV)
+
+            elif self.name in ['AbortDispProc[2]','AbortFaultProc[2]']:
+                with self.Dummy.lock, self.StandardDeviation_UV.lock, self.StandardDeviation_DV.lock:
+
+                    # NumPy Array Slicing - [start:end:step]
+                    self.Dummy.value()[:] = data[0:(self._maxSize*3)+0:3]
+                    self.StandardDeviation_UV.value()[:] = data[1:(self._maxSize*3)+1:3]
+                    self.StandardDeviation_DV.value()[:] = data[2:(self._maxSize*3)+2:3]
+
+                    self.writeAndVerifyBlocks(force=True, variable=self.Dummy)
+                    self.writeAndVerifyBlocks(force=True, variable=self.StandardDeviation_UV)
+                    self.writeAndVerifyBlocks(force=True, variable=self.StandardDeviation_DV)
 
             self.NewDataReady.set(True)

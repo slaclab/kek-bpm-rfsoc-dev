@@ -33,9 +33,9 @@ class AbortIssue(pr.Device):
             hidden       = True,
         ))
 
-        #define ABORTISSUE_CHARGE_THRESHOLD 0x500/**< charge_threshold */
+        #define ABORTISSUE_CHARGE_THRESHOLD_UV 0x500/**< charge_threshold_uv */
         self.add(pr.RemoteVariable(
-            name         = 'ChargeThreshold',
+            name         = 'ChargeThreshold_UV',
             description  = 'Buckets whose charge exceeds this ADC count are considered bunches',
             offset       = 0x500,
             bitSize      = 32,
@@ -44,10 +44,10 @@ class AbortIssue(pr.Device):
             mode         = 'RW',
         ))
 
-        #define ABORTISSUE_ABORT_THRESHOLD 0x504/**< abort_threshold */
+        #define ABORTISSUE_CHARGE_THRESHOLD_DV 0x504/**< charge_threshold_dv */
         self.add(pr.RemoteVariable(
-            name         = 'AbortThreshold',
-            description  = 'Triggers when the moving average exceeds x times the moving standard deviation',
+            name         = 'ChargeThreshold_DV',
+            description  = 'Buckets whose charge exceeds this ADC count are considered bunches',
             offset       = 0x504,
             bitSize      = 32,
             bitOffset    = 0,
@@ -55,15 +55,39 @@ class AbortIssue(pr.Device):
             mode         = 'RW',
         ))
 
-        #define ABORTISSUE_ABORT_ON 0x508/**< abort_on */
+        #define ABORTISSUE_ABORT_THRESHOLD 0x508/**< abort_threshold */
+        self.add(pr.RemoteVariable(
+            name         = 'AbortThreshold',
+            description  = 'Triggers when the moving average exceeds x times the moving standard deviation',
+            offset       = 0x508,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            mode         = 'RW',
+        ))
+
+        #define ABORTISSUE_ABORT_ON 0x50C/**< abort_on */
         self.add(pr.RemoteVariable(
             name         = 'AbortON',
             description  = 'When this is 1, the abort notification system is turned on',
-            offset       = 0x508,
+            offset       = 0x50C,
             bitSize      = 1,
             mode         = 'RW',
             enum        = {
                 0x0: 'Abort OFF',
                 0x1: 'Abort ON',
+            },
+        ))
+
+        #define ABORTISSUE_MA_RESET 0x510/**< ma_reset */
+        self.add(pr.RemoteVariable(
+            name         = 'MAReset',
+            description  = 'While this is set to 1, 0 is input to the FIFO and the MA will be reset',
+            offset       = 0x510,
+            bitSize      = 1,
+            mode         = 'RW',
+            enum        = {
+                0x0: 'Running',
+                0x1: 'Reset',
             },
         ))

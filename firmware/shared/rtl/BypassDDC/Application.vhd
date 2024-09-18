@@ -105,6 +105,7 @@ architecture mapping of Application is
    signal dummy_sig   : slv(31 downto 0);
    signal calcResult  : slv(95 downto 0);
    signal calcResult_2: slv(95 downto 0);
+   signal calcResult_3: slv(95 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
@@ -256,8 +257,9 @@ begin
          axilWriteMaster => dspWriteMasters(POSCALC_INDEX_C),
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
-   calcResult <= dvMA & uvMA & abortFlag;
+   calcResult   <= dvMA & uvMA & abortFlag;
    calcResult_2 <= dvPos & uvPos & dummy_sig;
+   calcResult_3 <= dvSTD & uvSTD & dummy_sig;
 
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
@@ -353,7 +355,7 @@ begin
             TDEST_ROUTES_G     => (
                0               => toSlv(8*i+0, 8),
                1               => toSlv(8*i+1, 8),
-               2               => x"FF",
+               2               => toSlv(8*i+2, 8),
                3               => x"FF",
                4               => x"FF",
                5               => x"FF",
@@ -367,9 +369,9 @@ begin
                13              => x"FF",
                14              => x"FF",
                15              => x"FF"),
-            NUM_CH_G           => 2,
+            NUM_CH_G           => 3,
             SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-1),
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-2),
             MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -384,6 +386,7 @@ begin
             dataRst         => dspReset,
             data0           => calcResult,
             data1           => calcResult_2,
+            data2           => calcResult_3,
             extTrigIn       => sigGenTrig(i-2),
             -- AXI-Lite Interface (axilClk domain)
             axilClk         => dspClk,
