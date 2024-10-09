@@ -41,6 +41,7 @@ entity ReadoutCtrl is
       courseDelay     : out   Slv4Array(3 downto 0);
       selectdirect    : out   sl;
       muxSelect       : out   sl;
+      abortTrig       : in    sl;
       -- AXI-Lite Interface
       axilReadMaster  : in    AxiLiteReadMasterType;
       axilReadSlave   : out   AxiLiteReadSlaveType;
@@ -109,7 +110,7 @@ architecture rtl of ReadoutCtrl is
 
 begin
 
-   comb : process (axilReadMaster, axilWriteMaster, dspRst, pmod, r) is
+   comb : process (axilReadMaster, axilWriteMaster, dspRst, pmod, r, abortTrig) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
       variable pmodIn : sl;
@@ -181,7 +182,7 @@ begin
          v.faultTrigReady := '1';
 
       -- Check for hardware fault event
-      elsif (r.faultTrigReady = '1') and (r.pmodIn = '1') then
+      elsif (r.faultTrigReady = '1') and ((r.pmodIn = '1') or (abortTrig = '1')) then
 
          -- Clear the flag
          v.faultTrigReady := '0';

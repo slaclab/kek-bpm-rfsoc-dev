@@ -278,6 +278,7 @@ begin
          fineDelay       => fineDelay,
          courseDelay     => courseDelay,
          muxSelect       => muxSelect,
+         abortTrig       => abortFlag(30),  
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(SW_TRIG_INDEX_C),
          axilReadSlave   => dspReadSlaves(SW_TRIG_INDEX_C),

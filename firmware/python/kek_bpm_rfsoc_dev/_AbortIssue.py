@@ -91,3 +91,23 @@ class AbortIssue(pr.Device):
                 0x1: 'Reset',
             },
         ))
+
+        #define ABORTISSUE_STORED_THRESHOLD 0x514/**< stored_threshold */
+        self.add(pr.RemoteVariable(
+            name         = 'Stored Threshold',
+            description  = 'When charge of all bunches in one turn exceeds this number, abort system is on',
+            offset       = 0x514,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            mode         = 'RW',
+        ))
+
+        #define ABORTISSUE_ABORT_PREPARED 0x518/**< abort_prepared */
+        self.add(pr.RemoteVariable(
+            name         = 'Abort Prepared',
+            description  = 'When this is 1, AbortOn and Beam is stored',
+            offset       = 0x518,
+            bitSize      = 1,
+            mode         = 'RO',
+        ))

@@ -112,7 +112,7 @@ class Root(pr.Root):
         self.ampFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(4)]
         # self.bpmFaultWithHdr = rfsoc.PrependLocalTime()
         #--------Abort issue--------#
-        self.abortFaultWithHdr = rfsoc.PrependLocalTime()
+        self.abortFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(3)]
         #---------------------------#
 
         ##################################################################################
@@ -166,7 +166,7 @@ class Root(pr.Root):
             self.add(self.abortDispProc[i])
 
             #AbortIssue Fault Display Path
-            self.abortFaultBuff[i] >> self.abortFaultWithHdr >> self.dataWriter.getChannel(24+i)
+            self.abortFaultBuff[i] >> self.abortFaultWithHdr[i] >> self.dataWriter.getChannel(24+i)
             self.abortFaultBuff[i] >> self.abortFaultProc[i]
             self.add(self.abortFaultProc[i])
 
