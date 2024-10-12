@@ -111,3 +111,36 @@ class AbortIssue(pr.Device):
             bitSize      = 1,
             mode         = 'RO',
         ))
+
+        #define INJECTIONVETO_THRESHOLD 0x51C/**< InjectionVeto_threshold */
+        self.add(pr.RemoteVariable(
+            name         = 'InjectionVeto Threshold',
+            description  = 'Injection Veto threshold is this number multiplied by STD',
+            offset       = 0x51C,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            mode         = 'RW',
+        ))
+
+        #define POSITION_THRESHOLD_UV 0x520/**< Position_threshold_UV */
+        self.add(pr.RemoteVariable(
+            name         = 'Position Threshold UV',
+            description  = 'Bunch whose position exceeds this number excluded',
+            offset       = 0x520,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            mode         = 'RW',
+        ))
+
+        #define POSITION_THRESHOLD_DV 0x524/**< Position_threshold_DV */
+        self.add(pr.RemoteVariable(
+            name         = 'Position Threshold DV',
+            description  = 'Bunch whose position exceeds this number excluded',
+            offset       = 0x524,
+            bitSize      = 32,
+            bitOffset    = 0,
+            base         = pr.Float,
+            mode         = 'RW',
+        ))

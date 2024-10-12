@@ -73,6 +73,7 @@ architecture mapping of AbortIssueWrapper is
          dv_stdout                 : out std_logic_vector(31 downto 0);
          uv_validout               : out std_logic_vector(0 downto 0);
          dv_validout               : out std_logic_vector(0 downto 0);
+         injection_veto            : out std_logic_vector(0 downto 0);
          abort_issue_s_axi_awready : out std_logic;
          abort_issue_s_axi_wready  : out std_logic;
          abort_issue_s_axi_bresp   : out std_logic_vector(1 downto 0);
@@ -130,6 +131,7 @@ begin
          dv_stdout                 => Std_DV,
          uv_validout(0)            => abort_trigger(0),
          dv_validout(0)            => abort_trigger(1),
+         injection_veto(0)         => abort_trigger(2),
          -- AXI-Lite interface
          abort_issue_aresetn       => dspRstL,
          abort_issue_s_axi_awaddr  => axilWriteMaster.awaddr(11 downto 0),
