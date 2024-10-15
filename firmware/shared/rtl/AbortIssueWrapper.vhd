@@ -27,13 +27,13 @@ entity AbortIssueWrapper is
       dspClk          : in  sl;
       dspRst          : in  sl;
       ampPeakIn       : in  Slv32Array(3 downto 0);
-      abort_trigger   : out slv(31 downto 0);
-      MA_UV           : out slv(31 downto 0);
-      MA_DV           : out slv(31 downto 0);
-      Pos_UV          : out slv(31 downto 0);
-      Pos_DV          : out slv(31 downto 0);
-      Std_UV          : out slv(31 downto 0);
-      Std_DV          : out slv(31 downto 0);
+      abort_trigger   : out slv(15 downto 0);
+      MA_UV           : out slv(15 downto 0);
+      MA_DV           : out slv(15 downto 0);
+      Pos_UV          : out slv(15 downto 0);
+      Pos_DV          : out slv(15 downto 0);
+      Std_UV          : out slv(15 downto 0);
+      Std_DV          : out slv(15 downto 0);
       -- AXI-Lite Interface
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
@@ -65,12 +65,12 @@ architecture mapping of AbortIssueWrapper is
          abort_issue_s_axi_arvalid : in  std_logic;
          abort_issue_s_axi_rready  : in  std_logic;
          abort_trigger             : out std_logic_vector(0 downto 0);
-         uv_maout                  : out std_logic_vector(31 downto 0);
-         dv_maout                  : out std_logic_vector(31 downto 0);
-         uv_posout                 : out std_logic_vector(31 downto 0);
-         dv_posout                 : out std_logic_vector(31 downto 0);
-         uv_stdout                 : out std_logic_vector(31 downto 0);
-         dv_stdout                 : out std_logic_vector(31 downto 0);
+         uv_maout                  : out std_logic_vector(15 downto 0);
+         dv_maout                  : out std_logic_vector(15 downto 0);
+         uv_posout                 : out std_logic_vector(15 downto 0);
+         dv_posout                 : out std_logic_vector(15 downto 0);
+         uv_stdout                 : out std_logic_vector(15 downto 0);
+         dv_stdout                 : out std_logic_vector(15 downto 0);
          uv_validout               : out std_logic_vector(0 downto 0);
          dv_validout               : out std_logic_vector(0 downto 0);
          injection_veto            : out std_logic_vector(0 downto 0);
@@ -122,7 +122,7 @@ begin
          uv_sum_1                  => ampPeakIn(2)(31 downto 16),
          uv_sum_2                  => ampPeakIn(2)(15 downto 0),
          -- Calculation Outbound Interface
-         abort_trigger(0)          => abort_trigger(30),--This is 2 in float32
+         abort_trigger(0)          => abort_trigger(14),--This is 2 in float16
          uv_maout                  => MA_UV,
          dv_maout                  => MA_DV,
          uv_posout                 => Pos_UV,

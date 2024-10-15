@@ -25,7 +25,7 @@ class AbortDisplay(PyDMFrame):
         self._node     = None
         self._dispType = dispType
         self.color     = ["white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink","white","red", "dodgerblue","forestgreen","yellow","magenta","turquoise","deeppink"]
-        self.path      = [f'{self.channel}.{self._dispType}[{i}]' for i in range(3)]
+        self.path      = [f'{self.channel}.{self._dispType}[{i}]' for i in range(7)]
 
     # Reset the auto-ranging
     def resetScales(self):
@@ -59,8 +59,8 @@ class AbortDisplay(PyDMFrame):
         self.posPlot.setLabel("bottom", text='Time (ns)')
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[1]}.Time',
-            y_channel  = f'{self.path[1]}.Position_UV',
+            x_channel  = f'{self.path[0]}.Time',
+            y_channel  = f'{self.path[0]}.Position_UV',
             color      = 'white',
             symbol     = 'o',
             symbolSize = 3,
@@ -75,40 +75,40 @@ class AbortDisplay(PyDMFrame):
         )
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[0]}.Time',
-            y_channel  = f'{self.path[0]}.MovingAverage_UV',
+            x_channel  = f'{self.path[2]}.Time',
+            y_channel  = f'{self.path[2]}.MovingAverage_UV',
             color      = 'yellow',
             symbol     = 'o',
             symbolSize = 3,
         )
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[0]}.Time',
-            y_channel  = f'{self.path[0]}.MovingAverage_DV',
+            x_channel  = f'{self.path[3]}.Time',
+            y_channel  = f'{self.path[3]}.MovingAverage_DV',
             color      = 'turquoise',
             symbol     = 'o',
             symbolSize = 3,
         )
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[2]}.Time',
-            y_channel  = f'{self.path[2]}.StandardDeviation_UV',
+            x_channel  = f'{self.path[4]}.Time',
+            y_channel  = f'{self.path[4]}.StandardDeviation_UV',
             color      = 'forestgreen',
             symbol     = 'o',
             symbolSize = 3,
         )
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[2]}.Time',
-            y_channel  = f'{self.path[2]}.StandardDeviation_DV',
+            x_channel  = f'{self.path[5]}.Time',
+            y_channel  = f'{self.path[5]}.StandardDeviation_DV',
             color      = 'deeppink',
             symbol     = 'o',
             symbolSize = 3,
         )
         self.posPlot.addChannel(
             name       = 'Position',
-            x_channel  = f'{self.path[0]}.Time',
-            y_channel  = f'{self.path[0]}.AbortFlag',
+            x_channel  = f'{self.path[6]}.Time',
+            y_channel  = f'{self.path[6]}.AbortFlag',
             color      = 'magenta',
             symbol     = 'o',
             symbolSize = 3,

@@ -95,17 +95,18 @@ architecture mapping of Application is
    signal courseDelay : Slv4Array(3 downto 0);
    signal muxSelect   : sl;
 
-   signal uvPos       : slv(31 downto 0);
-   signal dvPos       : slv(31 downto 0);
-   signal uvMA        : slv(31 downto 0);
-   signal dvMA        : slv(31 downto 0);
-   signal uvSTD       : slv(31 downto 0);
-   signal dvSTD       : slv(31 downto 0);
-   signal abortFlag   : slv(31 downto 0);
-   signal dummy_sig   : slv(31 downto 0);
-   signal calcResult  : slv(95 downto 0);
-   signal calcResult_2: slv(95 downto 0);
-   signal calcResult_3: slv(95 downto 0);
+   signal uvPos       : slv(15 downto 0);
+   signal dvPos       : slv(15 downto 0);
+   signal uvMA        : slv(15 downto 0);
+   signal dvMA        : slv(15 downto 0);
+   signal uvSTD       : slv(15 downto 0);
+   signal dvSTD       : slv(15 downto 0);
+   signal abortFlag   : slv(15 downto 0);
+   signal dummy_sig   : slv(15 downto 0);
+   signal calcResult  : slv(31 downto 0);
+   signal calcResult_2: slv(31 downto 0);
+   signal calcResult_3: slv(31 downto 0);
+   signal calcResult_4: slv(31 downto 0);
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
@@ -257,9 +258,10 @@ begin
          axilWriteMaster => dspWriteMasters(POSCALC_INDEX_C),
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
-   calcResult   <= dvMA & uvMA & abortFlag;
-   calcResult_2 <= dvPos & uvPos & dummy_sig;
-   calcResult_3 <= dvSTD & uvSTD & dummy_sig;
+   --calcResult   <= dvMA & uvMA;
+   --calcResult_2 <= dvPos & uvPos;
+   --calcResult_3 <= dvSTD & uvSTD;
+   --calcResult_4 <= abortFlag & dummy_sig;
 
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
@@ -278,7 +280,7 @@ begin
          fineDelay       => fineDelay,
          courseDelay     => courseDelay,
          muxSelect       => muxSelect,
-         abortTrig       => abortFlag(30),  
+         abortTrig       => abortFlag(14),  
          -- AXI-Lite Interface
          axilReadMaster  => dspReadMasters(SW_TRIG_INDEX_C),
          axilReadSlave   => dspReadSlaves(SW_TRIG_INDEX_C),
@@ -357,10 +359,10 @@ begin
                0               => toSlv(8*i+0, 8),
                1               => toSlv(8*i+1, 8),
                2               => toSlv(8*i+2, 8),
-               3               => x"FF",
-               4               => x"FF",
-               5               => x"FF",
-               6               => x"FF",
+               3               => toSlv(8*i+3, 8),
+               4               => toSlv(8*i+4, 8),
+               5               => toSlv(8*i+5, 8),
+               6               => toSlv(8*i+6, 8),
                7               => x"FF",
                8               => x"FF",
                9               => x"FF",
@@ -370,9 +372,9 @@ begin
                13              => x"FF",
                14              => x"FF",
                15              => x"FF"),
-            NUM_CH_G           => 3,
-            SAMPLE_PER_CYCLE_G => 6,     -- 6 = 96-bit/(16b per sample)
-            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G-2),
+            NUM_CH_G           => 7,
+            SAMPLE_PER_CYCLE_G => 1,     -- 1 = 16-bit/(16b per sample)
+            RAM_ADDR_WIDTH_G   => ite(i = 2, 9, FAULT_BUFF_ADDR_WIDTH_G),
             MEMORY_TYPE_G      => ite(i = 2, "block", FAULT_AMP_MEMORY_TYPE_G),
             COMMON_CLK_G       => true,  -- true if dataClk=axilClk
             AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+i).baseAddr)
@@ -385,9 +387,13 @@ begin
             -- DATA Interface (dataClk domain)
             dataClk         => dspClk,
             dataRst         => dspReset,
-            data0           => calcResult,
-            data1           => calcResult_2,
-            data2           => calcResult_3,
+            data0           => uvPos,
+            data1           => dvPos,
+            data2           => uvMA,
+            data3           => dvMA,
+            data4           => uvSTD,
+            data5           => dvSTD,
+            data6           => abortFlag,
             extTrigIn       => sigGenTrig(i-2),
             -- AXI-Lite Interface (axilClk domain)
             axilClk         => dspClk,
@@ -398,6 +404,7 @@ begin
             axilWriteSlave  => dspWriteSlaves(RING_INDEX_C+i));
 
    end generate GEN_BUFFER_B;
+   
 
    U_Mux : entity surf.AxiStreamMux
       generic map (
