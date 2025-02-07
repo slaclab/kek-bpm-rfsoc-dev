@@ -28,7 +28,7 @@ import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
 import axi_soc_ultra_plus_core as soc_core
 
-rogue.Version.minVersion('6.1.1')
+rogue.Version.minVersion('6.4.4')
 
 class Root(pr.Root):
     def __init__(self,
@@ -158,9 +158,12 @@ class Root(pr.Root):
 
         # Add RfSoC4x2 PS hardware control
         if (self.boardType == 'Rfsoc4x2'):
+            self.expectedHardware = 'RealDigitalRfSoC4x2'
             self.add(rfsoc_hw.Hardware(
                 memBase    = self.memMap,
             ))
+        else:
+            self.expectedHardware = f'Xilinx{self.boardType}'
 
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
@@ -294,8 +297,8 @@ class Root(pr.Root):
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Check for Expected HW Platform
-        if (self.boardType in axiVersion.HW_TYPE_C.getDisp()) != True:
-                errMsg = f'Actual.Hardware={axiVersion.HW_TYPE_C.getDisp()} != Expected.Hardware=Xilinx{self.boardType}'
+        if (self.expectedHardware in axiVersion.HW_TYPE_C.getDisp()) != True:
+                errMsg = f'Actual.Hardware={axiVersion.HW_TYPE_C.getDisp()} != Expected.Hardware={self.expectedHardware}'
                 click.secho(errMsg, bg='red')
                 self.stop()
                 raise ValueError(errMsg)

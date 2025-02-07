@@ -9,7 +9,8 @@
 - Model Composer Licnese (add on to Vivado)
   - Either floating (EF-MATSIM-ADDON-FL) or node locked (EF-MATSIM-ADDON-NL)
 - Matlab License (R2021a)
-- Petalinux (v2022.2)
+- Petalinux (v2024.2)
+- rogue (v6.4.4)
 
 <!--- ######################################################## -->
 
@@ -173,10 +174,10 @@ You can create .BIT and .XSA files for KekBpmRfsocDevZcu111_3054MSPS in the same
 ```bash
 # These setup scripts assume that you are on SLAC network
 $ source kek-bpm-rfsoc-dev/firmware/SLAC_setup.sh
-$ source /path/to/petalinux/2022.2/settings.sh
+$ source /path/to/petalinux/2024.2/settings.sh
 # in KEK
 $ source kek-bpm-rfsoc-dev/firmware/KEK_setup.sh
-$ source /path/to/petalinux/2022.2/settings.sh
+$ source /path/to/petalinux/2024.2/settings.sh
 ```
 
 3) Go to the target directory and run the `CreatePetalinuxProject.sh` script with arg pointing to path of .XSA file:
