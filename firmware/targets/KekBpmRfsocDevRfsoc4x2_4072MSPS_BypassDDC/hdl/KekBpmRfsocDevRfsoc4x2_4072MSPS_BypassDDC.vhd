@@ -26,7 +26,7 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfSoc4x2_4072MSPS_BypassDDC is
+entity KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
@@ -54,9 +54,9 @@ entity KekBpmRfSoc4x2_4072MSPS_BypassDDC is
       -- SYSMON Ports
       vPIn        : in    sl;
       vNIn        : in    sl);
-end KekBpmRfSoc4x2_4072MSPS_BypassDDC;
+end KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC;
 
-architecture top_level of KekBpmRfSoc4x2_4072MSPS_BypassDDC is
+architecture top_level of KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
