@@ -65,7 +65,7 @@ if __name__ == "__main__":
         "--boardType",
         type     = str,
         required = True,
-        help     = "Sets board type (zcu111 or zcu208)",
+        help     = "Sets board type (zcu111 or zcu208 or rfsoc4x2)",
     )
 
     # Get the arguments

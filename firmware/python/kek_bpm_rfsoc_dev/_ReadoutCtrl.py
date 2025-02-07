@@ -152,6 +152,14 @@ class ReadoutCtrl(pr.Device):
                 0x2: 'Pmod1Bit6',
                 0x3: 'Pmod1Bit7',
             }
+        elif boardType == 'Rfsoc4x2':
+            intfType = 'Sma1pps'
+            intfDict = {
+                0x0: 'irigTrig',
+                0x1: 'irigComp',
+                0x2: 'ReservedA',
+                0x3: 'ReservedB',
+            }
         else:
             intfType = 'Rfmc'
             intfDict = {

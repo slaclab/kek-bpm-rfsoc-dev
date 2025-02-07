@@ -34,8 +34,8 @@ entity KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
       -- System Ports
       userLed     : out   slv(3 downto 0);
       pmod        : inout Slv8Array(1 downto 0);
-      irigTrigOut : inout sl;
-      irigCompOut : inout sl;
+      irigTrigOut : inout sl;           -- Trigger input from 1PPS SMA
+      irigCompOut : inout sl;           -- Trigger input from 1PPS SMA
       -- RF DATA CONVERTER Ports
       adcClkP     : in    slv(1 downto 0);
       adcClkN     : in    slv(1 downto 0);
@@ -216,33 +216,30 @@ begin
       port map (
          -- PMOD Ports
          pmod(0)(5 downto 0) => pmod(0)(5 downto 0),
-         pmod(0)(6)          => irigCompOut, -- Trigger input
-         pmod(0)(7)          => irigTrigOut, -- Trigger input
-         pmod(1)(5 downto 0) => pmod(1)(5 downto 0),
-         pmod(1)(6)          => irigCompOut, -- Trigger input
-         pmod(1)(7)          => irigTrigOut, -- Trigger input
-
+         pmod(0)(6)          => irigTrigOut,  -- Trigger input from 1PPS SMA
+         pmod(0)(7)          => irigCompOut,  -- Trigger input from 1PPS SMA
+         pmod(1)             => pmod(1),
          -- DMA Interface (dmaClk domain)
-         dmaClk          => dmaClk,
-         dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMasters(0),
-         dmaIbSlave      => dmaIbSlaves(0),
+         dmaClk              => dmaClk,
+         dmaRst              => dmaRst,
+         dmaIbMaster         => dmaIbMasters(0),
+         dmaIbSlave          => dmaIbSlaves(0),
          -- ADC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
-         dspAdc          => dspAdc,
-         dspRunCntrl     => dspRunCntrl,
+         dspClk              => dspClk,
+         dspRst              => dspRst,
+         dspAdc              => dspAdc,
+         dspRunCntrl         => dspRunCntrl,
          -- DAC Interface (dacClk domain)
-         dacClk          => dacClk,
-         dacRst          => dacRst,
-         dspDacI         => dspDacI,
-         dspDacQ         => dspDacQ,
+         dacClk              => dacClk,
+         dacRst              => dacRst,
+         dspDacI             => dspDacI,
+         dspDacQ             => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilWriteMaster => axilWriteMasters(APP_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(APP_INDEX_C),
-         axilReadMaster  => axilReadMasters(APP_INDEX_C),
-         axilReadSlave   => axilReadSlaves(APP_INDEX_C));
+         axilClk             => axilClk,
+         axilRst             => axilRst,
+         axilWriteMaster     => axilWriteMasters(APP_INDEX_C),
+         axilWriteSlave      => axilWriteSlaves(APP_INDEX_C),
+         axilReadMaster      => axilReadMasters(APP_INDEX_C),
+         axilReadSlave       => axilReadSlaves(APP_INDEX_C));
 
 end top_level;

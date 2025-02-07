@@ -36,18 +36,26 @@ class RFSoC(pr.Device):
                 # expand       = True,
             ))
 
+        if boardType == 'Rfsoc4x2':
+            self.enAdcTile = [True,False,True,False] # adcTile[0,2]
+            self.enDacTile = [True,False,True,False] # dacTile[0,2]
+        else:
+            self.enAdcTile = [True,True,False,False] # adcTile[0,1]
+            self.enDacTile = [True,True,False,False] # dacTile[0,1]
+
         self.add(xil.RfDataConverter(
             offset    = 0x9000_0000,
             gen3      = (boardType != 'Zcu111'), # True if using RFSoC GEN3 Hardware
-            enAdcTile = [True,True,False,False], # adcTile[0,1]
-            enDacTile = [True,True,False,False], # dacTile[0,1]
-            # expand       = True,
+            enAdcTile = self.enAdcTile,
+            enDacTile = self.enDacTile,
+            # expand  = True,
         ))
 
         # SOFTWARE VARIABLE ONLY!!! (doesn't change sampling speed, used for calculation)
-        for i in range(2):
-            for j in range(4):
-                self.RfDataConverter.dacTile[i].dacBlock[j].samplingRate._default = 6108.0 # In units of MHz,
+        for i in range(4):
+            if self.enDacTile[i]:
+                for j in range(4):
+                    self.RfDataConverter.dacTile[i].dacBlock[j].samplingRate._default = 6108.0 # In units of MHz,
 
         self.add(rfsoc.Application(
             offset      = 0xA000_0000,
