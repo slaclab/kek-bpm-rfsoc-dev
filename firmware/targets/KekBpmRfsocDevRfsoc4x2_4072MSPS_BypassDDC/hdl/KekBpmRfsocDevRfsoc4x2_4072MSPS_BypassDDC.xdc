@@ -8,9 +8,6 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property -dict { PACKAGE_PIN AH13 IOSTANDARD LVCMOS18 } [get_ports { irigTrigOut }]
-set_property -dict { PACKAGE_PIN AJ13 IOSTANDARD LVCMOS18 } [get_ports { irigCompOut }]
-
 create_clock -name plClkP -period  1.964 [get_ports {plClkP}]
 
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_RFDC/U_AdcPll/PllGen.U_Pll/CLKOUT0]] -group [get_clocks -of_objects [get_pins U_RFDC/U_DacPll/PllGen.U_Pll/CLKOUT0]]

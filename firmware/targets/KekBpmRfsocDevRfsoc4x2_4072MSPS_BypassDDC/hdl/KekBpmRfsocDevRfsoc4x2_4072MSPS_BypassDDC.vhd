@@ -43,8 +43,8 @@ entity KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
       adcN        : in    slv(7 downto 0);
       dacClkP     : in    slv(1 downto 0);
       dacClkN     : in    slv(1 downto 0);
-      dacP        : out   slv(3 downto 0);
-      dacN        : out   slv(3 downto 0);
+      dacP        : out   slv(7 downto 0);
+      dacN        : out   slv(7 downto 0);
       sysRefP     : in    sl;
       sysRefN     : in    sl;
       plClkP      : in    sl;

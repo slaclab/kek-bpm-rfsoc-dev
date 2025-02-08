@@ -42,8 +42,8 @@ entity RfDataConverter is
       adcN            : in  slv(7 downto 0);
       dacClkP         : in  slv(1 downto 0);
       dacClkN         : in  slv(1 downto 0);
-      dacP            : out slv(3 downto 0);
-      dacN            : out slv(3 downto 0);
+      dacP            : out slv(7 downto 0);
+      dacN            : out slv(7 downto 0);
       sysRefP         : in  sl;
       sysRefN         : in  sl;
       plClkP          : in  sl;
@@ -125,12 +125,20 @@ architecture mapping of RfDataConverter is
          vin3_23_n       : in  std_logic;
          vout00_p        : out std_logic;
          vout00_n        : out std_logic;
+         vout02_p        : out std_logic;
+         vout02_n        : out std_logic;
          vout10_p        : out std_logic;
          vout10_n        : out std_logic;
+         vout12_p        : out std_logic;
+         vout12_n        : out std_logic;
          vout20_p        : out std_logic;
          vout20_n        : out std_logic;
+         vout22_p        : out std_logic;
+         vout22_n        : out std_logic;
          vout30_p        : out std_logic;
          vout30_n        : out std_logic;
+         vout32_p        : out std_logic;
+         vout32_n        : out std_logic;
          m0_axis_aresetn : in  std_logic;
          m0_axis_aclk    : in  std_logic;
          m00_axis_tdata  : out std_logic_vector(127 downto 0);
@@ -168,21 +176,33 @@ architecture mapping of RfDataConverter is
          s00_axis_tdata  : in  std_logic_vector(95 downto 0);
          s00_axis_tvalid : in  std_logic;
          s00_axis_tready : out std_logic;
+         s02_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s02_axis_tvalid : in  std_logic;
+         s02_axis_tready : out std_logic;
          s1_axis_aresetn : in  std_logic;
          s1_axis_aclk    : in  std_logic;
          s10_axis_tdata  : in  std_logic_vector(95 downto 0);
          s10_axis_tvalid : in  std_logic;
          s10_axis_tready : out std_logic;
+         s12_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s12_axis_tvalid : in  std_logic;
+         s12_axis_tready : out std_logic;
          s2_axis_aresetn : in  std_logic;
          s2_axis_aclk    : in  std_logic;
          s20_axis_tdata  : in  std_logic_vector(95 downto 0);
          s20_axis_tvalid : in  std_logic;
          s20_axis_tready : out std_logic;
+         s22_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s22_axis_tvalid : in  std_logic;
+         s22_axis_tready : out std_logic;
          s3_axis_aresetn : in  std_logic;
          s3_axis_aclk    : in  std_logic;
          s30_axis_tdata  : in  std_logic_vector(95 downto 0);
          s30_axis_tvalid : in  std_logic;
-         s30_axis_tready : out std_logic
+         s30_axis_tready : out std_logic;
+         s32_axis_tdata  : in  std_logic_vector(95 downto 0);
+         s32_axis_tvalid : in  std_logic;
+         s32_axis_tready : out std_logic
          );
    end component;
 
@@ -291,6 +311,14 @@ begin
          vout20_n        => dacN(2),
          vout30_p        => dacP(3),
          vout30_n        => dacN(3),
+         vout02_p        => dacP(4),
+         vout02_n        => dacN(4),
+         vout12_p        => dacP(5),
+         vout12_n        => dacN(5),
+         vout22_p        => dacP(6),
+         vout22_n        => dacN(6),
+         vout32_p        => dacP(7),
+         vout32_n        => dacN(7),
          -----------------------------------------
          -- Reserve Order to match PCB silkscreen:
          -----------------------------------------
@@ -364,7 +392,20 @@ begin
          s3_axis_aclk    => dacClock,
          s30_axis_tdata  => (others => '0'),
          s30_axis_tvalid => '1',
-         s30_axis_tready => open);
+         s30_axis_tready => open,
+         -- Unused DAC channels
+         s02_axis_tdata  => (others => '0'),
+         s02_axis_tvalid => '1',
+         s02_axis_tready => open,
+         s12_axis_tdata  => (others => '0'),
+         s12_axis_tvalid => '1',
+         s12_axis_tready => open,
+         s22_axis_tdata  => (others => '0'),
+         s22_axis_tvalid => '1',
+         s22_axis_tready => open,
+         s32_axis_tdata  => (others => '0'),
+         s32_axis_tvalid => '1',
+         s32_axis_tready => open);
 
    U_IBUFDS : IBUFDS
       port map(

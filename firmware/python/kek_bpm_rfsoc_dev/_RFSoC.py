@@ -37,11 +37,14 @@ class RFSoC(pr.Device):
             ))
 
         if boardType == 'Rfsoc4x2':
-            self.enAdcTile = [True,False,True,False] # adcTile[0,2]
-            self.enDacTile = [True,False,True,False] # dacTile[0,2]
-        else:
-            self.enAdcTile = [True,True,False,False] # adcTile[0,1]
-            self.enDacTile = [True,True,False,False] # dacTile[0,1]
+            self.enAdcTile = [True,False,True,False]
+            self.enDacTile = [True,False,True,False]
+        elif boardType == 'Zcu111':
+            self.enAdcTile = [True,True, True, True]
+            self.enDacTile = [True,True,False,False]
+        else: # Else boardType == 'Zcu208'
+            self.enAdcTile = [True,True,False,False]
+            self.enDacTile = [True,True,False,False]
 
         self.add(xil.RfDataConverter(
             offset    = 0x9000_0000,
