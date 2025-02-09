@@ -11,28 +11,13 @@
 GitBase: ..
 
 Targets:
-  KekBpmRfsocDevZcu111_3054MSPS:
-    ImageDir: targets/KekBpmRfsocDevZcu111_3054MSPS/images
-    Extensions:
-      - petalinux.tar.gz
-      - ltx
-  KekBpmRfsocDevZcu111_4072MSPS:
-    ImageDir: targets/KekBpmRfsocDevZcu111_4072MSPS/images
+  KekBpmRfSoc4x2_4072MSPS_BypassDDC:
+    ImageDir: targets/KekBpmRfSoc4x2_4072MSPS_BypassDDC/images
     Extensions:
       - petalinux.tar.gz
       - ltx
   KekBpmRfsocDevZcu111_4072MSPS_BypassDDC:
     ImageDir: targets/KekBpmRfsocDevZcu111_4072MSPS_BypassDDC/images
-    Extensions:
-      - petalinux.tar.gz
-      - ltx
-  KekBpmRfsocDevZcu208_3054MSPS:
-    ImageDir: targets/KekBpmRfsocDevZcu208_3054MSPS/images
-    Extensions:
-      - petalinux.tar.gz
-      - ltx
-  KekBpmRfsocDevZcu208_4072MSPS:
-    ImageDir: targets/KekBpmRfsocDevZcu208_4072MSPS/images
     Extensions:
       - petalinux.tar.gz
       - ltx
@@ -46,11 +31,8 @@ Releases:
   all:
     Primary: True
     Targets:
-#      - KekBpmRfsocDevZcu111_3054MSPS
-#      - KekBpmRfsocDevZcu111_4072MSPS
+      - KekBpmRfSoc4x2_4072MSPS_BypassDDC
       - KekBpmRfsocDevZcu111_4072MSPS_BypassDDC
-#      - KekBpmRfsocDevZcu208_3054MSPS
-#      - KekBpmRfsocDevZcu208_4072MSPS
       - KekBpmRfsocDevZcu208_4072MSPS_BypassDDC
     Types:
       - petalinux

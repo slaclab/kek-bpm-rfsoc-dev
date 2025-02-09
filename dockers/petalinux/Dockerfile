@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Install system tools for petalinux
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -17,10 +17,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
     dbus-x11 \
     debianutils \
     diffstat \
+    dnsutils  \
     expect \
     flex \
     fonts-droid-fallback \
-    fonts-ubuntu-font-family-console \
+    fonts-ubuntu-console \
     gawk \
     gcc-multilib \
     git \
@@ -40,10 +41,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
     libgdbm-dev \
     libglib2.0-dev \
     libgtk2.0-0 \
-    libidn11 \
-    libidn11-dev \
+    libidn12 \
+    libidn-dev \
+    libidn2-dev \
     libjpeg62-dev \
-    libpython3.8-dev \
+    libpython3-dev \
     libncurses5-dev \
     libnss3-dev \
     libreadline-dev \
@@ -63,8 +65,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
     net-tools \
     pax \
     pkg-config \
-    pylint3 \
-    python \
+    pylint \
+    python-is-python3 \
     python3 \
     python3-pexpect \
     python3-pip \
@@ -77,7 +79,6 @@ RUN DEBIAN_FRONTEND=noninteractive \
     texinfo \
     tftpd \
     tofrodos \
-    ttf-ubuntu-font-family \
     u-boot-tools \
     ubuntu-gnome-default-settings \
     unzip \

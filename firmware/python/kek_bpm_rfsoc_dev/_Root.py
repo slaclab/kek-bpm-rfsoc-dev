@@ -25,9 +25,10 @@ import pyrogue.protocols.epicsV4
 
 import kek_bpm_rfsoc_dev                     as rfsoc
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
+import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
 import axi_soc_ultra_plus_core as soc_core
 
-rogue.Version.minVersion('6.1.1')
+rogue.Version.minVersion('6.4.4')
 
 class Root(pr.Root):
     def __init__(self,
@@ -36,11 +37,12 @@ class Root(pr.Root):
             bpmFreqMHz = 2000, # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
-            boardType  = None, # Either zcu111 or zcu208
+            boardType  = None, # Either zcu111 or zcu208 or rfsoc4x2
             **kwargs):
 
         # Pass custom value to parent via super function
         super().__init__(**kwargs)
+        self._timeout = 5000000 # 5.0 seconds default
 
         if zmqSrvEn:
             self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
@@ -86,8 +88,8 @@ class Root(pr.Root):
         else:
             self.configPath = 'config'
         self.defaultFile = f'{self.configPath}/defaults.yml'
-        self.lmkConfig   = f'{self.configPath}/LmkConfig.txt'
-        self.lmxConfig   = [f'{self.configPath}/LmxConfig.txt']
+        self.lmkConfig   = f'{self.configPath}/{self.boardType}/LmkConfig.txt'
+        self.lmxConfig   = [f'{self.configPath}/{self.boardType}/LmxConfig.txt']
 
         # File writer
         self.dataWriter = pr.utilities.fileio.StreamWriter()
@@ -154,6 +156,15 @@ class Root(pr.Root):
 
         # Start a TCP Bridge Client, Connect remote server at 'ethReg' ports 9000 & 9001.
         self.memMap = rogue.interfaces.memory.TcpClient(ip,9000)
+
+        # Add RfSoC4x2 PS hardware control
+        if (self.boardType == 'Rfsoc4x2'):
+            self.expectedHardware = 'RealDigitalRfSoC4x2'
+            self.add(rfsoc_hw.Hardware(
+                memBase    = self.memMap,
+            ))
+        else:
+            self.expectedHardware = f'Xilinx{self.boardType}'
 
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
@@ -287,8 +298,8 @@ class Root(pr.Root):
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Check for Expected HW Platform
-        if (self.boardType in axiVersion.HW_TYPE_C.getDisp()) != True:
-                errMsg = f'Actual.Hardware={axiVersion.HW_TYPE_C.getDisp()} != Expected.Hardware=Xilinx{self.boardType}'
+        if (self.expectedHardware in axiVersion.HW_TYPE_C.getDisp()) != True:
+                errMsg = f'Actual.Hardware={axiVersion.HW_TYPE_C.getDisp()} != Expected.Hardware={self.expectedHardware}'
                 click.secho(errMsg, bg='red')
                 self.stop()
                 raise ValueError(errMsg)
@@ -309,6 +320,10 @@ class Root(pr.Root):
             print('Initialize the LMK/LMX Clock chips')
             self.RFSoC.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
+        if self.boardType == 'Rfsoc4x2':
+            print('Initialize the LMK/LMX Clock chips')
+            self.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
+
         print('Wait for DSP Clock to be stable')
         while(axiVersion.DspReset.get()):
             time.sleep(0.1)
@@ -322,22 +337,27 @@ class Root(pr.Root):
         rfdc.Init(dynamicNco=True)
 
         # Set the DAC's NCO frequency
-        for i in range(2):
-            for j in range(4):
-                rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
+        for i in range(4):
+            if self.RFSoC.enDacTile[i]:
+                for j in range(4):
+                    rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
 
         # Wait for ADC/DAC Tile to be stable
-        for i in range(2):
-            while rfdc.adcTile[i].CurrentState.get() < 14:
-                time.sleep(0.01)
-            while rfdc.dacTile[i].CurrentState.get() < 14:
-                time.sleep(0.01)
+        for i in range(4):
+            if self.RFSoC.enAdcTile[i]:
+                while rfdc.adcTile[i].CurrentState.get() < 14:
+                    time.sleep(0.01)
+            if self.RFSoC.enDacTile[i]:
+                while rfdc.dacTile[i].CurrentState.get() < 14:
+                    time.sleep(0.01)
 
         # Set the firmware DDC's NCO value and enable run control
         readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
         readoutCtrl.DspRunCntrl.set(1)
 
         # MTS Sync the RF Data Converter
+        # Note: MTS sync is not working and currently broken
+        # https://jira.slac.stanford.edu/browse/ESROGUE-675
         rfdc.MtsAdcSync()
         rfdc.MtsDacSync()
 
