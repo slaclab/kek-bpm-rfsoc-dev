@@ -11,8 +11,8 @@
 GitBase: ..
 
 Targets:
-  KekBpmRfSoc4x2_4072MSPS_BypassDDC:
-    ImageDir: targets/KekBpmRfSoc4x2_4072MSPS_BypassDDC/images
+  KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC:
+    ImageDir: targets/KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC/images
     Extensions:
       - petalinux.tar.gz
       - ltx
@@ -31,7 +31,7 @@ Releases:
   all:
     Primary: True
     Targets:
-      - KekBpmRfSoc4x2_4072MSPS_BypassDDC
+      - KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC
       - KekBpmRfsocDevZcu111_4072MSPS_BypassDDC
       - KekBpmRfsocDevZcu208_4072MSPS_BypassDDC
     Types:
