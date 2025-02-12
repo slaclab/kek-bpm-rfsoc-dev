@@ -112,10 +112,50 @@ class Root(pr.Root):
         ##################################################################################
 
         # Create rogue stream receivers
-        self.adcDispProc = [rfsoc_utility.RingBufferProcessor(name=f'AdcDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9) for i in range(4)]
-        self.ampDispProc = [rfsoc.RingBufferProcessor(name=f'AmpDispProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*2**9,SSR=self.SSR,faultDisp=False) for i in range(4)]
+        self.adcDispProc  = [None for _ in range(4)]
+        self.ampDispProc  = [None for _ in range(4)]
+        self.ampFaultProc = [None for _ in range(4)]
+        self.adcDispFifo  = [None for _ in range(4)]
+        self.ampDispFifo  = [None for _ in range(4)]
+        for i in range(4):
 
-        self.ampFaultProc = [rfsoc.RingBufferProcessor(name=f'AmpFaultProcessor[{i}]',sampleRate=self.sampleRate,maxSize=self.SSR*self.faultDepth,SSR=self.SSR,faultDisp=True) for i in range(4)]
+            self.adcDispProc[i] = rfsoc_utility.RingBufferProcessor(
+                name       = f'AdcDispProcessor[{i}]',
+                sampleRate = self.sampleRate,
+                maxSize    = self.SSR*2**9,
+            )
+
+            self.ampDispProc[i] = rfsoc.RingBufferProcessor(
+                name       = f'AmpDispProcessor[{i}]',
+                sampleRate = self.sampleRate,
+                maxSize    = self.SSR*2**9,
+                SSR        = self.SSR,
+                faultDisp  = False,
+            )
+
+            self.ampFaultProc[i] = rfsoc.RingBufferProcessor(
+                    name       = f'AmpFaultProcessor[{i}]',
+                    sampleRate = self.sampleRate,
+                    maxSize    = self.SSR*self.faultDepth,
+                    SSR        = self.SSR,
+                    faultDisp  = True,
+                )
+
+            self.adcDispFifo[i] = pr.interfaces.stream.Fifo(
+                name        = f'AdcDispFifo[{i}]',
+                description = 'Fifo to prevent back pressuring stream',
+                maxDepth    = 1, # Drop if more than 1 frame in FIFO
+                trimSize    = 0, # No triming
+                noCopy      = False, # Create copy of buffer
+                )
+
+            self.ampDispFifo[i] = pr.interfaces.stream.Fifo(
+                name        = f'AmpDispFifo[{i}]',
+                description = 'Fifo to prevent back pressuring stream',
+                maxDepth    = 1, # Drop if more than 1 frame in FIFO
+                trimSize    = 0, # No triming
+                noCopy      = False, # Create copy of buffer
+                )
 
         # self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
         # self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
@@ -126,11 +166,11 @@ class Root(pr.Root):
         for i in range(4):
 
             # ADC Live Display Path
-            self.adcDispBuff[i] >> self.adcDispProc[i]
+            self.adcDispBuff[i] >> self.adcDispFifo[i] >> self.adcDispProc[i]
             self.add(self.adcDispProc[i])
 
             # AMP Live Display Path
-            self.ampDispBuff[i] >> self.ampDispProc[i]
+            self.ampDispBuff[i] >> self.ampDispFifo[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
             # AMP Fault Display Path
