@@ -1,5 +1,5 @@
-# Define Firmware Version: v8.2.0.0
-export PRJ_VERSION = 0x08020000
+# Define Firmware Version: v9.0.0.0
+export PRJ_VERSION = 0x09000000
 
 # Include .XSA in image dir
 export GEN_XSA_IMAGE = 1

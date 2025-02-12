@@ -19,6 +19,7 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
 
 library work;
 use work.AppPkg.all;
@@ -31,6 +32,23 @@ entity KekBpmRfsocDevZcu111_4072MSPS_BypassDDC is
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
    port (
+      -- DDR4 Ports
+      ddrClkP   : in    sl;
+      ddrClkN   : in    sl;
+      ddrDm     : inout slv(7 downto 0);
+      ddrDqsP   : inout slv(7 downto 0);
+      ddrDqsN   : inout slv(7 downto 0);
+      ddrDq     : inout slv(63 downto 0);
+      ddrA      : out   slv(16 downto 0);
+      ddrBa     : out   slv(1 downto 0);
+      ddrCsL    : out   slv(0 downto 0);
+      ddrOdt    : out   slv(0 downto 0);
+      ddrCke    : out   slv(0 downto 0);
+      ddrCkP    : out   slv(0 downto 0);
+      ddrCkN    : out   slv(0 downto 0);
+      ddrBg     : out   slv(0 downto 0);
+      ddrActL   : out   sl;
+      ddrRstL   : out   sl;
       -- PMOD Ports
       pmod      : inout Slv8Array(1 downto 0);
       -- LMK/LMX Ports
@@ -95,6 +113,14 @@ architecture top_level of KekBpmRfsocDevZcu111_4072MSPS_BypassDDC is
    signal dacRst  : sl;
    signal dspDacI : Slv48Array(NUM_DAC_CH_C-1 downto 0);
    signal dspDacQ : Slv48Array(NUM_DAC_CH_C-1 downto 0);
+
+   signal ddrClk         : sl;
+   signal ddrRst         : sl;
+   signal ddrReady       : sl;
+   signal ddrWriteMaster : AxiWriteMasterType;
+   signal ddrWriteSlave  : AxiWriteSlaveType;
+   signal ddrReadMaster  : AxiReadMasterType;
+   signal ddrReadSlave   : AxiReadSlaveType;
 
 begin
 
@@ -229,12 +255,18 @@ begin
    --------------
    U_App : entity work.Application
       generic map (
-         TPD_G                    => TPD_G,
-         FAULT_BUFF_ADDR_WIDTH_G  => 15,  -- Able to have a bigger buffer and meet timing by not building the SsrDdc Module
-         FAULT_AMP_MEMORY_TYPE_G  => "ultra",
-         FAULT_CALC_MEMORY_TYPE_G => "block",
-         AXIL_BASE_ADDR_G         => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
+         TPD_G                   => TPD_G,
+         FAULT_BUFF_ADDR_WIDTH_G => 15,
+         AXIL_BASE_ADDR_G        => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
+         -- DDR AXI4 Interface
+         ddrClk          => ddrClk,
+         ddrRst          => ddrRst,
+         ddrReady        => ddrReady,
+         ddrWriteMaster  => ddrWriteMaster,
+         ddrWriteSlave   => ddrWriteSlave,
+         ddrReadMaster   => ddrReadMaster,
+         ddrReadSlave    => ddrReadSlave,
          -- PMOD Ports
          pmod            => pmod,
          -- DMA Interface (dmaClk domain)
@@ -259,5 +291,42 @@ begin
          axilWriteSlave  => axilWriteSlaves(APP_INDEX_C),
          axilReadMaster  => axilReadMasters(APP_INDEX_C),
          axilReadSlave   => axilReadSlaves(APP_INDEX_C));
+
+   ----------------------------
+   -- PL DDR4 Memory Controller
+   ----------------------------
+   U_PL_MEM : entity axi_soc_ultra_plus_core.MigCoreWrapper
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         extRst         => dspRst,
+         -- AXI4 Interface
+         ddrClk         => ddrClk,
+         ddrRst         => ddrRst,
+         ddrReady       => ddrReady,
+         ddrWriteMaster => ddrWriteMaster,
+         ddrWriteSlave  => ddrWriteSlave,
+         ddrReadMaster  => ddrReadMaster,
+         ddrReadSlave   => ddrReadSlave,
+         ----------------
+         -- Core Ports --
+         ----------------
+         -- DDR4 Ports
+         ddrClkP        => ddrClkP,
+         ddrClkN        => ddrClkN,
+         ddrDm          => ddrDm,
+         ddrDqsP        => ddrDqsP,
+         ddrDqsN        => ddrDqsN,
+         ddrDq          => ddrDq,
+         ddrA           => ddrA,
+         ddrBa          => ddrBa,
+         ddrCsL         => ddrCsL,
+         ddrOdt         => ddrOdt,
+         ddrCke         => ddrCke,
+         ddrCkP         => ddrCkP,
+         ddrCkN         => ddrCkN,
+         ddrBg          => ddrBg,
+         ddrActL        => ddrActL,
+         ddrRstL        => ddrRstL);
 
 end top_level;

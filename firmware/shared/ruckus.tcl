@@ -10,5 +10,8 @@ if { [get_ips poscalc_0] eq ""  } {
    create_ip -name poscalc -vendor SLAC -library KEK_BPM -version 1.0 -module_name poscalc_0
 }
 
+# Set top level simulation
+set_property top {AxiRingBufferTb} [get_filesets sim_1]
+
 # Updating the impl_1 strategy
 set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
