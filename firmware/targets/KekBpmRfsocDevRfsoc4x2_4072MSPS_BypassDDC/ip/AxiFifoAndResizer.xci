@@ -4,7 +4,7 @@
     "xci_name": "AxiFifoAndResizer",
     "component_reference": "xilinx.com:ip:axi_interconnect:1.7",
     "ip_revision": "21",
-    "gen_directory": "../../../../KekBpmRfsocDevZcu111_4072MSPS_BypassDDC_project.gen/sources_1/ip/AxiFifoAndResizer",
+    "gen_directory": "../../../../KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC_project.gen/sources_1/ip/AxiFifoAndResizer",
     "parameters": {
       "component_parameters": {
         "NUM_SLAVE_PORTS": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -430,9 +430,9 @@
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "zynquplusRFSOC" } ],
-        "BASE_BOARD_PART": [ { "value": "xilinx.com:zcu111:part0:1.4" } ],
+        "BASE_BOARD_PART": [ { "value": "realdigital.org:rfsoc4x2:part0:1.0" } ],
         "BOARD_CONNECTIONS": [ { "value": "" } ],
-        "DEVICE": [ { "value": "xczu28dr" } ],
+        "DEVICE": [ { "value": "xczu48dr" } ],
         "PACKAGE": [ { "value": "ffvg1517" } ],
         "PREFHDL": [ { "value": "VHDL" } ],
         "SILICON_REVISION": [ { "value": "" } ],
@@ -445,7 +445,7 @@
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "21" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../KekBpmRfsocDevZcu111_4072MSPS_BypassDDC_project.gen/sources_1/ip/AxiFifoAndResizer" } ],
+        "OUTPUTDIR": [ { "value": "../../../../KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC_project.gen/sources_1/ip/AxiFifoAndResizer" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
         "SWVERSION": [ { "value": "2023.1" } ],
