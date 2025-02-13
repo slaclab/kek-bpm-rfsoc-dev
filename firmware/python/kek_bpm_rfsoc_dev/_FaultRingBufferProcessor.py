@@ -82,9 +82,6 @@ class FaultRingBufferProcessor(pr.DataReceiver):
             # Reshape the array into (4, N) format
             self._waveformData = dat.reshape(-1, 4).T  # Transpose to get (4, N) shape
 
-            # Keep only the last self._maxDispSize columns
-            self._waveformData = self._waveformData[:, -self._maxDispSize:]
-
             for i in range(4):
                 # Keep only the last self._maxDispSize columns for each channel
                 self.WaveformData[i].set(self._waveformData[i, -self._maxDispSize:], write=True)
