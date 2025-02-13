@@ -255,9 +255,8 @@ begin
    --------------
    U_App : entity work.Application
       generic map (
-         TPD_G                   => TPD_G,
-         FAULT_BUFF_ADDR_WIDTH_G => 15,
-         AXIL_BASE_ADDR_G        => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
+         TPD_G            => TPD_G,
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
          -- DDR AXI4 Interface
          ddrClk          => ddrClk,

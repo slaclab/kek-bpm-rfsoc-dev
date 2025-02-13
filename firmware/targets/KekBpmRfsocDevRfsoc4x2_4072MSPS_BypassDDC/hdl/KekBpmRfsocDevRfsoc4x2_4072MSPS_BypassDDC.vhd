@@ -33,22 +33,22 @@ entity KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
       BUILD_INFO_G : BuildInfoType);
    port (
       -- DDR4 Ports
-      ddrClkP   : in    sl;
-      ddrClkN   : in    sl;
-      ddrDm     : inout slv(7 downto 0);
-      ddrDqsP   : inout slv(7 downto 0);
-      ddrDqsN   : inout slv(7 downto 0);
-      ddrDq     : inout slv(63 downto 0);
-      ddrA      : out   slv(16 downto 0);
-      ddrBa     : out   slv(1 downto 0);
-      ddrCsL    : out   slv(0 downto 0);
-      ddrOdt    : out   slv(0 downto 0);
-      ddrCke    : out   slv(0 downto 0);
-      ddrCkP    : out   slv(0 downto 0);
-      ddrCkN    : out   slv(0 downto 0);
-      ddrBg     : out   slv(0 downto 0);
-      ddrActL   : out   sl;
-      ddrRstL   : out   sl;
+      ddrClkP     : in    sl;
+      ddrClkN     : in    sl;
+      ddrDm       : inout slv(7 downto 0);
+      ddrDqsP     : inout slv(7 downto 0);
+      ddrDqsN     : inout slv(7 downto 0);
+      ddrDq       : inout slv(63 downto 0);
+      ddrA        : out   slv(16 downto 0);
+      ddrBa       : out   slv(1 downto 0);
+      ddrCsL      : out   slv(0 downto 0);
+      ddrOdt      : out   slv(0 downto 0);
+      ddrCke      : out   slv(0 downto 0);
+      ddrCkP      : out   slv(0 downto 0);
+      ddrCkN      : out   slv(0 downto 0);
+      ddrBg       : out   slv(0 downto 0);
+      ddrActL     : out   sl;
+      ddrRstL     : out   sl;
       -- System Ports
       userLed     : out   slv(3 downto 0);
       pmod        : inout Slv8Array(1 downto 0);
@@ -234,18 +234,17 @@ begin
    --------------
    U_App : entity work.Application
       generic map (
-         TPD_G                    => TPD_G,
-         FAULT_BUFF_ADDR_WIDTH_G  => 15,
-         AXIL_BASE_ADDR_G         => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
+         TPD_G            => TPD_G,
+         AXIL_BASE_ADDR_G => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
          -- DDR AXI4 Interface
-         ddrClk          => ddrClk,
-         ddrRst          => ddrRst,
-         ddrReady        => ddrReady,
-         ddrWriteMaster  => ddrWriteMaster,
-         ddrWriteSlave   => ddrWriteSlave,
-         ddrReadMaster   => ddrReadMaster,
-         ddrReadSlave    => ddrReadSlave,
+         ddrClk              => ddrClk,
+         ddrRst              => ddrRst,
+         ddrReady            => ddrReady,
+         ddrWriteMaster      => ddrWriteMaster,
+         ddrWriteSlave       => ddrWriteSlave,
+         ddrReadMaster       => ddrReadMaster,
+         ddrReadSlave        => ddrReadSlave,
          -- PMOD Ports
          pmod(0)(5 downto 0) => pmod(0)(5 downto 0),
          pmod(0)(6)          => irigTrigOut,  -- Trigger input from 1PPS SMA

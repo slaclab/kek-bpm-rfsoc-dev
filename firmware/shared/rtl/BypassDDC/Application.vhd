@@ -30,9 +30,8 @@ use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
 entity Application is
    generic (
-      TPD_G                   : time := 1 ns;
-      FAULT_BUFF_ADDR_WIDTH_G : positive;
-      AXIL_BASE_ADDR_G        : slv(31 downto 0));
+      TPD_G            : time := 1 ns;
+      AXIL_BASE_ADDR_G : slv(31 downto 0));
    port (
       -- DDR AXI4 Interface
       ddrClk          : in    sl;
@@ -107,8 +106,8 @@ architecture mapping of Application is
    signal charge     : slv(31 downto 0);
    signal calcResult : slv(95 downto 0);
 
-   signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
-   signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
+   signal axisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal axisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
    signal dspReset : sl;
 
@@ -346,7 +345,7 @@ begin
          TPD_G                  => TPD_G,
          -- Ring buffer Configurations
          DATA_BYTES_G           => (128/8),  -- 128-bit dataValue width
-         RING_BUFF_ADDR_WIDTH_G => FAULT_BUFF_ADDR_WIDTH_G,
+         RING_BUFF_ADDR_WIDTH_G => 15,  -- 128.7 us = 2^15 x (SSR=2)/509MHz)
          SYNTH_MODE_G           => "xpm",
          MEMORY_TYPE_G          => "ultra",
          -- AXI-Lite Configurations
@@ -417,7 +416,7 @@ begin
    U_Mux : entity surf.AxiStreamMux
       generic map (
          TPD_G         => TPD_G,
-         NUM_SLAVES_G  => 4,
+         NUM_SLAVES_G  => 2,
          MODE_G        => "PASSTHROUGH",
          PIPE_STAGES_G => 1)
       port map (
