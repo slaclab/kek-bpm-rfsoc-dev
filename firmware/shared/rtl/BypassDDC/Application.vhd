@@ -345,7 +345,11 @@ begin
          TPD_G                  => TPD_G,
          -- Ring buffer Configurations
          DATA_BYTES_G           => (128/8),  -- 128-bit dataValue width
-         RING_BUFF_ADDR_WIDTH_G => 15,  -- 128.7 us = 2^15 x (SSR=2)/509MHz)
+         ----------------------------------------------------------------------------------------------
+         -- RING_BUFF_ADDR_WIDTH_G => 15,  -- 128 us = 2^15 x (SSR=2)/509MHz) -> 524,288 Bytes per event
+         RING_BUFF_ADDR_WIDTH_G => 18,  -- 1 ms = 2^18 x (SSR=2)/509MHz) -> 4MB per event
+         -- RING_BUFF_ADDR_WIDTH_G => 28,  -- 1 sec = 2^28 x (SSR=2)/509MHz) -> 4GB per event
+         ----------------------------------------------------------------------------------------------
          SYNTH_MODE_G           => "xpm",
          MEMORY_TYPE_G          => "ultra",
          -- AXI-Lite Configurations
