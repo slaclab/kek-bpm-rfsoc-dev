@@ -66,10 +66,6 @@ class FaultRingBufferProcessor(pr.DataReceiver):
 
     # Method which updates the waveform PV from external function
     def UpdateWaveform(self):
-        for i in range(4):
-            # Keep only the last self._maxDispSize columns for each channel
-            self.WaveformData[i].set(self._waveformData[i, -self._maxDispSize:], write=True)
-
         # Reset the flag
         self.NewDataReady.set(False)
 
