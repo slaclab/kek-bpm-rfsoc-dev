@@ -41,7 +41,7 @@ class Application(pr.Device):
             expand      = True,
         ))
 
-        # self.add(rfsoc.PosCalc(
-            # offset = 0x06_000000,
-            # expand = False,
-        # ))
+        self.add(axi.AxiRingBuffer(
+            offset = 0x03_000000,
+            hidden = True,
+        ))

@@ -34,7 +34,7 @@ class Root(pr.Root):
     def __init__(self,
             ip         = '',   # ETH Host Name (or IP address)
             top_level  = '',
-            bpmFreqMHz = 2000, # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
+            bpmFreqMHz = 0   , # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
             boardType  = None, # Either zcu111 or zcu208 or rfsoc4x2
@@ -50,6 +50,7 @@ class Root(pr.Root):
 
         ##################################################################################
 
+        # Intialize the local variables
         self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
         self.boardType = boardType[0].upper() + boardType[1:].lower()
@@ -62,22 +63,8 @@ class Root(pr.Root):
             self.sampleRate = 4.072E+9 # Units of Hz
             self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
             self.faultDepth = 2**15
-
-        # Check for ZONE1 operation
-        elif bpmFreqMHz < (3054//2):
-            self.SSR = 16
-            self.NcoFreqMHz = self.bpmFreqMHz
-            self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS'
-            self.faultDepth = 2**14
-
-        # Else ZONE2 operation
         else:
-            self.SSR = 12
-            self.NcoFreqMHz = 3054.0 - float(bpmFreqMHz) # ZONE2: Operation 1054MHz = 3.054MSPS - bpmFreqMHz
-            self.sampleRate = 3.054E+9 # Units of Hz
-            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_3054MSPS'
-            self.faultDepth = 2**14
+            raise ValueError( 'non-zero bpmFreqMHz is no longer support' )
 
         print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
 
@@ -100,21 +87,16 @@ class Root(pr.Root):
         # Create rogue stream objects
         self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
         self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
+        self.ampFaultBuff =  stream.TcpClient(ip,10000+2*(8))
 
-        self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8)) for i in range(4)]
-
-        # self.bpmDispBuff  = stream.TcpClient(ip,10000+2*16)
-        # self.bpmFaultBuff = stream.TcpClient(ip,10000+2*24)
-
-        self.ampFaultWithHdr = [rfsoc.PrependLocalTime() for i in range(4)]
-        # self.bpmFaultWithHdr = rfsoc.PrependLocalTime()
+        # Used to prepend the local time into a stream
+        self.ampFaultWithHdr = rfsoc.PrependLocalTime()
 
         ##################################################################################
 
         # Create rogue stream receivers
         self.adcDispProc  = [None for _ in range(4)]
         self.ampDispProc  = [None for _ in range(4)]
-        self.ampFaultProc = [None for _ in range(4)]
         self.adcDispFifo  = [None for _ in range(4)]
         self.ampDispFifo  = [None for _ in range(4)]
         for i in range(4):
@@ -133,14 +115,6 @@ class Root(pr.Root):
                 faultDisp  = False,
             )
 
-            self.ampFaultProc[i] = rfsoc.RingBufferProcessor(
-                    name       = f'AmpFaultProcessor[{i}]',
-                    sampleRate = self.sampleRate,
-                    maxSize    = self.SSR*self.faultDepth,
-                    SSR        = self.SSR,
-                    faultDisp  = True,
-                )
-
             self.adcDispFifo[i] = pr.interfaces.stream.Fifo(
                 name        = f'AdcDispFifo[{i}]',
                 description = 'Fifo to prevent back pressuring stream',
@@ -157,8 +131,10 @@ class Root(pr.Root):
                 noCopy      = False, # Create copy of buffer
                 )
 
-        # self.bpmDispProc  = rfsoc.PosCalcProcessor(name='BpmDispProc',maxSize=2**9)
-        # self.bpmFaultProc = rfsoc.PosCalcProcessor(name='BpmFaultProc',maxSize=self.faultDepth)
+        self.ampFaultProc = rfsoc.FaultRingBufferProcessor(
+            name   = 'AmpFaultProcessor',
+            hidden = True,
+        )
 
         ##################################################################################
 
@@ -173,19 +149,10 @@ class Root(pr.Root):
             self.ampDispBuff[i] >> self.ampDispFifo[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
-            # AMP Fault Display Path
-            self.ampFaultBuff[i] >> self.ampFaultWithHdr[i] >> self.dataWriter.getChannel(i+12)
-            self.ampFaultBuff[i] >> self.ampFaultProc[i]
-            self.add(self.ampFaultProc[i])
-
-        # # PosCalc Live Display Path
-        # self.bpmDispBuff >> self.bpmDispProc
-        # self.add(self.bpmDispProc)
-
-        # # PosCalc Fault Display Path
-        # self.bpmFaultBuff  >> self.bpmFaultWithHdr >> self.dataWriter.getChannel(24)
-        # self.bpmFaultBuff >> self.bpmFaultProc
-        # self.add(self.bpmFaultProc)
+        # AMP Fault Display Path
+        self.ampFaultBuff >> self.ampFaultWithHdr >> self.dataWriter.getChannel(i+12)
+        self.ampFaultBuff >> self.ampFaultProc
+        self.add(self.ampFaultProc)
 
         ##################################################################################
         ##                              Register Access
@@ -280,9 +247,7 @@ class Root(pr.Root):
                 self.FaultTrigTimerValue.set(0)
 
             # Check if there is new data in the fault event path
-            newData = True
-            for i in range(4):
-                newData = newData and self.ampFaultProc[i].Updated.get()
+            newData = self.ampFaultProc.Updated.get()
 
             # Check if this mode is enable
             if (self.EnableAutoReopen.get()) and newData:
@@ -304,8 +269,7 @@ class Root(pr.Root):
                 self.dataWriter._open()
 
                 # Reset the flags
-                for i in range(4):
-                    self.ampFaultProc[i].Updated.set(0)
+                self.ampFaultProc.Updated.set(0)
 
             # Check if MuxSelect changed
             if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):
@@ -313,10 +277,8 @@ class Root(pr.Root):
                 for i in range(4):
                     if (self.MuxSelect == 0):
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
-                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsFine)
                     else:
                         self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
-                        #self.ampFaultProc[i].Time.set(self.ampFaultProc[i]._timeStepsCourse)
 
         self.add(pr.LocalVariable(
             name         = 'GetFaultEventStatus',
@@ -374,7 +336,8 @@ class Root(pr.Root):
 
         # Initialize the RF Data Converter
         time.sleep(2.0)
-        rfdc.Init(dynamicNco=True)
+        print('Initialize RFDC')
+        rfdc.Init(dynamicNco=False)
 
         # Set the DAC's NCO frequency
         for i in range(4):
@@ -391,15 +354,14 @@ class Root(pr.Root):
                 while rfdc.dacTile[i].CurrentState.get() < 14:
                     time.sleep(0.01)
 
-        # Set the firmware DDC's NCO value and enable run control
-        readoutCtrl.NcoFreqMHz.set(self.NcoFreqMHz)
+        # Enable run control
         readoutCtrl.DspRunCntrl.set(1)
 
         # MTS Sync the RF Data Converter
         # Note: MTS sync is not working and currently broken
         # https://jira.slac.stanford.edu/browse/ESROGUE-675
-        rfdc.MtsAdcSync()
-        rfdc.MtsDacSync()
+        # rfdc.MtsAdcSync()
+        # rfdc.MtsDacSync()
 
         # Load the Default YAML file and refresh all remote variables
         print(f'Loading path={self.defaultFile} Default Configuration File...')
@@ -418,5 +380,8 @@ class Root(pr.Root):
 
         # Tune the amplitude delays for the firmware position calculation
         readoutCtrl.tuneAmpDelays(self.chMask)
+
+        # Enable the fault ring buffer
+        self.RFSoC.Application.AxiRingBuffer.EnableMode.set(1)
 
     ##################################################################################

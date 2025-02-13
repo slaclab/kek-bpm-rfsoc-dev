@@ -1,5 +1,6 @@
 from kek_bpm_rfsoc_dev._PrependLocalTime import *
 from kek_bpm_rfsoc_dev._RingBufferProcessor import *
+from kek_bpm_rfsoc_dev._FaultRingBufferProcessor import *
 from kek_bpm_rfsoc_dev._PosCalcProcessor import *
 from kek_bpm_rfsoc_dev._StreamProcessor import *
 from kek_bpm_rfsoc_dev._ReadoutCtrl     import *
