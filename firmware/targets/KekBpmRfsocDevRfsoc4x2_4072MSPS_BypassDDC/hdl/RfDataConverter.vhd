@@ -223,6 +223,7 @@ architecture mapping of RfDataConverter is
    signal dacResetL : sl := '0';
 
    signal adcData : Slv128Array(NUM_ADC_CH_C-1 downto 0);
+   signal adcRaw  : Slv128Array(NUM_ADC_CH_C-1 downto 0);
 
    signal plSysRefRaw : sl := '0';
    signal adcSysRef   : sl := '0';
@@ -330,10 +331,10 @@ begin
          -- ADC[1:0] AXI Stream Interface (ADC_VIN_TILE224)
          m0_axis_aresetn => adcResetL,
          m0_axis_aclk    => adcClock,
-         m00_axis_tdata  => adcData(3),
+         m00_axis_tdata  => adcRaw(3),
          m00_axis_tvalid => open,
          m00_axis_tready => '1',
-         m02_axis_tdata  => adcData(2),
+         m02_axis_tdata  => adcRaw(2),
          m02_axis_tvalid => open,
          m02_axis_tready => '1',
          -- Unused TILE but needed for CLK source from TILE228 distribution (ADC_VIN_TILE225)
@@ -348,10 +349,10 @@ begin
          -- ADC[3:2] AXI Stream Interface (ADC_VIN_TILE226)
          m2_axis_aresetn => adcResetL,
          m2_axis_aclk    => adcClock,
-         m20_axis_tdata  => adcData(1),
+         m20_axis_tdata  => adcRaw(1),
          m20_axis_tvalid => open,
          m20_axis_tready => '1',
-         m22_axis_tdata  => adcData(0),
+         m22_axis_tdata  => adcRaw(0),
          m22_axis_tvalid => open,
          m22_axis_tready => '1',
          -- Unused TILE but needed for CLK source from TILE228 distribution (ADC_VIN_TILE227)
@@ -495,6 +496,19 @@ begin
          clk      => dacClock,
          asyncRst => dspRunCntrl,
          syncRst  => dacReset);
+
+   ----------------------------------------------------------------
+   -- Correct for a _P/_N swap on the RFSoC 4x2 hardware on TILE224
+   ----------------------------------------------------------------
+   -- ADC_A = CH[0] = ADC_VIN_I23_226
+   -- ADC_B = CH[1] = ADC_VIN_I01_226
+   -- ADC_C = CH[2] = ADC_VIN_I23_224 (swapped in HW)
+   -- ADC_D = CH[3] = ADC_VIN_I01_224 (swapped in HW)
+   ----------------------------------------------------------------
+   adcData(0) <= adcRaw(0);
+   adcData(1) <= adcRaw(1);
+   adcData(2) <= not adcRaw(2);
+   adcData(3) <= not adcRaw(3);
 
    GEN_ADC :
    for i in NUM_ADC_CH_C-1 downto 0 generate

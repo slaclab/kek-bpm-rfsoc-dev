@@ -48,7 +48,7 @@ entity KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC is
       ddrCkN    : out   slv(0 downto 0);
       ddrBg     : out   slv(0 downto 0);
       ddrActL   : out   sl;
-      ddrRstL   : out   sl;   
+      ddrRstL   : out   sl;
       -- System Ports
       userLed     : out   slv(3 downto 0);
       pmod        : inout Slv8Array(1 downto 0);
