@@ -26,8 +26,7 @@ use work.AppPkg.all;
 
 entity ReadoutCtrl is
    generic (
-      TPD_G             : time := 1 ns;
-      COURSE_DLY_INIT_G : Slv4Array(3 downto 0));
+      TPD_G : time := 1 ns);
    port (
       -- PMOD Ports
       pmod            : inout Slv8Array(1 downto 0);
@@ -98,7 +97,7 @@ architecture rtl of ReadoutCtrl is
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
       fineDelay      => (others => x"0"),
-      courseDelay    => COURSE_DLY_INIT_G,
+      courseDelay    => (others => '0'),
       selectdirect   => '0',
       muxSelect      => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
@@ -191,7 +190,7 @@ begin
 
          --keep Arm
          if (r.setkeepArm = '1') then
-             v.faultTrigReady := '1';
+            v.faultTrigReady := '1';
          end if;
 
       end if;

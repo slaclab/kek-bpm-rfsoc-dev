@@ -337,13 +337,7 @@ class Root(pr.Root):
         # Initialize the RF Data Converter
         time.sleep(2.0)
         print('Initialize RFDC')
-        rfdc.Init(dynamicNco=False)
-
-        # Set the DAC's NCO frequency
-        for i in range(4):
-            if self.RFSoC.enDacTile[i]:
-                for j in range(4):
-                    rfdc.dacTile[i].dacBlock[j].ncoFrequency.set(self.bpmFreqMHz) # In units of MHz
+        rfdc.Init()
 
         # Wait for ADC/DAC Tile to be stable
         for i in range(4):
