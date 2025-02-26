@@ -27,6 +27,7 @@ entity AbortIssueWrapper is
       dspClk          : in  sl;
       dspRst          : in  sl;
       ampPeakIn       : in  Slv32Array(3 downto 0);
+      injection       : in  sl; 
       abort_trigger   : out slv(15 downto 0);
       MA_UV           : out slv(15 downto 0);
       MA_DV           : out slv(15 downto 0);
@@ -64,6 +65,7 @@ architecture mapping of AbortIssueWrapper is
          abort_issue_s_axi_araddr  : in  std_logic_vector(11 downto 0);
          abort_issue_s_axi_arvalid : in  std_logic;
          abort_issue_s_axi_rready  : in  std_logic;
+         injection_signal          : in  std_logic_vector(0 downto 0);
          abort_trigger             : out std_logic_vector(0 downto 0);
          uv_maout                  : out std_logic_vector(15 downto 0);
          dv_maout                  : out std_logic_vector(15 downto 0);
@@ -121,6 +123,7 @@ begin
          uv_delta_2                => ampPeakIn(3)(15 downto 0),
          uv_sum_1                  => ampPeakIn(2)(31 downto 16),
          uv_sum_2                  => ampPeakIn(2)(15 downto 0),
+         injection_signal(0)       => injection,
          -- Calculation Outbound Interface
          abort_trigger(0)          => abort_trigger(14),--This is 2 in float16
          uv_maout                  => MA_UV,

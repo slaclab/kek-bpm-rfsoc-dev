@@ -102,11 +102,7 @@ architecture mapping of Application is
    signal uvSTD       : slv(15 downto 0);
    signal dvSTD       : slv(15 downto 0);
    signal abortFlag   : slv(15 downto 0);
-   signal dummy_sig   : slv(15 downto 0);
-   signal calcResult  : slv(31 downto 0);
-   signal calcResult_2: slv(31 downto 0);
-   signal calcResult_3: slv(31 downto 0);
-   signal calcResult_4: slv(31 downto 0);
+
 
    signal axisMasters : AxiStreamMasterArray(3 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
    signal axisSlaves  : AxiStreamSlaveArray(3 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
@@ -245,6 +241,7 @@ begin
          ampPeakIn(1)    => amp(1)(255 downto 224),
          ampPeakIn(2)    => amp(2)(255 downto 224),
          ampPeakIn(3)    => amp(3)(255 downto 224),
+         injection       => pmod(0)(7),
          MA_UV           => uvMA,
          MA_DV           => dvMA,
          Pos_UV          => uvPos,
@@ -258,10 +255,6 @@ begin
          axilWriteMaster => dspWriteMasters(POSCALC_INDEX_C),
          axilWriteSlave  => dspWriteSlaves(POSCALC_INDEX_C));
 
-   --calcResult   <= dvMA & uvMA;
-   --calcResult_2 <= dvPos & uvPos;
-   --calcResult_3 <= dvSTD & uvSTD;
-   --calcResult_4 <= abortFlag & dummy_sig;
 
 
    U_ReadoutCtrl : entity work.ReadoutCtrl

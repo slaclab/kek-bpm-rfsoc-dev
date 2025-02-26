@@ -112,15 +112,17 @@ class AbortIssue(pr.Device):
             mode         = 'RO',
         ))
 
-        #define INJECTIONVETO_THRESHOLD 0x51C/**< InjectionVeto_threshold */
+        #define INJECTIONVETO_ON 0x51C/**< InjectionVeto_on */
         self.add(pr.RemoteVariable(
-            name         = 'InjectionVeto Threshold',
-            description  = 'Injection Veto threshold is this number multiplied by STD',
+            name         = 'InjectionVeto ON',
+            description  = 'Injection Veto ON or OFF',
             offset       = 0x51C,
-            bitSize      = 32,
-            bitOffset    = 0,
-            base         = pr.Float,
+            bitSize      = 1,
             mode         = 'RW',
+            enum        = {
+                0x0: 'OFF',
+                0x1: 'ON',
+            },
         ))
 
         #define POSITION_THRESHOLD_UV 0x520/**< Position_threshold_UV */

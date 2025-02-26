@@ -31,9 +31,6 @@ def find_latest_dat_files(directory):
 def datfile(filename):
     # Waveforms variables to be filled 
     ampFault = { i : []  for i in range(4) }  
-    xPosFault = []
-    yPosFault = []
-    qBunchFault = []
     recordtime = []
     
     # Open the .dat file
@@ -76,172 +73,169 @@ def datfile(filename):
             # Check if AMP Fault waveform
             elif (header.channel < 16) and (header.channel >= 12):
                 ampFault[header.channel-12].append(data[hdrOffset:].view(np.int16))
-    
-            # Check if AMP Live waveform
-            elif header.channel == 24:
-                fpData = data[hdrOffset:].view(np.float32)
-                fpDataLen = len(fpData)
-                xPosFault.append(   fpData[0:(fpDataLen*3)+0:3] ) 
-                yPosFault.append(   fpData[1:(fpDataLen*3)+1:3] )
-                qBunchFault.append( fpData[2:(fpDataLen*3)+2:3] )
-            
+
             # Else undefined stream index
-            else:
-                print( f'UNDEFINED DATA STREAM[{header.channel}]!!!')
+            #else:
+                #print( f'UNDEFINED DATA STREAM[{header.channel}]!!!')
     return ampFault, recordtime
 
-def parse_and_plot(filename,x1,x2):
+def parse_and_plot(filename):
+    print(f'Processing {filename} ...')
     ampFault, recordtime=datfile(filename)
-    eventnum=0
-    print(f'filename : {filename}')
-    print(f'Recorded time : {recordtime[0]}')
-    recordtime=recordtime[0].replace(' ', '_').replace(':', '-')
+    print(f'filename: {filename}')
+    print(f'Recorded time: {recordtime[0]}')
+    recordtime=recordtime[0].replace(' ','_').replace(':','-')
+
+    X_sum=ampFault[0][0]
+    X_delta=ampFault[1][0]
+    Y_sum=ampFault[2][0]
+    Y_delta=ampFault[3][0]
     
+    ###########################################################################################################
+    # Detect the bunch and determine the index where the bunch is located.
+    # This firmware records peak value of each 5120 RF buckets. But not all buckets contain bunch. 
+    # Since I'm testing a new firmware which detect bunch oscillation and issue a trigger itself from 2024c, 
+    # the trigger timing is not constant for each abort event.
+    # Therefore it is not guaranteed that 101 turns are recorded for all events.
+    ###########################################################################################################
+    #find first abort gap
+    start=0
+    for i in range(0,2560):
+        if i==2560:
+            print("data is invalid")
+            return
+        if max(X_sum[i:i+50])<500:
+            start=i+50
+            break
+
+    # determine the number of turns recorded in this file
+    end=0
+    for i in range(0,205):
+        if start+(i+1)*2560 > len(X_sum):
+            print('Data is invalid')
+            return
+        if np.sum(X_sum[start+i*2560:start+(i+1)*2560]) < 256000:
+            end=i
+            break
+    if end%2==1:
+        start=start+2560
+        turn=end//2
+    elif end%2==0:
+        turn=end//2
+            
+
     def bunchindex(threshold,waveform):
-        bunch_index=[]
-        for i in range(2560):
-            if max(ampFault[0][eventnum][i:i+50])<500:
-                start=i+50
-                break
-        #print(start)
+        bunch_index=[]                                                                                                                                                                                                                                                         
         for i in range(5120):
             if waveform[start+i]>threshold:
                 bunch_index.append(start+i)
 
         if len(bunch_index)==0:
-            print("data is not invalid")
+            print("Data is invalid")
             return bunch_index
 
-        if len(bunch_index)<300:
-            print('Nbunch is too small')
-            return []
-
-        print(f'Nbunch={len(bunch_index)}')
         return np.array(bunch_index)
 
-    bunch_index=bunchindex(500,ampFault[0][eventnum])
-    if len(bunch_index)==0:
+    bunch_index=bunchindex(1000,X_sum)
+
+    if len(bunch_index)==0 or turn<=10:
         print("end process")
         return 0
 
-    os.makedirs(f'/mnt/SBOR/RFSoC/{recordtime}', exist_ok=True)
-    
-    UV=[]
-    DV=[]
-    charge_U=[]
-    charge_D=[]
-    for j in bunch_index:
-        certain_bunch_UV=[]
-        certain_bunch_DV=[]
-        certain_bunch_charge_U=[]
-        certain_bunch_charge_D=[]
-        for i in range(102):
-            tbt_0=ampFault[0][eventnum][j+5120*i]
-            tbt_1=ampFault[1][eventnum][j+5120*i]
-            tbt_2=ampFault[2][eventnum][j+5120*i]
-            tbt_3=ampFault[3][eventnum][j+5120*i]
-            certain_bunch_UV.append(tbt_3/tbt_2*(-16.58)/5)
-            certain_bunch_DV.append(tbt_1/tbt_0*(-16.58)/5)
-            certain_bunch_charge_U.append(tbt_2)
-            certain_bunch_charge_D.append(tbt_0)
-        UV.append(np.array(certain_bunch_UV))
-        DV.append(np.array(certain_bunch_DV))
-        charge_U.append(np.array(certain_bunch_charge_U))
-        charge_D.append(np.array(certain_bunch_charge_D))
-    UV=np.array(UV)
-    DV=np.array(DV)
-    charge_U=np.array(charge_U)
-    charge_D=np.array(charge_D)
+    os.makedirs(f'/mnt/SBOR/RFSoC/{recordtime}',exist_ok=True)
+    print(f'Num of bunch : {len(bunch_index)}') # If num of bunch is weired, threshod must be adjusted.
 
-    mean=np.mean(UV[:,0:10],axis=1)
-    UV=UV-mean[:,np.newaxis]
-    mean=np.mean(DV[:,0:10],axis=1)
-    DV=DV-mean[:,np.newaxis]
-    charge_mean=np.mean(charge_U[:,0:10],axis=1)
-    charge_U=charge_U/charge_mean[:,np.newaxis]
-    charge_mean=np.mean(charge_D[:,0:10],axis=1)
-    charge_D=charge_D/charge_mean[:,np.newaxis]
-            
-    #make x axis
+    ###########################################################################################################
+    # Using 'bunch_index', calculate and store bunch position and bunch charge in 2d array 'DV(UV)' and 'charge_D(U)'.
+    # Position is calculated by delta/sum * 16.58/5 (mm).
+    # The row of these 2D array corresponds to bunch index, and colum corresponds to the number of turn.
+    # If num of bunch is 2346 and num of turn is 100, the shape of 'X', 'Y' and 'charge' is 2346x100.
+    ###########################################################################################################
+    X=[]
+    Y=[]
+    charge=[]
+    for j in bunch_index:
+        certain_bunch_X=[]
+        certain_bunch_Y=[]
+        certain_bunch_charge=[]
+        for i in range(turn):
+            tbt_0=X_sum[j+5120*i]
+            tbt_1=X_delta[j+5120*i]
+            tbt_2=Y_sum[j+5120*i]
+            tbt_3=Y_delta[j+5120*i]
+            certain_bunch_Y.append(tbt_3/tbt_2*16.58/5)
+            certain_bunch_X.append(tbt_1/tbt_0*16.58/5)
+            certain_bunch_charge.append(tbt_0+tbt_2)
+        X.append(np.array(certain_bunch_X))
+        Y.append(np.array(certain_bunch_Y))
+        charge.append(np.array(certain_bunch_charge))
+    X=np.array(X)
+    Y=np.array(Y)
+    charge=np.array(charge)
+
+    #Subtract the average of the first two turns' positions to make the results easier to see.
+    mean=np.mean(X[:,0:2],axis=1)
+    X=X-mean[:,np.newaxis]
+    mean=np.mean(Y[:,0:2],axis=1)
+    Y=Y-mean[:,np.newaxis]
+    #Normalize by the average of the first two turns' charge to make the results easier to see.
+    charge_mean=np.mean(charge[:,0:2],axis=1)
+    charge=charge/charge_mean[:,np.newaxis]
+
+
+    ######################################
+    # make plot of last 10 turns
+    ######################################
+    #make x axis                                                                                                                                                                                                                                                                
     bunch_index_10=[]
     for i in range(10):
         bunch_index_10.append(bunch_index-bunch_index[0]+5120*i)
     x_axis=np.concatenate(bunch_index_10)/5120
+    x_axis-=x_axis[-1]
 
-    #x_axis_0=[]
-    #print(DV.shape)
-    #for i in range(101):
-    #    x_axis_0.append(bunch_index-bunch_index[0]+5120*i)
-    #x_axis=np.concatenate(x_axis_0)/0.509
+    fig, (ax1,ax2,ax3) = plt.subplots(3, 1, sharex=True,figsize=(16,6))
     
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(16,6))
-    split=np.hsplit(UV[:,-10:],UV[:,-10:].shape[1])
     ax1.set_title(f'{recordtime}')
-    ax1.scatter(x_axis,np.concatenate(split),color='tomato',s=6)
-    ax1.set_ylabel("Y position (mm)")
-    ax1.set_ylim(-0.4,0.4)
+    split=np.hsplit(X[:,-10:],X[:,-10:].shape[1]) 
+    ax1.scatter(x_axis,np.concatenate(split).flatten(),color='red',s=1)
+    ax1.set_ylabel("X position (mm)")
+    ax1.set_ylim(-0.6,0.6)
     ax1.grid()
-    ax1.text(0.02,0.05,'Upstream Vertical',transform=ax1.transAxes,ha='left',va='bottom',fontsize=14)
+    ax1.text(0.02,0.05,'Downstream Horizontal',transform=ax1.transAxes,ha='left',va='bottom',fontsize=10)
 
-    split=np.hsplit(charge_U[:,-10:],charge_U[:,-10:].shape[1])
-    ax2.scatter(x_axis,np.concatenate(split).reshape(len(x_axis)),color='royalblue',s=6)
-    ax2.set_xlabel("Turn")
-    ax2.set_ylabel("Charge")
-    ax2.set_ylim(0,1.2)
+    split=np.hsplit(Y[:,-10:],Y[:,-10:].shape[1]) 
+    ax2.scatter(x_axis,np.concatenate(split).flatten(),color='red',s=1)
+    ax2.set_ylabel("Y position (mm)")
+    ax2.set_ylim(-0.6,0.6)
     ax2.grid()
-    
-    ax2.set_xticks([0,1,2,3,4,5,6,7,8,9,10],['-10','-9','-8','-7','-6','-5','-4','-3','-2','-1','0'])
-    ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-    ax2.set_xlim(x1,x2)
-    ax2.text(0.02,0.05,'Upstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=14)
-    ax2.set_xlabel("Turn")
-    plt.subplots_adjust(hspace=.1)
-    plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime}/LERUV_{recordtime}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
-    plt.close()
-    
-    
-    fig2, (ax1, ax2) = plt.subplots(2, 1, sharex=True,figsize=(18,6))
-    split=np.hsplit(DV[:,-10:],DV[:,-10:].shape[1])
-    #split=np.hsplit(DV,DV.shape[1])
-    ax1.set_title(f'{recordtime}')
-    ax1.scatter(x_axis,np.concatenate(split),color='red',s=6)
-    ax1.set_ylabel("Y position (mm)")
-    ax1.set_ylim(-0.4,0.4)
-    ax1.grid()
-    ax1.text(0.02,0.05,'Downstream Vertical',transform=ax1.transAxes,ha='left',va='bottom',fontsize=14)
+    ax2.text(0.02,0.05,'Downstream Vertical',transform=ax2.transAxes,ha='left',va='bottom',fontsize=10)
 
-    split=np.hsplit(charge_D[:,-10:],charge_D[:,-10:].shape[1])
-    #split=np.hsplit(charge_D,charge_D.shape[1])
-    ax2.scatter(x_axis,np.concatenate(split).reshape(len(x_axis)),color='blue',s=6)
-    ax2.set_xlabel("Turn")
-    ax2.set_ylabel("Charge (a.u.)")
-    ax2.set_ylim(0,1.2)
-    ax2.grid()
-    
-    ax2.set_xticks([0,1,2,3,4,5,6,7,8,9,10],['-10','-9','-8','-7','-6','-5','-4','-3','-2','-1','0'])
-    ax2.set_yticks([0,0.2,0.4,0.6,0.8,1])
-    ax2.set_xlim(x1,x2)
-    ax2.text(0.02,0.05,'Downstream Charge',transform=ax2.transAxes,ha='left',va='bottom',fontsize=14)
+    split=np.hsplit(charge[:,-10:],charge[:,-10:].shape[1])
+    ax3.scatter(x_axis,np.concatenate(split).flatten(),color='blue',s=1)
+    ax3.set_xlabel("Turn")
+    ax3.set_ylabel("Charge (a.u.)")
+    ax3.set_ylim(0,1.2)
+    ax3.set_xticks([-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0])
+    ax3.set_yticks([0,0.2,0.4,0.6,0.8,1])
+    ax3.grid()
+    ax3.text(0.02,0.05,'Downstream Charge',transform=ax3.transAxes,ha='left',va='bottom',fontsize=10)
+    plt.xlim(-10,0)
     plt.subplots_adjust(hspace=.1)
-    plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime}/LERDV_{recordtime}_plot.png',dpi=200,bbox_inches="tight",pad_inches=0.5)
+    plt.savefig(f'/mnt/SBOR/RFSoC/{recordtime}/LERDV_{recordtime}_plot.png',dpi=100,bbox_inches='tight',pad_inches=0.5)
     plt.close()
 
-    outputfile=[]
-    for i in range(4):
-        outputfile.append(ampFault[i][0])
-    outputfile=np.array(outputfile)
-    outputfile.tofile(f'/mnt/SBOR/RFSoC/{recordtime}/LERFuji_{recordtime}.dat')
+    
 
 
     print("Plot saved successfully.")
 
     
 def main():
-    directory = '/mnt/SBOR/ZCU111/'  # ディレクトリのパスを指定する
+    directory = '/mnt/SBOR/ZCU111/2024c/'  # ディレクトリのパスを指定する
     latest_file, previous_file = find_latest_dat_files(directory)
     
     if latest_file:
-        parse_and_plot(previous_file,0,10)
+        parse_and_plot(previous_file)
     
     else:
         print("No dat files found in the directory.")
