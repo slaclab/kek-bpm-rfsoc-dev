@@ -341,82 +341,54 @@ begin
    ----------------------------------
    -- sigGenTrig(1) - Fault Buffering
    ----------------------------------
-   U_RingBufferFault : entity surf.AxiRingBuffer
+   U_RingBufferFault : entity axi_soc_ultra_plus_core.AppRingBufferEngine
       generic map (
-         TPD_G                  => TPD_G,
-         -- Ring buffer Configurations
-         DATA_BYTES_G           => (128/8),  -- 128-bit dataValue width
-         ----------------------------------------------------------------------------------------------
-         -- RING_BUFF_ADDR_WIDTH_G => 15,  -- 128 us = 2^15 x (SSR=2)/509MHz) -> 524,288 Bytes per event
-         RING_BUFF_ADDR_WIDTH_G => 18,  -- 1 ms = 2^18 x (SSR=2)/509MHz) -> 4MB per event
-         -- RING_BUFF_ADDR_WIDTH_G => 26,  -- 264 ms = 2^26 x (SSR=2)/509MHz) -> 1GB per event (max. recommend size)
-         ----------------------------------------------------------------------------------------------
-         SYNTH_MODE_G           => "xpm",
-         MEMORY_TYPE_G          => "ultra",
-         -- AXI-Lite Configurations
-         AXIL_CLK_IS_DATA_CLK_G => true,     -- axilClk=dataClk
-         -- AXI4 Configurations
-         AXI_CLK_IS_DATA_CLK_G  => true,     -- axiClk=dataClk
-         -- AXI Stream Configurations
-         AXIS_CLK_IS_DATA_CLK_G => false,    -- FALSE: using DMA clock
-         AXIS_TDEST_G           => x"08",
-         AXIS_CONFIG_G          => DMA_AXIS_CONFIG_C)
+         TPD_G              => TPD_G,
+         TDEST_ROUTES_G     => (
+            0               => x"08", -- Ensure no conflict with live buffer destinations
+            1               => x"09",
+            2               => x"0A",
+            3               => x"0B",
+            4               => x"FF", -- Set unused to FF
+            5               => x"FF",
+            6               => x"FF",
+            7               => x"FF",
+            8               => x"FF",
+            9               => x"FF",
+            10              => x"FF",
+            11              => x"FF",
+            12              => x"FF",
+            13              => x"FF",
+            14              => x"FF",
+            15              => x"FF"),
+         NUM_CH_G           => 4, -- 4 ADC channels
+         SAMPLE_PER_CYCLE_G => 16, -- each clock 16 samples received from ADC
+         RAM_ADDR_WIDTH_G   => 9, -- Determines buffer size
+         MEMORY_TYPE_G      => "block",
+         COMMON_CLK_G       => true,    -- true if dataClk=axilClk
+         AXIL_BASE_ADDR_G   => AXIL_CONFIG_C(RING_INDEX_C+1).baseAddr)
       port map (
-         -- Data to store in ring buffer (dataClk domain)
-         dataClk => dspClk,
-         dataRst => dspReset,
-         extTrig => sigGenTrig(1),
-
-         -- Sample#1 from SSR=16
-         dataValue(15 downto 0)    => amp(0)(15 downto 0),
-         dataValue(31 downto 16)   => amp(1)(15 downto 0),
-         dataValue(47 downto 32)   => amp(2)(15 downto 0),
-         dataValue(63 downto 48)   => amp(3)(15 downto 0),
-         -- Sample#8 from SSR=16
-         dataValue(79 downto 64)   => amp(0)(143 downto 128),
-         dataValue(95 downto 80)   => amp(1)(143 downto 128),
-         dataValue(111 downto 96)  => amp(2)(143 downto 128),
-         dataValue(127 downto 112) => amp(3)(143 downto 128),
-
-         -- AXI Ring Buffer Memory Interface (axiClk domain)
-         axiClk          => dspClk,
-         axiRst          => dspReset,
-         axiReady        => ddrReady,
-         mAxiWriteMaster => memWriteMaster,
-         mAxiWriteSlave  => memWriteSlave,
-         mAxiReadMaster  => memReadMaster,
-         mAxiReadSlave   => memReadSlave,
+         -- AXI-Stream Interface (axisClk domain)
+         axisClk         => dmaClk,
+         axisRst         => dmaRst,
+         axisMaster      => axisMasters(1),
+         axisSlave       => axisSlaves(1),
+         -- DATA Interface (dataClk domain)
+         dataClk         => dspClk,
+         dataRst         => dspReset,
+         dataValid       => dataValid(4 downto 0), -- Match NUM_CH_G
+         data0           => adc(0),
+         data1           => adc(1),
+         data2           => adc(2),
+         data3           => adc(3),
+         extTrigIn       => sigGenTrig(1),
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => dspClk,
          axilRst         => dspReset,
          axilReadMaster  => dspReadMasters(RING_INDEX_C+1),
          axilReadSlave   => dspReadSlaves(RING_INDEX_C+1),
          axilWriteMaster => dspWriteMasters(RING_INDEX_C+1),
-         axilWriteSlave  => dspWriteSlaves(RING_INDEX_C+1),
-         -- AXI-Stream Interface (axisClk domain)
-         axisClk         => dmaClk,
-         axisRst         => dmaRst,
-         axisMaster      => axisMasters(1),
-         axisSlave       => axisSlaves(1));
-
-   U_FifoAndResizer : entity work.AxiFifoAndResizerWrapper
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Slaves Interface (dspClk domain)
-         dspClk         => dspClk,
-         dspRst         => dspReset,
-         dspWriteMaster => memWriteMaster,
-         dspWriteSlave  => memWriteSlave,
-         dspReadMaster  => memReadMaster,
-         dspReadSlave   => memReadSlave,
-         -- Master Interface (ddrClk domain)
-         ddrClk         => ddrClk,
-         ddrRst         => ddrRst,
-         ddrWriteMaster => ddrWriteMaster,
-         ddrWriteSlave  => ddrWriteSlave,
-         ddrReadMaster  => ddrReadMaster,
-         ddrReadSlave   => ddrReadSlave);
+         axilWriteSlave  => dspWriteSlaves(RING_INDEX_C+1));
 
    U_Mux : entity surf.AxiStreamMux
       generic map (
