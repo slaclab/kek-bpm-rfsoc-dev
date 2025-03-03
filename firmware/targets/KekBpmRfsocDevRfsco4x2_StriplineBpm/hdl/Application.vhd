@@ -376,7 +376,7 @@ begin
          -- DATA Interface (dataClk domain)
          dataClk         => dspClk,
          dataRst         => dspReset,
-         dataValid       => dataValid(4 downto 0), -- Match NUM_CH_G
+         dataValid       => dataValid(3 downto 0), -- Match NUM_CH_G
          data0           => adc(0),
          data1           => adc(1),
          data2           => adc(2),
