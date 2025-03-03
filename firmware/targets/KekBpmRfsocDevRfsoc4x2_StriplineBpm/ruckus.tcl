@@ -7,8 +7,9 @@ loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/RealDi
 
 # Load common ruckus.tcl files
 loadRuckusTcl $::env(TOP_DIR)/shared
-loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/DownSampleAdc.vhd"
-loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/SsrDdcWrapper.vhd"
+loadSource -dir "$::env(TOP_DIR)/shared/rtl/BypassDDC"
+#loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/DownSampleAdc.vhd"
+#loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/SsrDdcWrapper.vhd"
 
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/hdl"
