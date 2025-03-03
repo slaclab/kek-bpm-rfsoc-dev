@@ -284,7 +284,6 @@ begin
    -------------------------------
    -- sigGenTrig(0) - Live Display
    -------------------------------
-   -- Use this one!
    U_RingBufferLive : entity axi_soc_ultra_plus_core.AppRingBufferEngine
       generic map (
          TPD_G              => TPD_G,
