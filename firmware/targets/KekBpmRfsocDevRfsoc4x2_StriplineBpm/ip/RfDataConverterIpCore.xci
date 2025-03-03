@@ -4,7 +4,7 @@
     "xci_name": "RfDataConverterIpCore",
     "component_reference": "xilinx.com:ip:usp_rf_data_converter:2.6",
     "ip_revision": "6",
-    "gen_directory": "../../../../KekBpmRfsocDevRfsco4x2_StriplineBpm_project.gen/sources_1/ip/RfDataConverterIpCore",
+    "gen_directory": "../../../../KekBpmRfsocDevRfsoc4x2_StriplineBpm_project.gen/sources_1/ip/RfDataConverterIpCore",
     "parameters": {
       "component_parameters": {
         "AMS_Factory_Var": [ { "value": "0", "resolve_type": "user", "usage": "all" } ],
@@ -1669,7 +1669,7 @@
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "6" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../KekBpmRfsocDevRfsco4x2_StriplineBpm_project.gen/sources_1/ip/RfDataConverterIpCore" } ],
+        "OUTPUTDIR": [ { "value": "../../../../KekBpmRfsocDevRfsoc4x2_StriplineBpm_project.gen/sources_1/ip/RfDataConverterIpCore" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
         "SWVERSION": [ { "value": "2023.1" } ],
