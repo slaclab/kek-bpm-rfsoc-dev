@@ -7,9 +7,10 @@ loadRuckusTcl $::env(TOP_DIR)/submodules/axi-soc-ultra-plus-core/hardware/RealDi
 
 # Load common ruckus.tcl files
 loadRuckusTcl $::env(TOP_DIR)/shared
-loadSource -dir "$::env(TOP_DIR)/shared/rtl/BypassDDC"
-#loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/DownSampleAdc.vhd"
-#loadSource -lib work "$::env(TOP_DIR)/shared/rtl/BypassDDC/SsrDdcWrapper.vhd"
+# Load files we want individually to avoid loading shared/.../Application.vhd
+# which clashes with the adjusted Application for this target
+loadSource -path "$::env(TOP_DIR)/shared/rtl/BypassDDC/DownSampleAdc.vhd"
+loadSource -path "$::env(TOP_DIR)/shared/rtl/BypassDDC/SsrDdcWrapper.vhd"
 
 # Load local source Code and constraints
 loadSource      -dir "$::DIR_PATH/hdl"
