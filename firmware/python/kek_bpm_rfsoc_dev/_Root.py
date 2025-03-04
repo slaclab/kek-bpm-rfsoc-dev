@@ -38,6 +38,7 @@ class Root(pr.Root):
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
             boardType  = None, # Either zcu111 or zcu208 or rfsoc4x2
+            isBOR      = False,
             **kwargs):
 
         # Pass custom value to parent via super function
@@ -56,13 +57,21 @@ class Root(pr.Root):
         self.boardType = boardType[0].upper() + boardType[1:].lower()
         self.MuxSelect = 0
 
+
         # Check for DDC bypass mode
         if (bpmFreqMHz == 0):
-            self.SSR = 16
-            self.NcoFreqMHz = self.bpmFreqMHz
-            self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
-            self.faultDepth = 2**15
+            if (isBOR):
+                self.SSR = 16
+                self.NcoFreqMHz = self.bpmFreqMHz
+                self.sampleRate = 4.072E+9 # Units of Hz
+                self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
+                self.faultDepth = 2**15
+            else:  # Stripline BPM firmware
+                self.SSR = 16
+                self.NcoFreqMHz = self.bpmFreqMHz
+                self.sampleRate = 4.072E+9 # Units of Hz
+                self.ImageName  = f'KekBpmRfsocDev{self.boardType}_StriplineBpm'
+                self.faultDepth = 2**9
         else:
             raise ValueError( 'non-zero bpmFreqMHz is no longer support' )
 
@@ -87,10 +96,7 @@ class Root(pr.Root):
         # Create rogue stream objects
         self.adcDispBuff  = [stream.TcpClient(ip,10000+2*(i+4))  for i in range(4)]
         self.ampDispBuff  = [stream.TcpClient(ip,10000+2*(i+0))  for i in range(4)]
-        self.ampFaultBuff =  stream.TcpClient(ip,10000+2*(8))
-
-        # Used to prepend the local time into a stream
-        self.ampFaultWithHdr = rfsoc.PrependLocalTime()
+        self.ampFaultBuff = [stream.TcpClient(ip,10000+2*(i+8))  for i in range(4)]
 
         ##################################################################################
 
@@ -99,6 +105,7 @@ class Root(pr.Root):
         self.ampDispProc  = [None for _ in range(4)]
         self.adcDispFifo  = [None for _ in range(4)]
         self.ampDispFifo  = [None for _ in range(4)]
+        self.ampFaultProc = [None for _ in range(4)]
         for i in range(4):
 
             self.adcDispProc[i] = rfsoc_utility.RingBufferProcessor(
@@ -131,10 +138,13 @@ class Root(pr.Root):
                 noCopy      = False, # Create copy of buffer
                 )
 
-        self.ampFaultProc = rfsoc.FaultRingBufferProcessor(
-            name   = 'AmpFaultProcessor',
-            hidden = True,
-        )
+            self.ampFaultProc[i] = rfsoc.RingBufferProcessor(
+                name=f'AmpFaultProcessor[{i}]',
+                sampleRate=self.sampleRate,
+                maxSize=self.SSR*self.faultDepth,
+                SSR=self.SSR,
+                faultDisp=True
+                )
 
         ##################################################################################
 
@@ -149,10 +159,10 @@ class Root(pr.Root):
             self.ampDispBuff[i] >> self.ampDispFifo[i] >> self.ampDispProc[i]
             self.add(self.ampDispProc[i])
 
-        # AMP Fault Display Path
-        self.ampFaultBuff >> self.ampFaultWithHdr >> self.dataWriter.getChannel(i+12)
-        self.ampFaultBuff >> self.ampFaultProc
-        self.add(self.ampFaultProc)
+            # AMP Fault Display Path
+            # self.ampFaultBuff[i] >> self.ampFaultWithHdr[i] >> self.dataWriter.getChannel(i+12)
+            self.ampFaultBuff[i] >> self.ampFaultProc[i]
+            self.add(self.ampFaultProc[i])
 
         ##################################################################################
         ##                              Register Access
@@ -247,7 +257,9 @@ class Root(pr.Root):
                 self.FaultTrigTimerValue.set(0)
 
             # Check if there is new data in the fault event path
-            newData = self.ampFaultProc.Updated.get()
+            newData = True
+            for i in range(4):
+                newData = newData and self.ampFaultProc[i].Updated.get()
 
             # Check if this mode is enable
             if (self.EnableAutoReopen.get()) and newData:
@@ -269,7 +281,8 @@ class Root(pr.Root):
                 self.dataWriter._open()
 
                 # Reset the flags
-                self.ampFaultProc.Updated.set(0)
+                for i in range(4):
+                    self.ampFaultProc[i].Updated.set(0)
 
             # Check if MuxSelect changed
             if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):
@@ -324,6 +337,7 @@ class Root(pr.Root):
 
         if self.boardType == 'Rfsoc4x2':
             print('Initialize the LMK/LMX Clock chips')
+            # Why is this different here???
             self.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
         print('Wait for DSP Clock to be stable')
@@ -379,9 +393,7 @@ class Root(pr.Root):
             readoutCtrl.SelectDirect.setDisp('DDC')
 
         # Tune the amplitude delays for the firmware position calculation
-        readoutCtrl.tuneAmpDelays(self.chMask)
-
-        # Enable the fault ring buffer
-        self.RFSoC.Application.AxiRingBuffer.EnableMode.set(1)
+        # Skip this for now
+        #readoutCtrl.tuneAmpDelays(self.chMask)
 
     ##################################################################################
