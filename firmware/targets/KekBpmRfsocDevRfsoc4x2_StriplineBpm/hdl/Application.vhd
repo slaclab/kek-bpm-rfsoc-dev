@@ -376,10 +376,10 @@ begin
          dataClk         => dspClk,
          dataRst         => dspReset,
          dataValid       => dataValid(3 downto 0), -- Match NUM_CH_G
-         data0           => adc(0),
-         data1           => adc(1),
-         data2           => adc(2),
-         data3           => adc(3),
+         data0           => amp(0),
+         data1           => amp(1),
+         data2           => amp(2),
+         data3           => amp(3),
          extTrigIn       => sigGenTrig(1),
          -- AXI-Lite Interface (axilClk domain)
          axilClk         => dspClk,
