@@ -261,8 +261,7 @@ begin
 
    U_ReadoutCtrl : entity work.ReadoutCtrl
       generic map (
-         TPD_G             => TPD_G,
-         COURSE_DLY_INIT_G => (0 => x"0", 1 => x"0", 2 => x"1", 3 => x"1"))
+         TPD_G => TPD_G)
       port map (
          -- PMOD Ports
          pmod            => pmod,

@@ -502,31 +502,18 @@ begin
          asyncRst => dspRunCntrl,
          syncRst  => dacReset);
 
-   GEN_ADC :
-   for i in NUM_ADC_CH_C-1 downto 0 generate
-      U_Gearbox : entity surf.AsyncGearbox
-         generic map (
-            TPD_G              => TPD_G,
-            SLAVE_WIDTH_G      => 128,
-            MASTER_WIDTH_G     => 256,
-            EN_EXT_CTRL_G      => false,
-            -- Async FIFO generics
-            FIFO_MEMORY_TYPE_G => "block",
-            FIFO_ADDR_WIDTH_G  => 8)
-         port map (
-            -- Slave Interface
-            slaveClk    => adcClock,
-            slaveRst    => adcReset,
-            slaveData   => adcData(i),
-            slaveValid  => '1',
-            slaveReady  => open,
-            -- Master Interface
-            masterClk   => dspClock,
-            masterRst   => dspReset,
-            masterData  => dspAdc(i),
-            masterValid => open,
-            masterReady => '1');
-   end generate GEN_ADC;
+   U_Gearbox : entity axi_soc_ultra_plus_core.Ssr8ToSsr16Gearbox
+      generic map (
+         TPD_G    => TPD_G,
+         NUM_CH_G => NUM_ADC_CH_C)
+      port map (
+         -- Slave Interface
+         wrClk     => adcClock,
+         wrData    => adcData,
+         -- Master Interface
+         rdClk     => dspClock,
+         rdRst     => dspReset,
+         rdData    => dspAdc);
 
    process(dacClock)
    begin
