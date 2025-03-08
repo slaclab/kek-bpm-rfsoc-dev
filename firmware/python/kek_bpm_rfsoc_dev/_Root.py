@@ -173,6 +173,14 @@ class Root(pr.Root):
         else:
             self.expectedHardware = f'Xilinx{self.boardType}'
 
+        # Add the RFDC API interface
+        self.memRfdc = rogue.interfaces.memory.TcpClient(ip,9002)
+        self.add(rfsoc_utility.Rfdc(
+            memBase = self.memRfdc,
+            gen3   = not (self.boardType == 'Zcu111'), # True if using RFSoC GEN3 Hardware
+            hidden = True,
+        ))
+
         # Added the RFSoC HW device
         self.add(rfsoc.RFSoC(
             memBase     = self.memMap,
@@ -296,7 +304,6 @@ class Root(pr.Root):
         # Useful pointers
         axiVersion  = self.RFSoC.AxiSocCore.AxiVersion
         dacSigGen   = self.RFSoC.Application.DacSigGen
-        rfdc        = self.RFSoC.RfDataConverter
         readoutCtrl = self.RFSoC.Application.ReadoutCtrl
 
         # Check for Expected HW Platform
@@ -314,9 +321,7 @@ class Root(pr.Root):
                 raise ValueError(errMsg)
 
         print('Issuing a reset to the user logic')
-        axiVersion.UserRst()
-        while(axiVersion.AppReset.get() != 0):
-            time.sleep(0.1)
+        self.RFSoC.AxiSocCore.UserRst()
 
         if self.boardType == 'Zcu111':
             print('Initialize the LMK/LMX Clock chips')
@@ -327,35 +332,35 @@ class Root(pr.Root):
             self.Hardware.InitClock(lmkConfig=self.lmkConfig,lmxConfig=self.lmxConfig)
 
         print('Wait for DSP Clock to be stable')
-        while(axiVersion.DspReset.get()):
-            time.sleep(0.1)
+        self.RFSoC.AxiSocCore.DspRstWait()
 
         # Enable application after LMK/LMX has been configured
         self.RFSoC.Application.enable.set(True)
         self.ReadAll()
 
-        # Initialize the RF Data Converter
-        time.sleep(2.0)
-        print('Initialize RFDC')
-        rfdc.Init()
-
-        # Wait for ADC/DAC Tile to be stable
-        for i in range(4):
-            if self.RFSoC.enAdcTile[i]:
-                while rfdc.adcTile[i].CurrentState.get() < 14:
-                    time.sleep(0.01)
-            if self.RFSoC.enDacTile[i]:
-                while rfdc.dacTile[i].CurrentState.get() < 14:
-                    time.sleep(0.01)
-
         # Enable run control
         readoutCtrl.DspRunCntrl.set(1)
 
+        # Initialize the RF Data Converter
+        self.Rfdc.Init()
+
         # MTS Sync the RF Data Converter
-        # Note: MTS sync is not working and currently broken
-        # https://jira.slac.stanford.edu/browse/ESROGUE-675
-        # rfdc.MtsAdcSync()
-        # rfdc.MtsDacSync()
+        if self.boardType == 'Zcu111':
+            self.Rfdc.Mst.AdcTiles.set(0xF)
+            self.Rfdc.Mst.DacTiles.set(0x3)
+            self.Rfdc.Mst.AdcRefTile.set(0x0)
+            self.Rfdc.Mst.DacRefTile.set(0x0)
+            self.Rfdc.Mst.SysRefConfig.set(1)
+            self.Rfdc.Mst.SyncAdcTiles()
+            self.Rfdc.Mst.SyncDacTiles()
+        if self.boardType == 'Rfsoc4x2':
+            self.Rfdc.Mst.AdcTiles.set(0x5)
+            self.Rfdc.Mst.DacTiles.set(0x5)
+            self.Rfdc.Mst.AdcRefTile.set(0x2)
+            self.Rfdc.Mst.DacRefTile.set(0x2)
+            self.Rfdc.Mst.SysRefConfig.set(1)
+            self.Rfdc.Mst.SyncAdcTiles()
+            self.Rfdc.Mst.SyncDacTiles()
 
         # Load the Default YAML file and refresh all remote variables
         print(f'Loading path={self.defaultFile} Default Configuration File...')
@@ -373,7 +378,8 @@ class Root(pr.Root):
             readoutCtrl.SelectDirect.setDisp('DDC')
 
         # Tune the amplitude delays for the firmware position calculation
-        readoutCtrl.tuneAmpDelays(self.chMask)
+        if (self.chMask>0):
+            readoutCtrl.tuneAmpDelays(self.chMask)
 
         # Enable the fault ring buffer
         self.RFSoC.Application.AxiRingBuffer.EnableMode.set(1)

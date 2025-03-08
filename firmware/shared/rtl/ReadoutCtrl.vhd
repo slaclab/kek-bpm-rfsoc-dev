@@ -97,7 +97,7 @@ architecture rtl of ReadoutCtrl is
       sigGenTrig     => (others => '0'),
       ncoConfig      => (others => '0'),
       fineDelay      => (others => x"0"),
-      courseDelay    => (others => '0'),
+      courseDelay    => (others => x"0"),
       selectdirect   => '0',
       muxSelect      => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
