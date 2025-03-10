@@ -12,7 +12,8 @@ import pyrogue as pr
 
 import axi_soc_ultra_plus_core                       as socCore
 import axi_soc_ultra_plus_core.hardware.XilinxZcu111 as xilinxZcu111
-import kek_bpm_rfsoc_dev                             as rfsoc
+import kek_bpm_rfsoc_bor                             as bpmShared
+import kek_bpm_rfsoc_stripline                       as stripline
 
 class RFSoC(pr.Device):
     def __init__(self,
@@ -35,7 +36,7 @@ class RFSoC(pr.Device):
                 # expand       = True,
             ))
 
-        self.add(rfsoc.Application(
+        self.add(stripline.Application(
             offset      = 0xA000_0000,
             sampleRate  = sampleRate,
             ampDispProc = ampDispProc,

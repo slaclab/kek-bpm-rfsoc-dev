@@ -230,20 +230,6 @@ class ReadoutCtrl(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'SelectDirect',
-            description  = 'Select DDC or Direct sampling',
-            offset       = 0x28,
-            bitSize      = 1,
-            bitOffset    = 1,
-            mode         = 'RW',
-            hidden       = True, # With KekBpmRfsocDevZcu111_4072MSPS_BypassDDC, we could consider removing this feature in the future
-            enum        = {
-                0x0: 'DDC',
-                0x1: 'Direct sampling',
-            },
-        ))
-
-        self.add(pr.RemoteVariable(
             name         = 'SetKeepArm',
             description  = 'Keep FaultTrigReady = 1',
             offset       = 0x28,

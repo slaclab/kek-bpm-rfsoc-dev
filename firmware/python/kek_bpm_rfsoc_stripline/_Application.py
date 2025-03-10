@@ -10,7 +10,8 @@
 
 import pyrogue as pr
 
-import kek_bpm_rfsoc_dev                     as rfsoc
+import kek_bpm_rfsoc_bor                     as bpmShared
+import kek_bpm_rfsoc_stripline               as stripline
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
 import surf.axi                              as axi
 
@@ -32,16 +33,11 @@ class Application(pr.Device):
             expand       = False,
         ))
 
-        self.add(rfsoc.ReadoutCtrl(
+        self.add(bpmShared.ReadoutCtrl(
             offset      = 0x00_000000,
             sampleRate  = sampleRate,
             ampDispProc = ampDispProc,
             SSR         = SSR,
             boardType   = boardType,
             expand      = True,
-        ))
-
-        self.add(axi.AxiRingBuffer(
-            offset = 0x03_000000,
-            hidden = True,
         ))

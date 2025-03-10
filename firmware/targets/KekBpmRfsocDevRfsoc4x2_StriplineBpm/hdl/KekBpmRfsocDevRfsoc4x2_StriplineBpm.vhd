@@ -27,48 +27,54 @@ use work.AppPkg.all;
 library axi_soc_ultra_plus_core;
 use axi_soc_ultra_plus_core.AxiSocUltraPlusPkg.all;
 
-entity KekBpmRfsocDevZcu208_4072MSPS_BypassDDC is
+entity KekBpmRfsocDevRfsoc4x2_StriplineBpm is
    generic (
       TPD_G        : time := 1 ns;
       BUILD_INFO_G : BuildInfoType);
    port (
       -- DDR4 Ports
-      ddrClkP    : in    sl;
-      ddrClkN    : in    sl;
-      ddrDm      : inout slv(3 downto 0);
-      ddrDqsP    : inout slv(3 downto 0);
-      ddrDqsN    : inout slv(3 downto 0);
-      ddrDq      : inout slv(31 downto 0);
-      ddrA       : out   slv(16 downto 0);
-      ddrBa      : out   slv(1 downto 0);
-      ddrCsL     : out   slv(1 downto 0);
-      ddrOdt     : out   slv(0 downto 0);
-      ddrCke     : out   slv(0 downto 0);
-      ddrCkP     : out   slv(0 downto 0);
-      ddrCkN     : out   slv(0 downto 0);
-      ddrBg      : out   slv(1 downto 0);
-      ddrActL    : out   sl;
-      ddrRstL    : out   sl;
-      -- RFMC Ports
-      adcio      : inout slv(7 downto 0);
-      dacio      : inout slv(7 downto 0);
+      ddrClkP     : in    sl;
+      ddrClkN     : in    sl;
+      ddrDm       : inout slv(7 downto 0);
+      ddrDqsP     : inout slv(7 downto 0);
+      ddrDqsN     : inout slv(7 downto 0);
+      ddrDq       : inout slv(63 downto 0);
+      ddrA        : out   slv(16 downto 0);
+      ddrBa       : out   slv(1 downto 0);
+      ddrCsL      : out   slv(0 downto 0);
+      ddrOdt      : out   slv(0 downto 0);
+      ddrCke      : out   slv(0 downto 0);
+      ddrCkP      : out   slv(0 downto 0);
+      ddrCkN      : out   slv(0 downto 0);
+      ddrBg       : out   slv(0 downto 0);
+      ddrActL     : out   sl;
+      ddrRstL     : out   sl;
+      -- System Ports
+      userLed     : out   slv(3 downto 0);
+      pmod        : inout Slv8Array(1 downto 0);
+      irigTrigOut : inout sl;           -- Trigger input from 1PPS SMA
+      irigCompOut : inout sl;           -- Trigger input from 1PPS SMA
       -- RF DATA CONVERTER Ports
-      adcP       : in    slv(7 downto 0);
-      adcN       : in    slv(7 downto 0);
-      dacClk228P : in    sl;
-      dacClk228N : in    sl;
-      dacP       : out   slv(7 downto 0);
-      dacN       : out   slv(7 downto 0);
-      sysRefP    : in    sl;
-      sysRefN    : in    sl;
-      plSysRefP  : in    sl;
-      plSysRefN  : in    sl;
+      adcClkP     : in    slv(1 downto 0);
+      adcClkN     : in    slv(1 downto 0);
+      adcP        : in    slv(7 downto 0);
+      adcN        : in    slv(7 downto 0);
+      dacClkP     : in    slv(1 downto 0);
+      dacClkN     : in    slv(1 downto 0);
+      dacP        : out   slv(7 downto 0);
+      dacN        : out   slv(7 downto 0);
+      sysRefP     : in    sl;
+      sysRefN     : in    sl;
+      plClkP      : in    sl;
+      plClkN      : in    sl;
+      plSysRefP   : in    sl;
+      plSysRefN   : in    sl;
       -- SYSMON Ports
-      vPIn       : in    sl;
-      vNIn       : in    sl);
-end KekBpmRfsocDevZcu208_4072MSPS_BypassDDC;
+      vPIn        : in    sl;
+      vNIn        : in    sl);
+end KekBpmRfsocDevRfsoc4x2_StriplineBpm;
 
-architecture top_level of KekBpmRfsocDevZcu208_4072MSPS_BypassDDC is
+architecture top_level of KekBpmRfsocDevRfsoc4x2_StriplineBpm is
 
    constant HW_INDEX_C   : natural := 0;
    constant RFDC_INDEX_C : natural := 1;
@@ -117,6 +123,11 @@ architecture top_level of KekBpmRfsocDevZcu208_4072MSPS_BypassDDC is
    signal ddrReadSlave   : AxiReadSlaveType;
 
 begin
+
+   userLed(0) <= not(axilRst);
+   userLed(1) <= not(dmaRst);
+   userLed(2) <= not(dspRst);
+   userLed(3) <= '1';
 
    -----------------------
    -- Common Platform Core
@@ -186,14 +197,18 @@ begin
          AXIL_BASE_ADDR_G => AXIL_CONFIG_C(RFDC_INDEX_C).baseAddr)
       port map (
          -- RF DATA CONVERTER Ports
+         adcClkP         => adcClkP,
+         adcClkN         => adcClkN,
          adcP            => adcP,
          adcN            => adcN,
-         dacClk228P      => dacClk228P,
-         dacClk228N      => dacClk228N,
+         dacClkP         => dacClkP,
+         dacClkN         => dacClkN,
          dacP            => dacP,
          dacN            => dacN,
          sysRefP         => sysRefP,
          sysRefN         => sysRefN,
+         plClkP          => plClkP,
+         plClkN          => plClkN,
          plSysRefP       => plSysRefP,
          plSysRefN       => plSysRefN,
          -- ADC Interface (dspClk domain)
@@ -223,38 +238,40 @@ begin
          AXIL_BASE_ADDR_G => AXIL_CONFIG_C(APP_INDEX_C).baseAddr)
       port map (
          -- DDR AXI4 Interface
-         ddrClk          => ddrClk,
-         ddrRst          => ddrRst,
-         ddrReady        => ddrReady,
-         ddrWriteMaster  => ddrWriteMaster,
-         ddrWriteSlave   => ddrWriteSlave,
-         ddrReadMaster   => ddrReadMaster,
-         ddrReadSlave    => ddrReadSlave,
+         ddrClk              => ddrClk,
+         ddrRst              => ddrRst,
+         ddrReady            => ddrReady,
+         ddrWriteMaster      => ddrWriteMaster,
+         ddrWriteSlave       => ddrWriteSlave,
+         ddrReadMaster       => ddrReadMaster,
+         ddrReadSlave        => ddrReadSlave,
          -- PMOD Ports
-         pmod(0)         => adcio,  -- Mapping the ZCU111.PMOD to ZCU208.RFMC ports
-         pmod(1)         => dacio,  -- Mapping the ZCU111.PMOD to ZCU208.RFMC ports
+         pmod(0)(5 downto 0) => pmod(0)(5 downto 0),
+         pmod(0)(6)          => irigTrigOut,  -- Trigger input from 1PPS SMA
+         pmod(0)(7)          => irigCompOut,  -- Trigger input from 1PPS SMA
+         pmod(1)             => pmod(1),
          -- DMA Interface (dmaClk domain)
-         dmaClk          => dmaClk,
-         dmaRst          => dmaRst,
-         dmaIbMaster     => dmaIbMasters(0),
-         dmaIbSlave      => dmaIbSlaves(0),
+         dmaClk              => dmaClk,
+         dmaRst              => dmaRst,
+         dmaIbMaster         => dmaIbMasters(0),
+         dmaIbSlave          => dmaIbSlaves(0),
          -- ADC Interface (dspClk domain)
-         dspClk          => dspClk,
-         dspRst          => dspRst,
-         dspAdc          => dspAdc,
-         dspRunCntrl     => dspRunCntrl,
+         dspClk              => dspClk,
+         dspRst              => dspRst,
+         dspAdc              => dspAdc,
+         dspRunCntrl         => dspRunCntrl,
          -- DAC Interface (dacClk domain)
-         dacClk          => dacClk,
-         dacRst          => dacRst,
-         dspDacI         => dspDacI,
-         dspDacQ         => dspDacQ,
+         dacClk              => dacClk,
+         dacRst              => dacRst,
+         dspDacI             => dspDacI,
+         dspDacQ             => dspDacQ,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk         => axilClk,
-         axilRst         => axilRst,
-         axilWriteMaster => axilWriteMasters(APP_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(APP_INDEX_C),
-         axilReadMaster  => axilReadMasters(APP_INDEX_C),
-         axilReadSlave   => axilReadSlaves(APP_INDEX_C));
+         axilClk             => axilClk,
+         axilRst             => axilRst,
+         axilWriteMaster     => axilWriteMasters(APP_INDEX_C),
+         axilWriteSlave      => axilWriteSlaves(APP_INDEX_C),
+         axilReadMaster      => axilReadMasters(APP_INDEX_C),
+         axilReadSlave       => axilReadSlaves(APP_INDEX_C));
 
    ----------------------------
    -- PL DDR4 Memory Controller
@@ -294,3 +311,4 @@ begin
          ddrRstL        => ddrRstL);
 
 end top_level;
+

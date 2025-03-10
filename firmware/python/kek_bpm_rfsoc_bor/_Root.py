@@ -23,10 +23,10 @@ import pyrogue.utilities.fileio
 import pyrogue.utilities.prbs
 import pyrogue.protocols.epicsV4
 
-import kek_bpm_rfsoc_dev                     as rfsoc
+import kek_bpm_rfsoc_bor                     as bpmShared
 import axi_soc_ultra_plus_core.rfsoc_utility as rfsoc_utility
+import axi_soc_ultra_plus_core               as soc_core
 import axi_soc_ultra_plus_core.hardware.RealDigitalRfSoC4x2 as rfsoc_hw
-import axi_soc_ultra_plus_core as soc_core
 
 rogue.Version.minVersion('6.4.4')
 
@@ -34,14 +34,14 @@ class Root(pr.Root):
     def __init__(self,
             ip         = '',   # ETH Host Name (or IP address)
             top_level  = '',
-            bpmFreqMHz = 0   , # 0MHz (DDC bypass), 2000 MHz, 1000 MHz or 500MHz
             zmqSrvEn   = True, # Flag to include the ZMQ server
             chMask     = 0xF,
             boardType  = None, # Either zcu111 or zcu208 or rfsoc4x2
             **kwargs):
 
         # Pass custom value to parent via super function
-        super().__init__(timeout=5.0,**kwargs)
+        kwargs['timeout'] = 5.0
+        super(Root, self).__init__(**kwargs)
 
         if zmqSrvEn:
             self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
@@ -50,22 +50,13 @@ class Root(pr.Root):
         ##################################################################################
 
         # Intialize the local variables
-        self.bpmFreqMHz = float(bpmFreqMHz)
         self.chMask = chMask
         self.boardType = boardType[0].upper() + boardType[1:].lower()
         self.MuxSelect = 0
-
-        # Check for DDC bypass mode
-        if (bpmFreqMHz == 0):
-            self.SSR = 16
-            self.NcoFreqMHz = self.bpmFreqMHz
-            self.sampleRate = 4.072E+9 # Units of Hz
-            self.ImageName  = f'KekBpmRfsocDev{self.boardType}_4072MSPS_BypassDDC'
-            self.faultDepth = 2**15
-        else:
-            raise ValueError( 'non-zero bpmFreqMHz is no longer support' )
-
-        print( f'sampleRate={int(self.sampleRate/1E6)}MSPS, DDC.NcoFreqMHz={int(self.NcoFreqMHz)}MHz' )
+        self.SSR = 16
+        self.sampleRate = 4.072E+9 # Units of Hz
+        self.ImageName  = f'KekBpmRfsocDev{self.boardType}_BOR'
+        self.faultDepth = 2**15
 
         # Configuration File Paths
         self.top_level = top_level
@@ -89,7 +80,7 @@ class Root(pr.Root):
         self.ampFaultBuff =  stream.TcpClient(ip,10000+2*(8))
 
         # Used to prepend the local time into a stream
-        self.ampFaultWithHdr = rfsoc.PrependLocalTime()
+        self.ampFaultWithHdr = bpmShared.PrependLocalTime()
 
         ##################################################################################
 
@@ -106,7 +97,7 @@ class Root(pr.Root):
                 maxSize    = self.SSR*2**9,
             )
 
-            self.ampDispProc[i] = rfsoc.RingBufferProcessor(
+            self.ampDispProc[i] = bpmShared.RingBufferProcessor(
                 name       = f'AmpDispProcessor[{i}]',
                 sampleRate = self.sampleRate,
                 maxSize    = self.SSR*2**9,
@@ -120,7 +111,7 @@ class Root(pr.Root):
                 maxDepth    = 1, # Drop if more than 1 frame in FIFO
                 trimSize    = 0, # No triming
                 noCopy      = False, # Create copy of buffer
-                )
+            )
 
             self.ampDispFifo[i] = pr.interfaces.stream.Fifo(
                 name        = f'AmpDispFifo[{i}]',
@@ -128,9 +119,9 @@ class Root(pr.Root):
                 maxDepth    = 1, # Drop if more than 1 frame in FIFO
                 trimSize    = 0, # No triming
                 noCopy      = False, # Create copy of buffer
-                )
+            )
 
-        self.ampFaultProc = rfsoc.FaultRingBufferProcessor(
+        self.ampFaultProc = bpmShared.FaultRingBufferProcessor(
             name   = 'AmpFaultProcessor',
             hidden = True,
         )
@@ -149,7 +140,7 @@ class Root(pr.Root):
             self.add(self.ampDispProc[i])
 
         # AMP Fault Display Path
-        self.ampFaultBuff >> self.ampFaultWithHdr >> self.dataWriter.getChannel(i+12)
+        self.ampFaultBuff >> self.ampFaultWithHdr >> self.dataWriter.getChannel(12)
         self.ampFaultBuff >> self.ampFaultProc
         self.add(self.ampFaultProc)
 
@@ -181,7 +172,7 @@ class Root(pr.Root):
         ))
 
         # Added the RFSoC HW device
-        self.add(rfsoc.RFSoC(
+        self.add(bpmShared.RFSoC(
             memBase     = self.memMap,
             sampleRate  = self.sampleRate,
             ampDispProc = [self.AmpDispProcessor[x] for x in range(4)],
@@ -196,7 +187,7 @@ class Root(pr.Root):
         ##################################################################################
 
         self.epics = pyrogue.protocols.epicsV4.EpicsPvServer(
-            base      = 'kek_bpm_rfsoc_demo_ioc',
+            base      = 'kek_bpm_rfsoc_bor_ioc',
             root      = self,
             pvMap     = None,
             incGroups = None,
@@ -237,56 +228,6 @@ class Root(pr.Root):
             units       = 'seconds',
         ))
 
-        @self.command(hidden=True)
-        def getFaultEventStatus():
-            # Check if periodic fault triggering from software is enabled
-            if self.EnableFaultTrigTimer.get() and (self.FaultTrigTimerSize.get() > 0):
-                # Increment the timer
-                self.FaultTrigTimerValue.set(self.FaultTrigTimerValue.get()+1)
-                # Check for timeout
-                if (self.FaultTrigTimerValue.get() >= self.FaultTrigTimerSize.get()):
-                    # Reset the timer
-                    self.FaultTrigTimerValue.set(0)
-                    # Issue the software fault trigger
-                    self.RFSoC.Application.ReadoutCtrl.SwFaultTrig()
-            else:
-                # Reset the timer
-                self.FaultTrigTimerValue.set(0)
-
-            # Check if there is new data in the fault event path
-            newData = self.ampFaultProc.Updated.get()
-
-            # Check if this mode is enable
-            if (self.EnableAutoReopen.get()) and newData:
-
-                # Check if a file is already open
-                if self.dataWriter._isOpen():
-
-                    # Close file
-                    print( f'Closing {self.dataWriter.DataFile.get()}' )
-                    self.dataWriter._close()
-
-                    # Confirm file is not open
-                    while self.dataWriter._isOpen():
-                        time.sleep(0.01)
-
-                # Rename the file
-                self.dataWriter.AutoName()
-                print( f'Opening {self.dataWriter.DataFile.get()}' )
-                self.dataWriter._open()
-
-                # Reset the flags
-                self.ampFaultProc.Updated.set(0)
-
-            # Check if MuxSelect changed
-            if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):
-                self.MuxSelect = self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()
-                for i in range(4):
-                    if (self.MuxSelect == 0):
-                        self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
-                    else:
-                        self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
-
         self.add(pr.LocalVariable(
             name         = 'GetFaultEventStatus',
             mode         = 'RO',
@@ -297,8 +238,58 @@ class Root(pr.Root):
 
     ##################################################################################
 
-    def start(self,**kwargs):
-        super(Root, self).start(**kwargs)
+    def getFaultEventStatus(self):
+        # Check if periodic fault triggering from software is enabled
+        if self.EnableFaultTrigTimer.get() and (self.FaultTrigTimerSize.get() > 0):
+            # Increment the timer
+            self.FaultTrigTimerValue.set(self.FaultTrigTimerValue.get()+1)
+            # Check for timeout
+            if (self.FaultTrigTimerValue.get() >= self.FaultTrigTimerSize.get()):
+                # Reset the timer
+                self.FaultTrigTimerValue.set(0)
+                # Issue the software fault trigger
+                self.RFSoC.Application.ReadoutCtrl.SwFaultTrig()
+        else:
+            # Reset the timer
+            self.FaultTrigTimerValue.set(0)
+
+        # Check if there is new data in the fault event path
+        newData = self.ampFaultProc.Updated.get()
+
+        # Check if this mode is enable
+        if (self.EnableAutoReopen.get()) and newData:
+
+            # Check if a file is already open
+            if self.dataWriter._isOpen():
+
+                # Close file
+                print( f'Closing {self.dataWriter.DataFile.get()}' )
+                self.dataWriter._close()
+
+                # Confirm file is not open
+                while self.dataWriter._isOpen():
+                    time.sleep(0.01)
+
+            # Rename the file
+            self.dataWriter.AutoName()
+            print( f'Opening {self.dataWriter.DataFile.get()}' )
+            self.dataWriter._open()
+
+            # Reset the flags
+            self.ampFaultProc.Updated.set(0)
+
+        # Check if MuxSelect changed
+        if (self.MuxSelect != self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()):
+            self.MuxSelect = self.RFSoC.Application.ReadoutCtrl.MuxSelect.value()
+            for i in range(4):
+                if (self.MuxSelect == 0):
+                    self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsFine)
+                else:
+                    self.ampDispProc[i].Time.set(self.ampDispProc[i]._timeStepsCourse)
+
+    ##################################################################################
+
+    def StartupInit(self):
 
         # Useful pointers
         axiVersion  = self.RFSoC.AxiSocCore.AxiVersion
@@ -370,15 +361,17 @@ class Root(pr.Root):
         dacSigGen.CsvFilePath.set(f'{self.configPath}/{dacSigGen.CsvFilePath.get()}')
         dacSigGen.LoadCsvFile()
 
-        # Check if bypassing DDC (direct sampling)
-        if self.NcoFreqMHz==0:
-            readoutCtrl.SelectDirect.setDisp('Direct sampling')
-        else:
-            readoutCtrl.SelectDirect.setDisp('DDC')
-
         # Tune the amplitude delays for the firmware position calculation
         if (self.chMask>0):
             readoutCtrl.tuneAmpDelays(self.chMask)
+
+    ##################################################################################
+
+    def start(self,**kwargs):
+        super().start(**kwargs)
+
+        # Run the Start init function
+        self.StartupInit()
 
         # Enable the fault ring buffer
         self.RFSoC.Application.AxiRingBuffer.EnableMode.set(1)

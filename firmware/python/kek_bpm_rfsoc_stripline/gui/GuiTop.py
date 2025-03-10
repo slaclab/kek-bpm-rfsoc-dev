@@ -18,7 +18,8 @@ from pyrogue.pydm.widgets import SystemWindow
 Channel = 'rogue://0/root'
 
 import axi_soc_ultra_plus_core.rfsoc_utility.gui as guiBase
-import kek_bpm_rfsoc_dev.gui                     as guiUser
+import kek_bpm_rfsoc_bor.gui                     as guiShared
+import kek_bpm_rfsoc_stripline.gui               as guiUser
 
 class GuiTop(Display):
     def __init__(self, parent=None, args=[], macros=None):
@@ -69,18 +70,18 @@ class GuiTop(Display):
         self.tab.addTab(guiBase.LiveDisplay(parent=None, init_channel=Channel, dispType='AdcDisp', numCh=4),'ADC Live')
 
         # AMP Live Display (Tab Index=3)
-        self.tab.addTab(guiUser.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp'),'AMP Live')
+        self.tab.addTab(guiShared.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpDisp'),'AMP Live')
 
         # # BPM Live Display (Tab Index=4)
-        # self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmDispProc'),'BPM Live')
+        # self.tab.addTab(guiShared.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmDispProc'),'BPM Live')
 
         ######################################################################################################
 
-        # AMP Fault Display (Tab Index=5)
-        self.tab.addTab(guiUser.FaultDisplay(parent=None, init_channel=Channel),'AMP Fault')
+        # AMP Live Display (Tab Index=5)
+        self.tab.addTab(guiShared.LiveDisplay(parent=None, init_channel=Channel, dispType='AmpFault'),'AMP Fault')
 
         # # BPM Fault Display (Tab Index=6)
-        # self.tab.addTab(guiUser.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmFaultProc'),'BPM Fault')
+        # self.tab.addTab(guiShared.BpmDisplay(parent=None, init_channel=Channel, dispType='BpmFaultProc'),'BPM Fault')
 
         ######################################################################################################
 

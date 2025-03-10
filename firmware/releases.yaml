@@ -11,18 +11,23 @@
 GitBase: ..
 
 Targets:
-  KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC:
-    ImageDir: targets/KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC/images
+  KekBpmRfsocDevRfsoc4x2_BOR:
+    ImageDir: targets/KekBpmRfsocDevRfsoc4x2_BOR/images
     Extensions:
       - petalinux.tar.gz
       - ltx
-  KekBpmRfsocDevZcu111_4072MSPS_BypassDDC:
-    ImageDir: targets/KekBpmRfsocDevZcu111_4072MSPS_BypassDDC/images
+  KekBpmRfsocDevZcu111_BOR:
+    ImageDir: targets/KekBpmRfsocDevZcu111_BOR/images
     Extensions:
       - petalinux.tar.gz
       - ltx
-  KekBpmRfsocDevZcu208_4072MSPS_BypassDDC:
-    ImageDir: targets/KekBpmRfsocDevZcu208_4072MSPS_BypassDDC/images
+  KekBpmRfsocDevZcu208_BOR:
+    ImageDir: targets/KekBpmRfsocDevZcu208_BOR/images
+    Extensions:
+      - petalinux.tar.gz
+      - ltx
+  KekBpmRfsocDevRfsoc4x2_StriplineBpm:
+    ImageDir: targets/KekBpmRfsocDevRfsoc4x2_StriplineBpm/images
     Extensions:
       - petalinux.tar.gz
       - ltx
@@ -31,8 +36,9 @@ Releases:
   all:
     Primary: True
     Targets:
-      - KekBpmRfsocDevRfsoc4x2_4072MSPS_BypassDDC
-      - KekBpmRfsocDevZcu111_4072MSPS_BypassDDC
-      - KekBpmRfsocDevZcu208_4072MSPS_BypassDDC
+      - KekBpmRfsocDevRfsoc4x2_BOR
+      - KekBpmRfsocDevZcu111_BOR
+      - KekBpmRfsocDevZcu208_BOR
+      - KekBpmRfsocDevRfsoc4x2_StriplineBpm
     Types:
       - petalinux
