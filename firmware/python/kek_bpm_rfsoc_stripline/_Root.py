@@ -129,7 +129,6 @@ class Root(pr.Root):
                 maxSize    = self.faultDepth,
                 SSR        = self.SSR,
                 faultDisp  = True,
-                hidden     = False,
             )
 
         ##################################################################################
