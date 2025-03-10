@@ -41,8 +41,7 @@ class Root(pr.Root):
             **kwargs):
 
         # Pass custom value to parent via super function
-        super().__init__(**kwargs)
-        self._timeout = 5000000 # 5.0 seconds default
+        super().__init__(timeout=5.0,**kwargs)
 
         if zmqSrvEn:
             self.zmqServer = pyrogue.interfaces.ZmqServer(root=self, addr='127.0.0.1', port=0)
