@@ -9,7 +9,7 @@ hwType=XilinxZcu208
 numLane=1
 
 # Define number of DEST per DMA lane
-numDest=9
+numDest=12
 
 # Define number of DMA TX/RX Buffers
 rxBuffCnt=1280
