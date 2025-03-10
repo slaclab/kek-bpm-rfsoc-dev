@@ -9,7 +9,9 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 import setupLibPaths
-import kek_bpm_rfsoc_dev
+
+import kek_bpm_rfsoc_bor as bor
+import kek_bpm_rfsoc_stripline as stripline
 
 import os
 import sys
@@ -38,19 +40,18 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--guiType",
+        "--appType",
         type     = str,
         required = False,
-        default  = 'PyDM',
-        help     = "Sets the GUI type (PyDM or None)",
+        default  = 'bor',
+        help     = "Sets the application type (bor or stripline)",
     )
 
     parser.add_argument(
-        "--bpmFreqMHz",
-        type     = int,
-        required = False,
-        default  = 0,
-        help     = "BPM ringing frequency (in units of MHz)",
+        "--boardType",
+        type     = str,
+        required = True,
+        help     = "Sets board type (zcu111 or zcu208 or rfsoc4x2)",
     )
 
     parser.add_argument(
@@ -62,23 +63,31 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--boardType",
+        "--guiType",
         type     = str,
-        required = True,
-        help     = "Sets board type (zcu111 or zcu208 or rfsoc4x2)",
+        required = False,
+        default  = 'PyDM',
+        help     = "Sets the GUI type (PyDM or None)",
     )
 
     # Get the arguments
     args = parser.parse_args()
 
-    top_level = os.path.realpath(__file__).split('software')[0]
-    ui = top_level+'firmware/python/kek_bpm_rfsoc_dev/gui/GuiTop.py'
+    #################################################################
+
+    if (args.appType == 'bor'):
+        bpmRoot = bor.Root
+
+    elif (args.appType == 'stripline'):
+        bpmRoot = stripline.Root
+
+    else:
+        raise ValueError( f'Invalid Application type = {args.appType}' )
 
     #################################################################
 
-    with kek_bpm_rfsoc_dev.Root(
+    with bpmRoot(
         ip         = args.ip,
-        bpmFreqMHz = args.bpmFreqMHz,
         chMask     = args.chMask,
         boardType  = args.boardType,
     ) as root:
@@ -87,9 +96,10 @@ if __name__ == "__main__":
         # Development PyDM GUI
         ######################
         if (args.guiType == 'PyDM'):
+            top_level = os.path.realpath(__file__).split('software')[0]
             axi_soc_ultra_plus_core.rfsoc_utility.pydm.runPyDM(
                 serverList = root.zmqServer.address,
-                ui         = ui,
+                ui         = f'{top_level}/firmware/python/kek_bpm_rfsoc_{args.appType}/gui/GuiTop.py',
                 sizeX      = 800,
                 sizeY      = 800,
             )
@@ -105,6 +115,6 @@ if __name__ == "__main__":
         # Undefined GUI type
         ####################
         else:
-            raise ValueError("Invalid GUI type (%s)" % (args.guiType) )
+            raise ValueError( f'Invalid GUI type = {args.guiType}' )
 
     #################################################################

@@ -98,7 +98,7 @@ architecture rtl of ReadoutCtrl is
       ncoConfig      => (others => '0'),
       fineDelay      => (others => x"0"),
       courseDelay    => (others => x"0"),
-      selectdirect   => '0',
+      selectdirect   => '1',
       muxSelect      => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
@@ -238,7 +238,8 @@ begin
       dspRunCntrl    <= r.dspRunCntrl;
       fineDelay      <= r.fineDelay;
       courseDelay    <= r.courseDelay;
-      selectdirect   <= r.selectdirect;
+      -- selectdirect   <= r.selectdirect;
+      selectdirect   <= '1'; -- 0x1: 'Direct sampling',
       muxSelect      <= r.muxSelect;
       for i in 0 to 1 loop
          pmod(i)(5 downto 0) <= not(r.pmodOut(i));
